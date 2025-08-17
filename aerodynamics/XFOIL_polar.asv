@@ -7,7 +7,11 @@ datFilename = 'test.dat';
 folder_name = 'aerodynamics';
 app_name = 'XFOIL6.99';
 eval(sprintf('cd %s/%s', folder_name, app_name)) 
-system('.\xfoil'); % open xfoil 
+try
+    system('xfoil'); % open xfoil 
+catch
+    'Could not run xfoil'
+end
 airfoil_path = sprintf('airfoil_files/%s', datFilename);
 eval(sprintf('load ../%s', airfoil_path));
 
