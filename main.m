@@ -22,45 +22,47 @@ clear;clc
 %% Vary Design Parameters (Outer Loop) 
 % In other words, select a configuration. 
 
-fprintf('Generating Mission 2 variables from rules... ');
-% declare Ip1, Ip2, Ic1, Ic2, Ce, Cp, Cc
-M2_given_params = readcell("rules\M2_given_params.xlsx");
-varNames = M2_given_params(:, 2);
-varSyms = M2_given_params(:, 3);
-[thisVar, ~] = size(M2_given_params);
-for i = 1:thisVar
-    eval(sprintf("%s = %d;", varNames{i}, varSyms{i}));
-end
-fprintf('done \n');
+readM2pars
 
-b = 3; % wingspan;
-TPBC = 70; % total propulsion battery capacity (W*hr)
-
-%% Run Analyses (Inner Loop)
-% In other words, tie the configuration to the physics. 
-
-
-%% Compute Scores (Inner Loop)
-% In other words, consider multiple mission strategies for the configuration-in-physics 
-
-% M1 + M2 + M3
-successfulMission = 1; % points received for a successful Mission 1
-probabilities.M1 = 0.9;
-M1 = probabilities.M1 * successfulMission;
+% fprintf('Generating Mission 2 variables from rules... ');
+% % declare Ip1, Ip2, Ic1, Ic2, Ce, Cp, Cc
+% M2_given_params = readcell("rules\M2_given_params.xlsx");
+% varNames = M2_given_params(:, 2);
+% varSyms = M2_given_params(:, 3);
+% [thisVar, ~] = size(M2_given_params);
+% for i = 1:thisVar
+%     eval(sprintf("%s = %d;", varNames{i}, varSyms{i}));
+% end
+% fprintf('done \n');
+% 
+% b = 3; % wingspan;
+% TPBC = 70; % total propulsion battery capacity (W*hr)
+% 
+% %% Run Analyses (Inner Loop)
+% % In other words, tie the configuration to the physics. 
+% 
+% 
+% %% Compute Scores (Inner Loop)
+% % In other words, consider multiple mission strategies for the configuration-in-physics 
+% 
+% % M1 + M2 + M3
+% successfulMission = 1; % points received for a successful Mission 1
+% probabilities.M1 = 0.9;
+% M1 = probabilities.M1 * successfulMission;
 
 p = optimvar('p'); % passengers (ducks)
 c = optimvar('c'); % cargo (pucks)
 l = optimvar('l'); % laps
 bl = optimvar('bl'); % banner length (inches, rounded) 
 
-syms bl p c l
+% syms bl p c l
 global b 
 global TPBC 
 global probabilities
 b = 4;
 TPBC = 70;
 probabilities.M1 = 0.9;
-missionVars = [p, c, l, bl]
+missionVars = [p, c, l, bl];
 
 global income_net_best
 global quantity_best
@@ -79,6 +81,23 @@ global mission_time
 mission_time = 71; % ground mission time
 
 total_score = missionObjective(missionVars)
+
+for pVal = 1:10
+    for cVal = 1:10
+        for lVal = 1:10
+            for blVal = 10:40
+                
+            end
+        end
+    end
+end
+
+
+
+% need to do some coarse characterization of the missionObjective()
+% function to inform the initial guess
+
+%fmincon(missionObjective, )
 
 % p = 1; % passengers (ducks)
 % c = 1; % cargo (pucks)
@@ -114,13 +133,13 @@ total_score = missionObjective(missionVars)
 % P = flyoff + techInspScore + flightAttempt;
 % 
 % total_score = TMS*TRS + P;
-
-missionProb = optimproblem("Objective", total_score, "ObjectiveSense", 'maximize');
-% wingspan constraints
-missionProb.Constraints.cons1 = p >= 3*c;
-
-show(missionProb)
-solve(missionProb)
+% 
+% missionProb = optimproblem("Objective", total_score, "ObjectiveSense", 'maximize');
+% % wingspan constraints
+% missionProb.Constraints.cons1 = p >= 3*c;
+% 
+% show(missionProb)
+% solve(missionProb)
 %% Optimize Mission Scores for this Configuration (Inner Loop)
 % In other words, select the optimal mission strategy for this configuration-in-physics
 
@@ -131,5 +150,5 @@ solve(missionProb)
 % surrogates
 % maybe an OpenMDAO call or something
 
-configProb.Constraints.cons1 = RAC >= 0.9;
+%configProb.Constraints.cons1 = RAC >= 0.9;
 configProb.Constraints.cons2 = b <= 5;

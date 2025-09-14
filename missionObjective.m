@@ -1,4 +1,4 @@
-function total_score = missionObjective(missionVars)
+function recip = missionObjective(missionVars)
 
 % aircraft configuration parameters change depending on when the function is called. 
 % These configuration parameters (design variables) are accessed as global
@@ -47,6 +47,8 @@ TRS = 0.15*proposal + 0.85*report;
 P = flyoff + techInspScore + flightAttempt;
 
 total_score = TMS*TRS + P;
+
+recip = 1/total_score;
 
 end
 
