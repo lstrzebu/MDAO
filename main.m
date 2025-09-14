@@ -82,11 +82,17 @@ mission_time = 71; % ground mission time
 
 total_score = missionObjective(missionVars)
 
-for pVal = 1:10
-    for cVal = 1:10
-        for lVal = 1:10
-            for blVal = 10:40
-                
+step = 2;
+minP = 1; maxP = 10;
+minC = 1; maxC = 10;
+minL = 1; maxL = 10;
+minBL = 10; maxBL = 40;
+coarse = zeros([abs(maxP - minP), abs(maxC - minC), abs(maxL - minL), abs(maxBL - minBL)]);
+for pVal = minP:step:maxP
+    for cVal = minC:step:maxC
+        for lVal = minL:step:maxL
+            for blVal = minBL:step:maxBL 
+                coarse(pVal, cVal, lVal, blVal) = missionObjective([pVal, cVal, lVal, blVal])
             end
         end
     end
