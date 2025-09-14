@@ -1,9 +1,8 @@
+function [pol, foil] = xfoil_polar(datFilename) 
 % Generate aerodynamic polars programmatically using Louis Edelman's Xfoil
 % Interface Updated
 % (https://www.mathworks.com/matlabcentral/fileexchange/49706-xfoil-interface-updated)
 % Created 0730 EST 17 August 2025 by Liam Trzebunia
-
-datFilename = 'test.dat';
 
 airfoil_path = sprintf('airfoil_files/%s', datFilename);
 
@@ -11,7 +10,7 @@ airfoil_path = sprintf('airfoil_files/%s', datFilename);
 % folder_name = 'aerodynamics';
 % app_name = 'XFOIL6.99';
 % eval(sprintf('cd %s/%s', folder_name, app_name)) 
-[pol, foil] = xfoil(sprintf('../%s', airfoil_path), [0 1], 50000, 0.1)
+[pol, foil] = xfoil(sprintf('../%s', airfoil_path), -5:0.25:10, 50000, 0.1);
 % 
 % system('.\xfoil'); % open xfoil 
 % airfoil_path = sprintf('airfoil_files/%s', datFilename);
