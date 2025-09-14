@@ -80,24 +80,31 @@ report = 0.9; % assume something here
 global mission_time
 mission_time = 71; % ground mission time
 
-total_score = missionObjective(missionVars)
+total_score = missionObjective(missionVars);
+show(total_score)
 
 step = 2;
 minP = 1; maxP = 10;
 minC = 1; maxC = 10;
 minL = 1; maxL = 10;
 minBL = 10; maxBL = 40;
-coarse = zeros([abs(maxP - minP), abs(maxC - minC), abs(maxL - minL), abs(maxBL - minBL)]);
-for pVal = minP:step:maxP
-    for cVal = minC:step:maxC
-        for lVal = minL:step:maxL
-            for blVal = minBL:step:maxBL 
-                coarse(pVal, cVal, lVal, blVal) = missionObjective([pVal, cVal, lVal, blVal])
+coarse = zeros([length(minP:maxP), length(minC:maxC), length(minL:maxL), length(minBL:maxBL)]);
+expectedRuns = length(minP:maxP)*length(minC:maxC)*length(minL:maxL)*length(minBL:maxBL);
+fprintf("Expected runs: %d", expectedRuns)
+i = 0;
+for pVal = minP:maxP
+    for cVal = minC:maxC
+        for lVal = minL:maxL
+            for blVal = minBL:maxBL 
+                i = i + 1;
+                fprintf('Progress = %0.2f%%\n', (i/expectedRuns)*100)
+                coarse(pVal, cVal, lVal, blVal) = missionObjective([pVal, cVal, lVal, blVal]);
             end
         end
     end
 end
 
+RAC = 0.05*b + 0.75;
 
 
 % need to do some coarse characterization of the missionObjective()
