@@ -4,12 +4,12 @@ function recip = missionObjective(missionVars)
 % These configuration parameters (design variables) are accessed as global
 % variables.
 global b 
-global TPBC 
 global probabilities 
-p   = missionVars(1);
-c   = missionVars(2);
-l   = missionVars(3);
-bl  = missionVars(4);
+p       = missionVars(1);
+c       = missionVars(2);
+l       = missionVars(3);
+bl      = missionVars(4);
+TPBC    = missionVars(5);
 
 readM2pars
 

@@ -54,15 +54,15 @@ p = optimvar('p'); % passengers (ducks)
 c = optimvar('c'); % cargo (pucks)
 l = optimvar('l'); % laps
 bl = optimvar('bl'); % banner length (inches, rounded) 
+TPBC = optimbar('TPBC'); % battery capacity (W*hrs)
 
 % syms bl p c l
 global b 
-global TPBC 
 global probabilities
 b = 4;
 TPBC = 70;
 probabilities.M1 = 0.9;
-missionVars = [p, c, l, bl];
+missionVars = [p, c, l, bl, TBPC];
 
 global income_net_best
 global quantity_best
