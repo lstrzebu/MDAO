@@ -1,5 +1,5 @@
 % Jorge Quintana-Maldano
-% 26 September 2025
+% 25 September 2025
 % Inputs:
 %   - wingspan, chord, planform area
 %   - aspect ratio

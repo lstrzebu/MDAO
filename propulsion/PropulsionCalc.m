@@ -1,6 +1,6 @@
 function [pUtilization, maxFlightTime, TW, RPM, FactorOfSafety, safetyCheck] = PropulsionCalc(weight, drag, batteryCapacity, vTrim, maxVoltage, kV, resistance, currentNoLoad, maxCurrent, maxPower, propData)
 % Bruno Rosa
-% 26 September 2025
+% 25 September 2025
 %   PropulsionCalc is a function that takes in an aircraft's configuration 
 %   and previously computed performance characteristics and outputs six
 %   key things: 
