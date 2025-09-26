@@ -1,4 +1,6 @@
 function [y_span, L_prime, L_total, CL] = Lift_Distr(b, c, alpha, a0, alpha_L0, V)
+% Jorge Quintana-Maldano
+% 26 September 2025
 % Lifting Line Theory Solver using Collocation Method (rectangular wing)
 %
 % Inputs:

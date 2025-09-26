@@ -1,9 +1,22 @@
-clc;clear;close all; 
+% Jorge Quintana-Maldano
+% 26 September 2025
+% Inputs:
+%   - wingspan, chord, planform area
+%   - aspect ratio
+%   - airfoil
+%   - V_trim
+%   - alpha_trim
+%   - fuselage & landing info... elaborate?
+%   - weight
+%   - banner info
+% Outputs:
+%   - Lift and lift coefficients
+%   - Drag and drag coefficients
+%   - L/D
+%   - V_stall
+%   - alpha_stall
 
-
-
-%% Given parameters
-
+%% Given Parameters
 
 % FoIl = 'NACA2412'; %Foil name
 % alpha =; % angle of attack
@@ -14,11 +27,7 @@ clc;clear;close all;
 % rho = 1.225; % density
 % Re = rho*V*c/mu;
 
-
-
-%% Xfoil calling
-
-
+%% Invoke XFOIL
 
 [pol,~] = xfoil('NACA2412', -5:20, 1e6, 0.2, 'oper iter 200');
 
@@ -30,7 +39,7 @@ alpha = deg2rad(0); % geometric angle of attack [rad]
 a0 = 2*pi;         % 2D lift slope at low Re [per rad]
 alpha_L0 = deg2rad(-2.1);     % zero-lift angle [rad]
 rho = 1.225;      % air density [kg/m^3]
-V =30;           % freestream velocity [m/s]
+V = 30;           % freestream velocity [m/s]
 
 N = 100;            % number of Fourier terms (all n)
 

@@ -1,4 +1,11 @@
 function recip = missionObjective(missionVars)
+% Liam Trzebunia
+% 26 September 2025
+% Calculate total competition score for an AIAA DBF 2025-2026 aircraft
+% design flown for a particular number of laps (l), carrying a particular
+% number of passengers (p) and cargo (c), towing a banner of a particular
+% length (bl), and carrying a particular total propulsion battery capacity
+% (TPBC). 
 
 % aircraft configuration parameters change depending on when the function is called. 
 % These configuration parameters (design variables) are accessed as global
