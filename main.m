@@ -24,6 +24,11 @@ clear;clc
 
 readM2pars
 
+checkDesignConstraints
+checkMissionConstraints
+
+% check constraints here
+
 % fprintf('Generating Mission 2 variables from rules... ');
 % % declare Ip1, Ip2, Ic1, Ic2, Ce, Cp, Cc
 % M2_given_params = readcell("rules\M2_given_params.xlsx");
@@ -42,7 +47,7 @@ readM2pars
 % % In other words, tie the configuration to the physics.
 %
 %
-% %% Compute Scores (Inner Loop)
+%% Compute Scores (Inner Loop)
 % % In other words, consider multiple mission strategies for the configuration-in-physics
 %
 % % M1 + M2 + M3
@@ -60,7 +65,7 @@ TPBC = optimvar('TPBC'); % battery capacity (W*hrs)
 global b
 global probabilities
 b = 4;
-TPBC = 70;
+% TPBC = 70;
 probabilities.M1 = 0.9;
 missionVars = [p, c, l, bl, TPBC];
 
@@ -106,7 +111,7 @@ numCinstances       = length(Crange);
 numLinstances       = length(Lrange);
 numBLinstances      = length(BLrange);
 numTPBCinstances    = length(TPBCrange);
-numInstances = numSPinstances*numCinstances*numLinstances*numBLinstances*numTPBCinstances;
+numInstances = numPinstances*numCinstances*numLinstances*numBLinstances*numTPBCinstances;
 missionParamAttempts = zeros(numInstances, length(missionVars));
 
 missionParamAttempts(1:numPinstances, 1) = Prange';
