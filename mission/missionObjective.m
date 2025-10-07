@@ -7,6 +7,8 @@ function recip = missionObjective(missionVars)
 % length (bl), and carrying a particular total propulsion battery capacity
 % (TPBC). 
 
+fprintf('Calculating mission scores for designs...')
+
 % aircraft configuration parameters change depending on when the function is called. 
 % These configuration parameters (design variables) are accessed as global
 % variables.
@@ -56,6 +58,8 @@ P = flyoff + techInspScore + flightAttempt;
 total_score = TMS*TRS + P;
 
 recip = 1/total_score;
+
+fprintf('Done \n');
 
 end
 
