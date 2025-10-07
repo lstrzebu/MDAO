@@ -1,15 +1,10 @@
 function [pUtilization, maxFlightTime, TW, RPM, FactorOfSafety, safetyCheck] = PropulsionCalc(weight, drag, batteryCapacity, vTrim, maxVoltage, kV, resistance, currentNoLoad, maxCurrent, maxPower, propData)
-% Bruno Rosa
-% 25 September 2025
 %   PropulsionCalc is a function that takes in an aircraft's configuration 
 %   and previously computed performance characteristics and outputs six
-%   key things: 
-%       1. Power Utilization (in Watts During Cruise)
-%       2. Max Flight Time (in seconds)
-%       3. Thrust/Weight Ratio
-%       4. RPM
-%       5. The Factor of Safety (of the Voltage, Current, and Power) 
-%       6. A boolean that checks whether the propulsion system has sufficient Factors of Safety 
+%   key things: 1. Power Utilization (in Watts During Cruise), 2. Max 
+%   Flight Time (in seconds), 3. Thrust/Weight Ratio, 4. RPM, 5. The Factor
+%   of Safety (of the Voltage, Current, and Power) and 6. A boolean that 
+%   checks whether the propulsion system has sufficient Factors of Safety 
 %   
 %   It will be assumed that all inputs are given in the following units:
 %       - Weight in Newtons
