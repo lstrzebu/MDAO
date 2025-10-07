@@ -1,4 +1,5 @@
 % Get missions to evaluate for AIAA 2025-2026 DBF (for a given aircraft)
+% Created by Liam Trzebunia on 7 Oct 2025
 
 p = optimvar('p'); % passengers (ducks)
 c = optimvar('c'); % cargo (pucks)
@@ -102,7 +103,7 @@ TPBCvec = minTPBC:stepTPBC:maxTPBC;
 [P, C, L, BL, TPBC] = ndgrid(pVec, cVec, lVec, blVec, TPBCvec);
 
 % Flatten into an n x 5 matrix (each row is a combination: [pVal, cVal, lVal, blVal, TPBCval])
-missionMatrix = [P(:), C(:), L(:), BL(:), TPBC(:)];
+missions = [P(:), C(:), L(:), BL(:), TPBC(:)];
 
 % Now paramMatrix has n rows, where n = prod([numel(pVec), numel(cVec), numel(lVec), numel(blVec), numel(TPBCvec)])
-expectedRuns = size(missionMatrix, 1);
+expectedRuns = size(missions, 1);
