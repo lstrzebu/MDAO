@@ -125,10 +125,12 @@ V_trim = sqrt((W)/((1/2)*air_density*C_L_trim*S)); % [m/s]
 
 %% Determining if failure occurs
 
+Cm_failure_key = 1;
+Cl_failure_key = 2;
 % If the CG is further aft of NP
 if X_CG < X_NP
 
-    failure = true;
+    failure = Cm_failure_key;
 
     fprintf("Static Stability Failed! The CG is behind the NP\n")
 
@@ -137,7 +139,7 @@ end % End of if statement
 % If the Aircraft is statically stable but trims at negative lift
 if C_L_trim < 0 && ~failure
 
-    failure = true;
+    failure = Cl_failure_key;
 
     fprintf("Static Stability Failed! The aircraft is statically stable but trims at a negative lift\n")
 end % End of if statement

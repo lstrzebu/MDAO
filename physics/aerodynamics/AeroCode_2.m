@@ -14,13 +14,13 @@ function [L, L_2, D, C_D_Total, CL_trim_tot,V_stall, speed_boolean, alpha_boolea
 % A_banner  : banner projected area [m^2]
 % AR_banner : estimated banner aspect ratio (length/height)
 % alpha_trim: trim angle of attack
-% stall_w   : 2d wing stall angle
+% stall_w   : 2d wing stall angle (deg)
 % CLa_w       : 3d lift slope for wing
-% W_ref       : wing resting angle of attack with respect to fuselage
-% alphaL0_w   : 0 lift wing angle of attack
+% W_ref       : wing resting angle of attack with respect to fuselage 
+% alphaL0_w   : 0 lift wing angle of attack (deg)
 % Cla_t       : 3d lift slope for tail
-% t_ref       : tail resting angle of attack with respect to fuselage
-% alphaL0_t   : 0 lift tail angle of attack
+% t_ref       : tail resting angle of attack with respect to fuselage (deg)
+% alphaL0_t   : 0 lift tail angle of attack (deg)
 %
 % Outputs:
 % L           : Total lift (N)
