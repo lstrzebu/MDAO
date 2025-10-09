@@ -8,30 +8,41 @@ bl = optimvar('bl'); % banner length (inches, rounded)
 TPBC = optimvar('TPBC'); % battery capacity (W*hrs)
 
 % syms bl p c l
-global b
-global probabilities
-b = 4;
+% global b
+% global probabilities
+aircraft.b.value = 4; % wingspan in meters
+aircraft.b.units = 'ft';
+aircraft.b.description = "Wing span";
 % TPBC = 70;
-probabilities.M1 = 0.9;
+assumptions.probabilities.M1.value = 0.9;
+assumptions.probabilities.M1.description = "Probability of completing mission 1 (currently assumed)";
 missionVars = [p, c, l, bl, TPBC];
 
-global income_net_best
-global quantity_best
-global mission_time_best
+% global income_net_best
+% global quantity_best
+% global mission_time_best
 
-income_net_best = 1; % assume something here
-quantity_best = 1; % assume something here
-mission_time_best = 62; % assume something here
+assumptions.income_net_best.value = 1; % assume something here
+assumptions.income_net_best.description = "Best scored income out of any team at the competition (Mission 2)";
+assumptions.quantity_best.value = 1; % assume something here
+assumptions.quantity_best.description = "Best Mission 3 scoring parameter (equal to something defined in the rules) scored out of any team at the competition (Mission 3)";
+assumptions.mission_time_best.value = 62; % assume something here
+assumptions.mission_time_best.units = 's';
+assumptions.mission_time_best.description = "Best ground mission time scored out of any team at the competition";
 
-global proposal
-global report
-proposal = 0.9; % assume something here
-report = 0.9; % assume something here
+% global proposal
+% global report
+assumptions.proposal.value = 0.9; % assume something here
+assumptions.proposal.description = "Our score on the proposal";
+assumptions.report.value = 0.9; % assume something here
+assumptions.report.description = "Our score on the design report";
 
-global mission_time
-mission_time = 71; % ground mission time
+% global mission_time
+assumptions.mission_time.value = 71; % ground mission time
+assumptions.mission_time.units = 's';
+assumptions.mission_time.description = "Our time scored on the ground mission";
 
-total_score = missionObjective(missionVars);
+total_score = evalScore(missionVars, aircraft, assumptions);
 show(total_score)
 
 % step = 2;
