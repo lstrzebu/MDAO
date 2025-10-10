@@ -2,7 +2,7 @@
 % physically feasible
 % Created by Liam Trzebunia-Niebies on 7 October 2025
 
-fprintf('Verifying mission feasibility... \n')
+fprintf('Verifying Mission 2 feasibility... \n')
 
 % P       = 1;
 % C       = 1;
@@ -10,8 +10,8 @@ fprintf('Verifying mission feasibility... \n')
 % BL      = 1;
 % TPBC    = 75;
 
-%% 1. Static Stability
-fprintf('Running static stability checks... \n')
+%% 1. Static Stability (M2)
+fprintf('Running static stability checks for loaded aircraft (Mission 2)... \n')
 
 X_CG, 
 aircraft.weight.loaded.value
@@ -56,15 +56,15 @@ a_wb,alpha_0L_wb,C_M0_wb % from CL_alpha for wing
 % alpha_0L_wb needs to be converted from rad to 
 a_tail % from CL_alpha for tail
 
-fprintf('Completed static stability checks.\n')
+fprintf('Completed static stability checks for loaded aircraft (Mission 2).\n')
 
-%% 2. Aerodynamics
+%% 2. Aerodynamics (M2)
 
-%% 3. Propulsion
+%% 3. Propulsion (M2)
 
-%% 4. Structures
+%% 4. Structures (M2)
 
-%% 5. Dynamic Stability 
+%% 5. Dynamic Stability (M2)
 
-fprintf('Completed verification of mission feasibility.\n')
+fprintf('Completed verification of Mission 2 feasibility.\n')
 

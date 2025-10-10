@@ -54,6 +54,8 @@ aircraft.weight.empty.value = 10;
 aircraft.weight.empty.units = 'lbf';
 aircraft.weight.empty.description = "Empty (unloaded) weight of aircraft structures with no motor, ESC, batteries, payload, or propeller (neglect electronics system)";
 
+numBatt = 4; % considering 4 batteries at first
+opts = getBattCapOptions(numBatt);
 
 % Example Motor, Battery, and Prop Configuration Index
 % batteryIndex = 3; % Options of 1:4
@@ -61,7 +63,7 @@ motorIndex = 4; % Options of 1:4
 propIndex = 4; % Options of 1:6
 
 % Read Battery Spreadsheet
-batteryTable = readmatrix('Battery Data.xlsx'); % Name might change
+batteryTable = readmatrix('6S Battery Data Condensed.xlsx'); % Name might change
 aircraft.propulsion.battery.weight.value = batteryTable(batteryIndex,8) * (9.81/1000); % in N
 aircraft.propulsion.battery.weight.units = 'N';
 aircraft.propulsion.battery.weight.description = "Weight of the battery utilized for the propulsion system";
@@ -70,7 +72,7 @@ aircraft.propulsion.battery.capacity.units = 'Wh';
 aircraft.propulsion.battery.capacity.description = "Total propulsion battery capacity";
 
 % Read Motor Spreadsheet
-motorTable = readmatrix('Motor Data 6S Only.xlsx'); % Name might change
+motorTable = readmatrix('Motor Data Condensed.xlsx'); % Name might change
 motorWeight = motorTable(motorIndex, 13) * (9.81/1000); % in N
 kV = motorTable(motorIndex, 3)';
 resistance = motorTable(motorIndex, 12); % in Ohms
