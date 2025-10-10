@@ -10,9 +10,7 @@ TPBC = optimvar('TPBC'); % battery capacity (W*hrs)
 % syms bl p c l
 % global b
 % global probabilities
-aircraft.b.value = 4; % wingspan in meters
-aircraft.b.units = 'ft';
-aircraft.b.description = "Wing span";
+
 % TPBC = 70;
 assumptions.probabilities.M1.value = 0.9;
 assumptions.probabilities.M1.description = "Probability of completing mission 1 (currently assumed)";
@@ -116,5 +114,37 @@ TPBCvec = minTPBC:stepTPBC:maxTPBC;
 % Flatten into an n x 5 matrix (each row is a combination: [pVal, cVal, lVal, blVal, TPBCval])
 missions = [P(:), C(:), L(:), BL(:), TPBC(:)];
 
+% For testing only (DELETE afterwards):
+missions = missions(1,:);
+
 % Now paramMatrix has n rows, where n = prod([numel(pVec), numel(cVec), numel(lVec), numel(blVec), numel(TPBCvec)])
 expectedRuns = size(missions, 1);
+
+%% Variables necessary for static stability
+
+X_CG =
+
+% check if units are equal
+unitsToCompare = {string(aircraft.weight.empty.units), ...
+    string(aircraft.payload.passengers.weight.units), ...
+    string(aircraft.payload.cargo.weight.units), ...
+    string(aircraft.propulsion.motor.weight.units), ...
+    string(aircraft.propulsion.battery.weight.units), ...
+    string(aircraft.propulsion.ESC.weight.units), ...
+    string(aircraft.propulsion.propeller.weight.units)};
+% Compare each string to the first one
+comparisonResults = strcmp(unitsToCompare, unitsToCompare{1});
+% Check if all comparisons are true
+equalUnits = all(comparisonResults);
+
+if equalUnits
+aircraft.weight.loaded.value = aircraft.weight.empty.value + aircraft.payload.passengers.weight.value + aircraft.payload.cargo.weight.value + aircraft.propulsion.motor.weight.value + aircraft.propulsion.battery.weight.value + aircraft.propulsion.ESC.weight.value + aircraft.propulsion.propeller.weight.value; 
+aircraft.weight.loaded.units = "lbf";
+aircraft.weight.loaded.description = "maximum gross takeoff weight for aircraft for Mission 2";
+else
+    error('Maximum gross takeoff weight could not be computed. Ensure the weights of aircraft components share the same units.')
+end
+
+mission.weather.air_density.value = 0.002377; % SSL density (change later)
+mission.weather.air_density.units = 'slugs/ft^3';
+mission.weather.air_density.description = "density of air at competition location on competition day";

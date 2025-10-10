@@ -3,5 +3,6 @@
 
 
 % feasibleMissions = physics(missionMatrix); % check missions for physical feasibility
+physics
 
 feasibleMissions = [];
