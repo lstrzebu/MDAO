@@ -22,7 +22,11 @@ TPBC    = missionVars(:, 5);
 
 readM2pars
 
-RAC = 0.05*aircraft.b.value + 0.75;
+if strcmp(string(aircraft.wing.b.units), "ft")
+RAC = 0.05*aircraft.wing.b.value + 0.75;
+else
+    error(sprintf('RAC wingspan not possible because aircraft wingspan does not have correct units.\nExpected units: ft\nActual units: %s', aircraft.wing.b.units));
+end
 EF = TPBC./100;
 
 successfulMission = 1; % points received for a successful Mission 1

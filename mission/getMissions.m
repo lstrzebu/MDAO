@@ -122,27 +122,102 @@ expectedRuns = size(missions, 1);
 
 %% Variables necessary for static stability
 
-X_CG =
+% X_CG =
+
+% aircraft.weight.empty.units
+% aircraft.payload.passengers.weight.units
+% aircraft.payload.cargo.weight.units
+
+aircraft.payload.passengers.number.value = missions(:, 1);
+aircraft.payload.passengers.number.units = '';
+aircraft.payload.passengers.number.description = "number of passengers (rubber ducks) for Mission 2";
+
+assumptions.payload.rubber_duck_weight_1 = "assume that the rubber ducks are between 0.6 and 0.7 oz in mass (source: competition rules)";
+aircraft.payload.passengers.individual.mass.minimum.value = 0.6;
+aircraft.payload.passengers.individual.mass.minimum.units = 'oz';
+aircraft.payload.passengers.individual.mass.minimum.description = "lower limit of standard commerically available rubber duck mass (provided by competition)";
+
+aircraft.payload.passengers.individual.mass.maximum.value = 0.7;
+aircraft.payload.passengers.individual.mass.maximum.units = 'oz';
+aircraft.payload.passengers.individual.mass.maximum.description = "upper limit of standard commerically available rubber duck mass (provided by competition)";
+
+assumptions.payload.rubber_duck_weight_2 = "assume that on average the ducks weigh 0.65 oz (directly between minimum and maximum weights provided by competition rules)";
+if strcmp(string(aircraft.payload.passengers.individual.mass.minimum.units), string(aircraft.payload.passengers.individual.mass.maximum.units))
+    aircraft.payload.passengers.individual.mass.average.value = mean([aircraft.payload.passengers.individual.mass.minimum.value, aircraft.payload.passengers.individual.mass.maximum.value]);
+    aircraft.payload.passengers.individual.mass.average.units = aircraft.payload.passengers.individual.mass.minimum.units;
+    aircraft.payload.passengers.individual.mass.average.description = "average mass of rubber duck passenger (assumed)";
+else
+    error('Unit mismatch: unable to compute average mass of rubber duck passengers')
+end
+
+% (total mass of ducks) = (number of ducks)*(average mass of duck)
+aircraft.payload.passengers.mass.value = aircraft.payload.passengers.number.value.*aircraft.payload.passengers.individual.mass.average.value;
+aircraft.payload.passengers.mass.units = aircraft.payload.passengers.individual.mass.average.units;
+aircraft.payload.passengers.mass.description = "total mass of all passengers (ducks) onboard aircraft (Mission 2)";
+
+% convert total rubber duck mass from oz to kg
+if strcmp(string(aircraft.payload.passengers.mass.units), "oz")
+    aircraft.payload.passengers.mass.value = aircraft.payload.passengers.mass.value./35.274;
+    aircraft.payload.passengers.mass.units = 'kg';
+else
+    error('Unit mismatch: conversion of total rubber duck mass from oz to kg is not possible.');
+end
+
+% compute total rubber duck weight
+if strcmp(string(aircraft.payload.passengers.mass.units), "kg") && strcmp(string(constants.g.units), "m/s^2")
+    aircraft.payload.passengers.weight.value = aircraft.payload.passengers.mass.value.*constants.g.value;
+    aircraft.payload.passengers.weight.units = 'N';
+    aircraft.payload.passengers.weight.description = "total weight of all passengers (ducks) on the aircraft (Mission 2)";
+else
+    error('Unit mismatch: computation of total rubber duck weight is not possible.')
+end
+
+aircraft.payload.cargo.number.value = missions(:, 2);
+aircraft.payload.cargo.number.units = '';
+aircraft.payload.cargo.number.description = "number of pieces of cargo (hockey pucks) for Mission 2";
+
+assumptions.payload.puck_weight = "assume average hockey puck weight of 6 oz (source: competition rules)";
+aircraft.payload.cargo.individual.mass.value = 6;
+aircraft.payload.cargo.individual.mass.units = 'oz';
+aircraft.payload.cargo.individual.mass.description = "standard hockey puck mass (provided by competition)";
+
+% (total mass of pucks) = (number of pucks)*(average mass of puck)
+aircraft.payload.cargo.mass.value = aircraft.payload.cargo.number.value.*aircraft.payload.cargo.individual.mass.value;
+aircraft.payload.cargo.mass.units = aircraft.payload.cargo.individual.mass.units;
+aircraft.payload.cargo.mass.description = "total mass of all cargo (pucks) onboard aircraft (Mission 2)";
+
+% convert total hockey puck mass from oz to kg
+if strcmp(string(aircraft.payload.cargo.mass.units), "oz")
+    aircraft.payload.cargo.mass.value = aircraft.payload.cargo.mass.value./35.274;
+    aircraft.payload.cargo.mass.units = 'kg';
+else
+    error('Unit mismatch: conversion of total hockey puck mass from oz to kg is not possible.');
+end
+
+% compute total hockey puck weight
+if strcmp(string(aircraft.payload.cargo.mass.units), "kg") && strcmp(string(constants.g.units), "m/s^2")
+    aircraft.payload.cargo.weight.value = aircraft.payload.cargo.mass.value.*constants.g.value;
+    aircraft.payload.cargo.weight.units = 'N';
+    aircraft.payload.cargo.weight.description = "total weight of all cargo (ducks) on the aircraft (Mission 2)";
+else
+    error('Unit mismatch: computation of total hockye puck weight is not possible.')
+end
 
 % check if units are equal
-unitsToCompare = {string(aircraft.weight.empty.units), ...
+unitsToCompare = [string(aircraft.weight.empty.units), ...
     string(aircraft.payload.passengers.weight.units), ...
-    string(aircraft.payload.cargo.weight.units), ...
-    string(aircraft.propulsion.motor.weight.units), ...
-    string(aircraft.propulsion.battery.weight.units), ...
-    string(aircraft.propulsion.ESC.weight.units), ...
-    string(aircraft.propulsion.propeller.weight.units)};
+    string(aircraft.payload.cargo.weight.units)];
 % Compare each string to the first one
-comparisonResults = strcmp(unitsToCompare, unitsToCompare{1});
+comparisonResults = strcmp(unitsToCompare, unitsToCompare(1));
 % Check if all comparisons are true
 equalUnits = all(comparisonResults);
 
 if equalUnits
-aircraft.weight.loaded.value = aircraft.weight.empty.value + aircraft.payload.passengers.weight.value + aircraft.payload.cargo.weight.value + aircraft.propulsion.motor.weight.value + aircraft.propulsion.battery.weight.value + aircraft.propulsion.ESC.weight.value + aircraft.propulsion.propeller.weight.value; 
-aircraft.weight.loaded.units = "lbf";
+aircraft.weight.loaded.value = aircraft.weight.empty.value + aircraft.payload.passengers.weight.value + aircraft.payload.cargo.weight.value; 
+aircraft.weight.loaded.units = char(unitsToCompare(1));
 aircraft.weight.loaded.description = "maximum gross takeoff weight for aircraft for Mission 2";
 else
-    error('Maximum gross takeoff weight could not be computed. Ensure the weights of aircraft components share the same units.')
+    error('Unit mismatch: maximum gross takeoff weight could not be computed. Ensure the weights of aircraft components share the same units.')
 end
 
 mission.weather.air_density.value = 0.002377; % SSL density (change later)

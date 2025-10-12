@@ -19,6 +19,9 @@ clear;clc
 % M3 =
 % bl = banner length (inches)
 
+%% One-Time Setup Actions
+setup
+
 %% Vary Design Parameters (Outer Loop)
 % In other words, select a configuration.
 

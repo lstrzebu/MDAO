@@ -13,8 +13,8 @@ fprintf('Verifying Mission 2 feasibility... \n')
 %% 1. Static Stability (M2)
 fprintf('Running static stability checks for loaded aircraft (Mission 2)... \n')
 
-X_CG, 
-aircraft.weight.loaded.value
+% X_CG, 
+% aircraft.weight.loaded.value
 mission.weather.air_density.value % from getMission
 % S,b,d_tail,i_t,C_r_ht,C_t_ht,b_ht % from getAircraft
 
@@ -22,7 +22,7 @@ mission.weather.air_density.value % from getMission
 assumptions.wing.a_wb = "Assume that lift-curve slope of the wing approximately equals the lift-curve slope of the wing-body system";
 aircraft.wing.a_wb.units = '/rad';
 aircraft.wing.a_wb.description = "3D lift-curve slope of wing";
-aircraft.wing.Cm0.units = 'none';
+aircraft.wing.Cm0.units = '';
 aircraft.wing.Cm0.description = "pitching moment coefficient at zero lift for wing";
 aircraft.wing.alpha_0L_wb.units = 'rad';
 aircraft.wing.alpha_0L_wb.description = "zero-lift angle for wing";
@@ -39,7 +39,7 @@ aircraft.wing.alpha_stall.units = 'rad';
     aircraft.wing.airfoil_name);
 
 
-aircraft.horizontal.a.units = ;
+aircraft.horizontal.a.units = '/rad';
 aircraft.horizontal.a.description = "3D lift-curve slope of horizontal tail";
 [aircraft.tail.horizontal.a.value,...
     ~,...
