@@ -3,6 +3,10 @@
 
 fprintf('Generating aircraft configuration...\n')
 
+aircraft.continue_design_analysis.value = true;
+aircraft.continue_design_analysis.units = '';
+aircraft.continue_design_analysis.description = "boolean used to skip suboptimal aircraft designs if flaw is found";
+
 aircraft.wing.c.value = 2; % mean aerodynamic chord
 aircraft.wing.c.units = 'ft';
 aircraft.wing.c.description = "Mean aerodynamic chord of the wing";
@@ -26,11 +30,11 @@ aircraft.wing.weight.units = 'N';
 aircraft.wing.weight.description = "weight of wings only";
 
 aircraft.wing.airfoil_name = 'NACA 2412';
-aircraft.tail.airfoil_name = 'NACA 0000';
+aircraft.tail.airfoil_name = 'NACA 0012';
 
-aircraft.tail.d_tail.value = 3.5;
-aircraft.tail.d_tail.units = 'ft';
-aircraft.tail.d_tail.description = "Distance from LE of wing to LE of tail";
+aircraft.tail.horizontal.d_tail.value = 3.5;
+aircraft.tail.horizontal.d_tail.units = 'ft';
+aircraft.tail.horizontal.d_tail.description = "Distance from LE of wing to LE of tail";
 
 aircraft.tail.horizontal.i_tail.value = 0;
 aircraft.tail.horizontal.i_tail.units = 'deg';

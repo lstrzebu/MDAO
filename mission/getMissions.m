@@ -1,6 +1,8 @@
 % Get missions to evaluate for AIAA 2025-2026 DBF (for a given aircraft)
 % Created by Liam Trzebunia on 7 Oct 2025
 
+fprintf('Generating mission ideas... \n')
+
 p = optimvar('p'); % passengers (ducks)
 c = optimvar('c'); % cargo (pucks)
 l = optimvar('l'); % laps
@@ -39,9 +41,6 @@ assumptions.report.description = "Our score on the design report";
 assumptions.mission_time.value = 71; % ground mission time
 assumptions.mission_time.units = 's';
 assumptions.mission_time.description = "Our time scored on the ground mission";
-
-total_score = evalScore(missionVars, aircraft, assumptions);
-show(total_score)
 
 % step = 2;
 % minP = 1; stepP = 1; maxP = 2;
@@ -120,6 +119,9 @@ missions = missions(1,:);
 % Now paramMatrix has n rows, where n = prod([numel(pVec), numel(cVec), numel(lVec), numel(blVec), numel(TPBCvec)])
 expectedRuns = size(missions, 1);
 
+% example of how to evaluate these missions
+% total_score = evalScore(missionVars, aircraft, assumptions);
+% show(total_score)
 %% Variables necessary for static stability
 
 % X_CG =
@@ -223,3 +225,5 @@ end
 mission.weather.air_density.value = 0.002377; % SSL density (change later)
 mission.weather.air_density.units = 'slugs/ft^3';
 mission.weather.air_density.description = "density of air at competition location on competition day";
+
+fprintf('Done generating mission ideas.\n')

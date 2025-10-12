@@ -7,7 +7,7 @@ function recip = evalScore(missionVars, aircraft, assumptions)
 % length (bl), and carrying a particular total propulsion battery capacity
 % (TPBC). 
 
-fprintf('Calculating mission scores for designs... ')
+fprintf('Calculating mission scores for this design... \n')
 
 % aircraft configuration parameters change depending on when the function is called. 
 % These configuration parameters (design variables) are accessed as global
@@ -63,7 +63,7 @@ total_score = TMS.*TRS + P;
 
 recip = 1./total_score;
 
-fprintf('Done \n');
+fprintf('Done calculating mission scores for this design. \n');
 
 end
 

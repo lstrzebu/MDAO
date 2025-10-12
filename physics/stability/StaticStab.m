@@ -6,7 +6,7 @@ function [X_NP,C_L_trim,V_trim,alpha_FRL_trim,failure] = StaticStab(X_CG,W,S,b,d
 % X_CG    = 0.2;  % The location of the CG from the leading edge of the wing.
 %                 % Positive X_CG points toward the tail
 % 
-% W       = 13;   % weight of the aircraft
+% W       = 13;   % weight of the aircraft (N)
 % 
 % % Wing Properties
 % S       = 17.5; % Directly used for lift equation
