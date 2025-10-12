@@ -133,16 +133,16 @@ if X_CG < X_NP
     failure = Cm_failure_key;
 
     fprintf("Static Stability Failed! The CG is behind the NP\n")
-
-end % End of if statement
-
-% If the Aircraft is statically stable but trims at negative lift
-if C_L_trim < 0 && ~failure
+elseif C_L_trim < 0 
 
     failure = Cl_failure_key;
 
     fprintf("Static Stability Failed! The aircraft is statically stable but trims at a negative lift\n")
-end % End of if statement
+else
+    failure = 0;
+
+    fprintf("Static Stability Succeeded.\n")
+end
 
 end % End of function
 

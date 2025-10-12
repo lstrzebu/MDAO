@@ -223,7 +223,7 @@ else
 end
 
 mission.weather.air_density.value = 0.002377; % SSL density (change later)
-mission.weather.air_density.units = 'slugs/ft^3';
+mission.weather.air_density.units = 'slug/ft^3';
 mission.weather.air_density.description = "density of air at competition location on competition day";
 
 fprintf('Done generating mission ideas.\n')

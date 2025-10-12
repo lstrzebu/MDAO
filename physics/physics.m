@@ -76,6 +76,22 @@ aircraft.dynamics.alpha_trim.description = "angle of attack (with respect to fus
 aircraft.dynamics.stability.static.failure.units = '';
 aircraft.dynamics.stability.static.failure.description = "discrete value indicating the presence and mode of static failure: 0 = statically stable, 1 = inadequate pitching moment coefficient gradient (bad Cm_alpha), and 2 = inadequate trimmed lift coefficient (bad CL_trim)";
 
+% indicator of which type of unit conversion to use via the MATLAB Aerospace Toolbox: acc for acceleration units, vel for velocity units, etc: https://www.mathworks.com/help/aerotbx/unit-conversions-1.html
+aircraft.dynamics.X_CG.type = "length";
+aircraft.weight.loaded.type = "force";
+aircraft.wing.S.type = "area";
+aircraft.wing.b.type = "length";
+aircraft.tail.horizontal.d_tail.type = "length";
+aircraft.tail.horizontal.i_tail.type = "ang";
+aircraft.tail.horizontal.c.type = "length";
+aircraft.tail.horizontal.b.type = "length";
+aircraft.wing.a_wb.type = "recang"; % reciprocal of angle (1/angle)
+aircraft.tail.horizontal.a.type = "recang";
+aircraft.wing.alpha_0L_wb.type = "ang";
+aircraft.wing.Cm0.type = "non"; % nondimensional
+mission.weather.air_density.type = "density";
+
+% start test %
 unitsAgree = [strcmp(string(aircraft.dynamics.X_CG.units), "m"); 
     strcmp(string(aircraft.weight.loaded.units), "N");
     strcmp(string(aircraft.wing.S.units), "m^2");
@@ -89,6 +105,77 @@ unitsAgree = [strcmp(string(aircraft.dynamics.X_CG.units), "m");
     strcmp(string(aircraft.wing.alpha_0L_wb.units), "deg");
     strcmp(string(aircraft.wing.Cm0.units), "");
     strcmp(string(mission.weather.air_density.units), "kg/m^3")];
+
+structNames = ["aircraft.dynamics.X_CG";
+    "aircraft.weight.loaded";
+    "aircraft.wing.S";
+    "aircraft.wing.b";
+    "aircraft.tail.horizontal.d_tail";
+    "aircraft.tail.horizontal.i_tail";
+    "aircraft.tail.horizontal.c";
+    "aircraft.tail.horizontal.b";
+    "aircraft.wing.a_wb";
+    "aircraft.tail.horizontal.a";
+    "aircraft.wing.alpha_0L_wb";
+    "aircraft.wing.Cm0";
+    "mission.weather.air_density"];
+
+desiredUnits = ["m";
+    "N";
+    "m^2";
+    "m";
+    "m";
+    "deg";
+    "m";
+    "m";
+    "/deg";
+    "/deg";
+    "deg";
+    "";
+    "kg/m^3"];
+
+%variableTypes = 
+
+% structName = "aircraft.dynamics.X_CG";
+%variableType = "length";
+% desiredUnits = "m";
+
+% if length(structNames) == length(desiredUnits)
+% 
+%     for i = 1:length(structNames)
+%         structName = structNames(i); 
+%         desiredUnit = desiredUnits(i);
+%         eval(sprintf('type = %s.type;', structName));
+%         if ~strcmp(type, "non")
+%             eval(sprintf('%s.value = conv%s(%s.value, %s.units, "%s");', structName, type, structName, structName, desiredUnit))
+%             eval(sprintf('%s.units = "%s";', structName, desiredUnit))
+%         end
+%     end
+% else
+%     error('Function was called with mismatching input vectors. Input two vectors of the same length.')
+% end
+
+[aircraft, mission] = conv_aircraft_units(aircraft, mission, structNames, desiredUnits);
+%mission = conv_aircraft_units(mission, missionStructNames, missionDesiredUnits);
+
+unitsAgree = [strcmp(string(aircraft.dynamics.X_CG.units), "m"); 
+    strcmp(string(aircraft.weight.loaded.units), "N");
+    strcmp(string(aircraft.wing.S.units), "m^2");
+    strcmp(string(aircraft.wing.b.units), "m");
+    strcmp(string(aircraft.tail.horizontal.d_tail.units), "m");
+    strcmp(string(aircraft.tail.horizontal.i_tail.units), "deg");
+    strcmp(string(aircraft.tail.horizontal.c.units), "m");
+    strcmp(string(aircraft.tail.horizontal.b.units), "m");
+    strcmp(string(aircraft.wing.a_wb.units), "/deg");
+    strcmp(string(aircraft.tail.horizontal.a.units), "/deg");
+    strcmp(string(aircraft.wing.alpha_0L_wb.units), "deg");
+    strcmp(string(aircraft.wing.Cm0.units), "");
+    strcmp(string(mission.weather.air_density.units), "kg/m^3")];
+
+% end test %
+
+% aircraft.dynamics.X_CG.value = convlength(aircraft.dynamics.X_CG.value, aircraft.dynamics.X_CG.units, "m"); 
+% aircraft.dynamics.X_CG.units = "m";
 
 if all(unitsAgree)
     % capture assumptions embedded in the static stability analysis function call
@@ -115,6 +202,11 @@ if all(unitsAgree)
     mission.weather.air_density.value);
 else
     error('Unit mismatch: static stability analysis not possible. For convention, ensure static stability analysis functions are called with SI units (except for angles, which should use degrees rather than radians).')
+end
+
+% move on to another design 
+if aircraft.dynamics.stability.static.failure.value ~= 0
+    aircraft.continue_design_analysis = false;
 end
 
 fprintf('Completed static stability checks for loaded aircraft (Mission 2).\n')
