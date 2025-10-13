@@ -3,94 +3,160 @@
 
 fprintf('Generating aircraft configuration...\n')
 
+assumptions(1).name = "Example assumption";
+assumptions(1).description = "Describe assumption here";
+assumptions(1).rationale = "Provide rationale here";
+assumptions(1).responsible_engineer = "Liam Trzebunia";
+
+aircraft.title.value = "Notional fixed-value test aircraft";
+aircraft.title.units = '';
+aircraft.title.type = "non";
+aircraft.title.description = "Title of the current aircraft design";
+
 aircraft.continue_design_analysis.value = true;
 aircraft.continue_design_analysis.units = '';
+aircraft.continue_design_analysis.type = "non";
 aircraft.continue_design_analysis.description = "boolean used to skip suboptimal aircraft designs if flaw is found";
 
-aircraft.wing.c.value = 2; % mean aerodynamic chord
+aircraft.wing.c.value = 1; % mean aerodynamic chord
 aircraft.wing.c.units = 'ft';
+aircraft.wing.c.type = "length";
 aircraft.wing.c.description = "Mean aerodynamic chord of the wing";
 
 aircraft.wing.b.value = 4; % wingspan
 aircraft.wing.b.units = 'ft';
+aircraft.wing.b.type = "length";
 aircraft.wing.b.description = "Wing span";
 
-assumptions.wing.shape = "assume rectangular wing shape";
+assumptions(end+1).name = "Wing Planform Shape";
+assumptions(end+1).description = "Assume rectangular wing shape";
+assumptions(end+1).rationale = "Ease of manufacturing, lack of sweep benefits";
+assumptions(end+1).responsible_engineer = "Eric Stout";
+
 aircraft.wing.S.value = aircraft.wing.c.value.*aircraft.wing.b.value; 
 aircraft.wing.S.units = 'ft^2';
+aircraft.wing.S.type = "area";
 aircraft.wing.S.description = "Planform area";
 
-assumptions.wing.sweep = "assume zero sweep";
-aircraft.wing.sweep_angle = 0;
-aircraft.wing.sweep_angle = 'deg';
-aircraft.wing.sweep_angle = "Angle of sweep for wing";
+assumptions(end+1).name = "Wing Sweep";
+assumptions(end+1).description = "Assume zero wing sweep angle";
+assumptions(end+1).rationale = "Ease of manufacturing, lack of sweep benefits";
+assumptions(end+1).responsible_engineer = "Eric Stout";
+
+aircraft.wing.sweep_angle.value = 0;
+aircraft.wing.sweep_angle.units = 'deg';
+aircraft.wing.sweep_angle.type = "ang";
+aircraft.wing.sweep_angle.description = "Angle of sweep for wing";
+
+aircraft.fuselage.protrusion.value = 2;
+aircraft.fuselage.protrusion.units = 'ft';
+aircraft.fuselage.protrusion.type = "length";
+aircraft.fuselage.protrusion.description = "Distance from nose to LE of wing root chord";
 
 aircraft.wing.weight.value = 4;
 aircraft.wing.weight.units = 'N';
+aircraft.wing.weight.type = "force";
 aircraft.wing.weight.description = "weight of wings only";
 
 aircraft.wing.airfoil_name = 'NACA 2412';
-aircraft.tail.airfoil_name = 'NACA 0012';
+aircraft.tail.horizontal.airfoil_name = 'NACA 0012';
+aircraft.tail.vertical.airfoil_name = 'NACA 0012';
 
-aircraft.tail.horizontal.d_tail.value = 3.5;
+aircraft.tail.horizontal.d_tail.value = 4;
 aircraft.tail.horizontal.d_tail.units = 'ft';
+aircraft.tail.horizontal.d_tail.type = "length";
 aircraft.tail.horizontal.d_tail.description = "Distance from LE of wing to LE of tail";
 
 aircraft.tail.horizontal.i_tail.value = 0;
 aircraft.tail.horizontal.i_tail.units = 'deg';
+aircraft.tail.horizontal.i_tail.type = "ang";
 aircraft.tail.horizontal.i_tail.description = "Tail incidence angle based on fuselage reference line";
 
-aircraft.tail.horizontal.b.value = 1;
+aircraft.tail.horizontal.b.value = 2;
 aircraft.tail.horizontal.b.units = 'ft';
+aircraft.tail.horizontal.b.type = "length";
 aircraft.tail.horizontal.b.description = "Span of horizontal tail";
 
-aircraft.tail.horizontal.c.value = 1;
+aircraft.tail.horizontal.c.value = 0.5;
 aircraft.tail.horizontal.c.units = 'ft';
+aircraft.tail.horizontal.c.type = "length";
 aircraft.tail.horizontal.c.description = "mean aerodynamic chord of horizontal tail";
 
-assumptions.tail.horizontal.shape = "assume rectangular horizontal tail shape";
+
+assumptions(end+1).name = "Horizontal Tail Planform Shape";
+assumptions(end+1).description = "Assume rectangular horizontal tail";
+assumptions(end+1).rationale = "Ease of manufacturing, fewer design parameters (no need to variate sweep angle)";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
 aircraft.tail.horizontal.S.value = aircraft.tail.horizontal.c.value.*aircraft.tail.horizontal.b.value; 
 aircraft.tail.horizontal.S.units = 'ft^2';
+aircraft.tail.horizontal.S.type = "area";
 aircraft.tail.horizontal.S.description = "Planform area";
 
 aircraft.tail.horizontal.weight.value = 4;
 aircraft.tail.horizontal.weight.units = 'N';
+aircraft.tail.horizontal.weight.type = "force";
 aircraft.tail.horizontal.weight.description = "weight of horizontal tail only";
 
-aircraft.tail.vertical.b.value = 1;
+aircraft.tail.vertical.b.value = 2;
 aircraft.tail.vertical.b.units = 'ft';
+aircraft.tail.vertical.b.type = "length";
 aircraft.tail.vertical.b.description = "Span of vertical tail";
 
-aircraft.tail.vertical.c.value = 1;
+aircraft.tail.vertical.c.value = 0.5;
 aircraft.tail.vertical.c.units = 'ft';
+aircraft.tail.vertical.c.type = "length";
 aircraft.tail.vertical.c.description = "mean aerodynamic chord of vertical tail";
 
-assumptions.tail.vertical.shape = "assume rectangular vertical tail shape";
+assumptions(end+1).name = "Temporary Vertical Tail Shape";
+assumptions(end+1).description = "Assume rectangular vertical tail shape";
+assumptions(end+1).rationale = "Temporary. This may model a triangular or trapezoidal vertical tail fairly well as far as lift is concerned. Of course we will have a smoother finish on the manufactured VT but that is not considered here. Replace this with a trapezoidal VT.";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
 aircraft.tail.vertical.S.value = aircraft.tail.vertical.c.value.*aircraft.tail.vertical.b.value; 
 aircraft.tail.vertical.S.units = 'ft^2';
+aircraft.tail.vertical.S.type = "area";
 aircraft.tail.vertical.S.description = "Planform area";
 
 aircraft.tail.vertical.weight.value = 4;
 aircraft.tail.vertical.weight.units = 'N';
+aircraft.tail.vertical.weight.type = "force";
 aircraft.tail.vertical.weight.description = "weight of vertical tail only";
 
 aircraft.tail.config.value = 'Conventional'; % Conventional, U-Shaped (Dual Fin), or T-Shaped (High Tail)
 aircraft.tail.config.units = '';
+aircraft.tail.config.type = "non";
 aircraft.tail.config.description = "Whether the current design's tail is Conventional, U-Shaped (Dual Fin), or T-Shaped (High Tail)";
 
-assumptions.fuselage.shape = "assume cylindrical fuselage shape";
+assumptions(end+1).name = "Cylindrical Approximation of Fuselage";
+assumptions(end+1).description = "Model fuselage as a perfect cylinder having a diameter equal to the true fuselage's height.";
+assumptions(end+1).rationale = "It is not worth the effort to exactly model the fuselage for aerodynamic calculations. Using a diameter equal to the true fuselage's height (rather than width) results in a more conservative estimate as the true fuselage will have less drag this way.";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
 aircraft.fuselage.diameter.value = 1.5;
 aircraft.fuselage.diameter.units = 'ft';
+aircraft.fuselage.diameter.type = "length";
 aircraft.fuselage.diameter.description = "Diameter of fuselage";
 
 aircraft.fuselage.weight.value = 4;
 aircraft.fuselage.weight.units = 'N';
+aircraft.fuselage.weight.type = "force";
 aircraft.fuselage.weight.description = "weight of fuselage only";
+
+aircraft.fuselage.length.value = 7;
+aircraft.fuselage.length.units = 'ft';
+aircraft.fuselage.length.type = "length";
+aircraft.fuselage.length.description = "Length of fuselage";
 
 aircraft.landing_gear.weight.value = 4;
 aircraft.landing_gear.weight.units = 'N';
+aircraft.landing_gear.weight.type = "force";
 aircraft.landing_gear.weight.description = "weight of landing gear";
-assumptions.landing_gear_weight = sprintf("assume landing gear weight of %.2f %s", aircraft.landing_gear.weight.value, aircraft.landing_gear.weight.units);
+
+assumptions(end+1).name = "Landing Gear Weight";
+assumptions(end+1).description = sprintf("assume landing gear weight of %.2f %s", aircraft.landing_gear.weight.value, aircraft.landing_gear.weight.units);
+assumptions(end+1).rationale = "It is better to have an approximate value for landing gear than no value at all. MDAO aims to consider as many factors as possible, at a low resolution if necessary, so that there are fewer unknowns when manufacturing the selected design";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
 %aircraft.weight.empty.value = 10;
 %aircraft.weight.empty.units = 'lbf';
@@ -169,8 +235,11 @@ aircraft.avionics.servos.weight.value = 10;
 aircraft.avionics.servos.weight.units = 'N';
 aircraft.avionics.servos.weight.description = "combined weight of all servo motors on the aircraft";
 
-assumptions.propulsion.ESC.mass.value = "assume constant ESC mass of 126 grams";
-assumptions.propulsion.ESC.mass.responsible_engineer = "Bruno Rosa";
+assumptions(end+1).name = "ESC Mass";
+assumptions(end+1).description = "assume constant ESC mass of 126 grams";
+assumptions(end+1).rationale = "This was an ESC already available for Faux Fly";
+assumptions(end+1).responsible_engineer = "Bruno Rosa";
+
 aircraft.propulsion.ESC.mass.value = 126;
 aircraft.propulsion.ESC.mass.units = 'grams';
 aircraft.propulsion.ESC.mass.description = "mass of electronic speed controller (ESC)";
@@ -215,5 +284,7 @@ aircraft.weight.empty.description = "Weight of aircraft in flight configuration 
 else
     error('Unit mismatch: empty weight could not be computed. Ensure the weights of aircraft components share the same units.')
 end
+
+displayAircraft
 
 fprintf('Done generating aircraft configuration.\n')

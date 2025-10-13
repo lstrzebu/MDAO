@@ -14,33 +14,66 @@ TPBC = optimvar('TPBC'); % battery capacity (W*hrs)
 % global probabilities
 
 % TPBC = 70;
-assumptions.probabilities.M1.value = 0.9;
-assumptions.probabilities.M1.description = "Probability of completing mission 1 (currently assumed)";
+probabilities.M1.value = 0.9;
+probabilities.M1.description = "Probability of completing mission 1 (currently assumed)";
+
+assumptions(end+1).name = "Mission 1 Completion Probability";
+assumptions(end+1).description = sprintf("Assume %d%% probability of successfully completing Mission 1", 100*probabilities.M1.value);
+assumptions(end+1).rationale = "Assumed value out of a desire to holistically evaluate total competition score";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
 missionVars = [p, c, l, bl, TPBC];
 
 % global income_net_best
 % global quantity_best
 % global mission_time_best
 
-assumptions.income_net_best.value = 1; % assume something here
-assumptions.income_net_best.description = "Best scored income out of any team at the competition (Mission 2)";
-assumptions.quantity_best.value = 1; % assume something here
-assumptions.quantity_best.description = "Best Mission 3 scoring parameter (equal to something defined in the rules) scored out of any team at the competition (Mission 3)";
-assumptions.mission_time_best.value = 62; % assume something here
-assumptions.mission_time_best.units = 's';
-assumptions.mission_time_best.description = "Best ground mission time scored out of any team at the competition";
+income_net_best = 1;
+
+assumptions(end+1).name = "Best Mission 2 Net Income";
+assumptions(end+1).description = sprintf("Assume the highest net income score for Mission 2 out of any teams at the competition is %d", income_net_best);
+assumptions(end+1).rationale = "None; temporary value";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+quantity_best = 1;
+
+assumptions(end+1).name = "Best Mission 3 Scoring Parameter";
+assumptions(end+1).description = sprintf("Assume the best scoring parameter for Mission 3 out of any team at the competition is %d", quantity_best);
+assumptions(end+1).rationale = "None; temporary value";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+mission_time_best = 62; % assume something here
+
+assumptions(end+1).name = "Best Ground Mission Time";
+assumptions(end+1).description = sprintf("Assume the best ground mission time out of any team at the competition is %d", mission_time_best);
+assumptions(end+1).rationale = "None; temporary value";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
 % global proposal
 % global report
-assumptions.proposal.value = 0.9; % assume something here
-assumptions.proposal.description = "Our score on the proposal";
-assumptions.report.value = 0.9; % assume something here
-assumptions.report.description = "Our score on the design report";
+proposal = 0.9; % assumed proposal score
+% assumptions.proposal.description = "Our score on the proposal";
+report = 0.9; % assume something here
+% assumptions.report.description = "Our score on the design report";
+
+assumptions(end+1).name = "Proposal Score";
+assumptions(end+1).description = sprintf("Assume %d%% score on proposal submission", 100*proposal);
+assumptions(end+1).rationale = "None; temporary value";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+assumptions(end+1).name = "Report Score";
+assumptions(end+1).description = sprintf("Assume %d%% score on report submission", 100*report);
+assumptions(end+1).rationale = "None; temporary value";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
 % global mission_time
-assumptions.mission_time.value = 71; % ground mission time
-assumptions.mission_time.units = 's';
-assumptions.mission_time.description = "Our time scored on the ground mission";
+mission_time = 71; % ground mission time in seconds
+
+assumptions(end+1).name = "Ground Mission Time";
+assumptions(end+1).description = sprintf("Assume %ds time for completion of ground mission", mission_time);
+assumptions(end+1).rationale = "None; temporary value. In the future time ourselves practicing the ground mission and use an average of our timed practice attempts";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
 
 % step = 2;
 % minP = 1; stepP = 1; maxP = 2;
@@ -132,9 +165,14 @@ expectedRuns = size(missions, 1);
 
 aircraft.payload.passengers.number.value = missions(:, 1);
 aircraft.payload.passengers.number.units = '';
+aircraft.payload.passengers.number.type = "non";
 aircraft.payload.passengers.number.description = "number of passengers (rubber ducks) for Mission 2";
 
-assumptions.payload.rubber_duck_weight_1 = "assume that the rubber ducks are between 0.6 and 0.7 oz in mass (source: competition rules)";
+assumptions(end+1).name = "Statistical Consideration of Rubber Duck Weight";
+assumptions(end+1).description = "Assume that on average, a rubber duck weighs 0.65 oz";
+assumptions(end+1).rationale = "Competition rules state that rubber ducks are between 0.6 and 0.7 oz in mass, although this is not necessarily a hard and fast rule";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
 aircraft.payload.passengers.individual.mass.minimum.value = 0.6;
 aircraft.payload.passengers.individual.mass.minimum.units = 'oz';
 aircraft.payload.passengers.individual.mass.minimum.description = "lower limit of standard commerically available rubber duck mass (provided by competition)";
@@ -143,7 +181,6 @@ aircraft.payload.passengers.individual.mass.maximum.value = 0.7;
 aircraft.payload.passengers.individual.mass.maximum.units = 'oz';
 aircraft.payload.passengers.individual.mass.maximum.description = "upper limit of standard commerically available rubber duck mass (provided by competition)";
 
-assumptions.payload.rubber_duck_weight_2 = "assume that on average the ducks weigh 0.65 oz (directly between minimum and maximum weights provided by competition rules)";
 if strcmp(string(aircraft.payload.passengers.individual.mass.minimum.units), string(aircraft.payload.passengers.individual.mass.maximum.units))
     aircraft.payload.passengers.individual.mass.average.value = mean([aircraft.payload.passengers.individual.mass.minimum.value, aircraft.payload.passengers.individual.mass.maximum.value]);
     aircraft.payload.passengers.individual.mass.average.units = aircraft.payload.passengers.individual.mass.minimum.units;
@@ -178,7 +215,11 @@ aircraft.payload.cargo.number.value = missions(:, 2);
 aircraft.payload.cargo.number.units = '';
 aircraft.payload.cargo.number.description = "number of pieces of cargo (hockey pucks) for Mission 2";
 
-assumptions.payload.puck_weight = "assume average hockey puck weight of 6 oz (source: competition rules)";
+assumptions(end+1).name = "Hockey Puck Weight";
+assumptions(end+1).description = "Assume average hockey puck weight of 6 oz";
+assumptions(end+1).rationale = "Source: competition rules";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
 aircraft.payload.cargo.individual.mass.value = 6;
 aircraft.payload.cargo.individual.mass.units = 'oz';
 aircraft.payload.cargo.individual.mass.description = "standard hockey puck mass (provided by competition)";
@@ -217,6 +258,7 @@ equalUnits = all(comparisonResults);
 if equalUnits
 aircraft.weight.loaded.value = aircraft.weight.empty.value + aircraft.payload.passengers.weight.value + aircraft.payload.cargo.weight.value; 
 aircraft.weight.loaded.units = char(unitsToCompare(1));
+aircraft.weight.loaded.type = "force";
 aircraft.weight.loaded.description = "maximum gross takeoff weight for aircraft for Mission 2";
 else
     error('Unit mismatch: maximum gross takeoff weight could not be computed. Ensure the weights of aircraft components share the same units.')
@@ -225,5 +267,6 @@ end
 mission.weather.air_density.value = 0.002377; % SSL density (change later)
 mission.weather.air_density.units = 'slug/ft^3';
 mission.weather.air_density.description = "density of air at competition location on competition day";
+mission.weather.air_density.type = "density";
 
 fprintf('Done generating mission ideas.\n')

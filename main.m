@@ -1,4 +1,4 @@
-clear;clc
+clear;clc;close all;
 %% Index of Variables
 % RAC = rated aircraft cost
 % Income = Mission 2 income
