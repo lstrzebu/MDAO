@@ -74,6 +74,10 @@ aircraft.tail.vertical.weight.value = 4;
 aircraft.tail.vertical.weight.units = 'N';
 aircraft.tail.vertical.weight.description = "weight of vertical tail only";
 
+aircraft.tail.config.value = 'Conventional'; % Conventional, U-Shaped (Dual Fin), or T-Shaped (High Tail)
+aircraft.tail.config.units = '';
+aircraft.tail.config.description = "Whether the current design's tail is Conventional, U-Shaped (Dual Fin), or T-Shaped (High Tail)";
+
 assumptions.fuselage.shape = "assume cylindrical fuselage shape";
 aircraft.fuselage.diameter.value = 1.5;
 aircraft.fuselage.diameter.units = 'ft';
@@ -165,6 +169,8 @@ aircraft.avionics.servos.weight.value = 10;
 aircraft.avionics.servos.weight.units = 'N';
 aircraft.avionics.servos.weight.description = "combined weight of all servo motors on the aircraft";
 
+assumptions.propulsion.ESC.mass.value = "assume constant ESC mass of 126 grams";
+assumptions.propulsion.ESC.mass.responsible_engineer = "Bruno Rosa";
 aircraft.propulsion.ESC.mass.value = 126;
 aircraft.propulsion.ESC.mass.units = 'grams';
 aircraft.propulsion.ESC.mass.description = "mass of electronic speed controller (ESC)";

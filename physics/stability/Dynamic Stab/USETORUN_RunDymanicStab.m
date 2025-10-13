@@ -1,4 +1,4 @@
-title               = "TheCHC";
+design_title               = "TheCHC";
 
 file_name           = "QuackPack";
 
@@ -8,7 +8,7 @@ Htail_airfoil_file  = "n0012-TAIL.dat";
 
 Vtail_airfoil_file  = "n0012-TAIL.dat";
 
-tail_config = "U";
+tail_config = "C";
 
 delete_files = true;
 
@@ -64,7 +64,7 @@ I_matrix    = [1.9, 0, -0.5; ...
 
 dynamic_failure_mode = 0; % assume no failure until proven otherwise
 
-DynamicStab(title,file_name,airfoil_file,Htail_airfoil_file,Vtail_airfoil_file,tail_config,x_cm,y_cm,z_cm,mass,I_matrix,b,S,dihedral_angle,d_tail,z_tail,i_t,S_ht,S_vt,C_r_fuselage,lambda_ht,lambda_vt)
+DynamicStab(design_title,file_name,airfoil_file,Htail_airfoil_file,Vtail_airfoil_file,tail_config,x_cm,y_cm,z_cm,mass,I_matrix,b,S,dihedral_angle,d_tail,z_tail,i_t,S_ht,S_vt,C_r_fuselage,lambda_ht,lambda_vt)
 
 [X_NP,C_L0,C_D0,alpha_trim_FRL,C_Zw,C_Yw,C_lw,C_mw,C_nw,C_Zv,C_Yv,C_lv,C_mv,C_nv,C_Zp,C_Yp,C_lp,C_mp,C_np,C_Zq,C_Yq,C_lq,C_mq,C_nq,C_Zr,C_Yr,C_lr,C_mr,C_nr,efficiency_factor] = Read_Out(file_name);
 

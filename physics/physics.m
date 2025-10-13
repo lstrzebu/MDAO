@@ -62,8 +62,7 @@ aircraft.tail.horizontal.a.description = "3D lift-curve slope of horizontal tail
 
 
 
-% use all SI units when calling static stability analysis function
-% all angles for static stability analysis are in degrees
+% use SI units when calling static stability analysis function (however angles are in degrees)
 aircraft.dynamics.X_NP.units = 'm';
 aircraft.dynamics.X_NP.description = "X location of neutral point  according to AVL coordinate system: x positive rear, y positive to the right hand wing, and z positive up. Origin at LE of wing";
 aircraft.dynamics.CL_trim.units = '';

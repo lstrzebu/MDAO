@@ -1,9 +1,9 @@
-function [] = DynamicStab(title,file_name,airfoil_file,Htail_airfoil_file,Vtail_airfoil_file,tail_config,x_cm,y_cm,z_cm,mass,I_matrix,b,S,dihedral_angle,d_tail,z_tail,i_t,S_ht,S_vt,C_r_fuselage,lambda_ht,lambda_vt)
+function [] = DynamicStab(design_title,file_name,airfoil_file,Htail_airfoil_file,Vtail_airfoil_file,tail_config,x_cm,y_cm,z_cm,mass,I_matrix,b,S,dihedral_angle,d_tail,z_tail,i_t,S_ht,S_vt,C_r_fuselage,lambda_ht,lambda_vt)
 %DYNAMICSTAB Summary of this function goes here
 %   Detailed explanation goes here
 %   - INPUTS:
 %
-%       title               -   The name of the input design. Will appear
+%       design_title               -   The name of the input design. Will appear
 %                               on plots and graphs
 %                               (STRING OR CHAR)
 %
@@ -234,7 +234,7 @@ Vtail_section_y     = [0,0];
 
 Vtail_section_z     = [0,b_vt];
 
-WriteAvlFile(title,file_name,airfoil_file,Htail_airfoil_file,Vtail_airfoil_file,duplicate_Vtail,x_cm,y_cm,z_cm,M,S_ref,C_ref,b,section_chord,section_alpha,section_x,section_y,section_z,tail_incidence,Htail_location,Htail_section_chord,Htail_section_alpha,Htail_section_x,Htail_section_y,Htail_section_z,Vtail_location,Vtail_section_chord,Vtail_section_x,Vtail_section_y,Vtail_section_z)
+WriteAvlFile(design_title,file_name,airfoil_file,Htail_airfoil_file,Vtail_airfoil_file,duplicate_Vtail,x_cm,y_cm,z_cm,M,S_ref,C_ref,b,section_chord,section_alpha,section_x,section_y,section_z,tail_incidence,Htail_location,Htail_section_chord,Htail_section_alpha,Htail_section_x,Htail_section_y,Htail_section_z,Vtail_location,Vtail_section_chord,Vtail_section_x,Vtail_section_y,Vtail_section_z)
 
 %% Defining values for mass file
 
