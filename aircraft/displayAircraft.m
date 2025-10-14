@@ -308,8 +308,28 @@ aircraft.wing.skin.density.units = 'g/cm^3';
 aircraft.wing.skin.density.type = "density";
 aircraft.wing.skin.density.description = "Mass density of composite used for wing skin";
 
-assumptions(end+1).name = "Carbon Fiber Density";
+assumptions(end+1).name = "Wing Carbon Fiber Density";
 assumptions(end+1).description = sprintf("Assume an average carbon fiber density over the wing of approximately %.2f %s", aircraft.wing.skin.density.value, aircraft.wing.skin.density.units);
+assumptions(end+1).rationale = "No access to carbon fiber to weigh at the moment and no knowledge of what type of carbon fiber or plexiglass we're using. Averaging limits found online here: https://goodwinds.com/composite-resources/carbon-vs-fiberglass-2/#:~:text=Density,in%20tight%20tolerance%20composites%20machining. Will want to change this later";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+aircraft.tail.horizontal.skin.density.value = aircraft.wing.skin.density.value;
+aircraft.tail.horizontal.skin.density.units = aircraft.wing.skin.density.units;
+aircraft.tail.horizontal.skin.density.type = "density";
+aircraft.tail.horizontal.skin.density.description = "Mass density of composite used for horizontal tail skin";
+
+assumptions(end+1).name = "Horizontal Tail Carbon Fiber Density";
+assumptions(end+1).description = sprintf("Assume an average carbon fiber density over the horizontal tail of approximately %.2f %s", aircraft.wing.skin.density.value, aircraft.wing.skin.density.units);
+assumptions(end+1).rationale = "No access to carbon fiber to weigh at the moment and no knowledge of what type of carbon fiber or plexiglass we're using. Averaging limits found online here: https://goodwinds.com/composite-resources/carbon-vs-fiberglass-2/#:~:text=Density,in%20tight%20tolerance%20composites%20machining. Will want to change this later";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+aircraft.tail.vertical.skin.density.value = aircraft.wing.skin.density.value;
+aircraft.tail.vertical.skin.density.units = aircraft.wing.skin.density.units;
+aircraft.tail.vertical.skin.density.type = "density";
+aircraft.tail.vertical.skin.density.description = "Mass density of composite used for vertical tail skin";
+
+assumptions(end+1).name = "Vertical Tail Carbon Fiber Density";
+assumptions(end+1).description = sprintf("Assume an average carbon fiber density over the vertical tail of approximately %.2f %s", aircraft.wing.skin.density.value, aircraft.wing.skin.density.units);
 assumptions(end+1).rationale = "No access to carbon fiber to weigh at the moment and no knowledge of what type of carbon fiber or plexiglass we're using. Averaging limits found online here: https://goodwinds.com/composite-resources/carbon-vs-fiberglass-2/#:~:text=Density,in%20tight%20tolerance%20composites%20machining. Will want to change this later";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
@@ -322,6 +342,26 @@ assumptions(end+1).name = "Composite Wing Skin Thickness";
 assumptions(end+1).description = sprintf("Assume a wing skin thickness of approximately %.2f %s", aircraft.wing.skin.thickness.value, aircraft.wing.skin.thickness.units);
 assumptions(end+1).rationale = "Unknown";
 assumptions(end+1).responsible_engineer = "Sam Prochnau";
+
+aircraft.tail.horizontal.skin.thickness.value = aircraft.wing.skin.thickness.value;
+aircraft.tail.horizontal.skin.thickness.units = aircraft.wing.skin.thickness.units;
+aircraft.tail.horizontal.skin.thickness.type = "length";
+aircraft.tail.horizontal.skin.thickness.description = "Thickness of composite horizontal tail skin (i.e. the thickness of a single layer of skin, which wraps around both sides of lifting surface)";
+
+assumptions(end+1).name = "Composite Horizontal Tail Skin Thickness";
+assumptions(end+1).description = "Assume wing and horizontal tail have similar composite skin thicknesses";
+assumptions(end+1).rationale = "Ease of manufacturing, simplicity of calculation in MDAO - can be refined later";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+aircraft.tail.vertical.skin.thickness.value = aircraft.wing.skin.thickness.value;
+aircraft.tail.vertical.skin.thickness.units = aircraft.wing.skin.thickness.units;
+aircraft.tail.vertical.skin.thickness.type = "length";
+aircraft.tail.vertical.skin.thickness.description = "Thickness of composite vertical tail skin (i.e. the thickness of a single layer of skin, which wraps around both sides of lifting surface)";
+
+assumptions(end+1).name = "Composite vertical Tail Skin Thickness";
+assumptions(end+1).description = "Assume wing and vertical tail have similar composite skin thicknesses";
+assumptions(end+1).rationale = "Ease of manufacturing, simplicity of calculation in MDAO - can be refined later";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
 aircraft.wing.spar.outer_diameter.value = 0.75*0.0254; 
 aircraft.wing.spar.outer_diameter.units = 'm';
@@ -444,6 +484,8 @@ else
     error('Unit mismatch: computation of fuselage weight is not possible.')
 end
 
+% wing skin weight and CG 
+
 aircraft.wing.skin.total_thickness.value = aircraft.wing.skin.thickness.value.*2;
 aircraft.wing.skin.total_thickness.units = aircraft.wing.skin.thickness.units;
 aircraft.wing.skin.total_thickness.type = "length";
@@ -504,6 +546,132 @@ aircraft.wing.skin.XYZ_CG.value = [chord/2, 0, vertical_wing_center+thickness_wi
 aircraft.wing.skin.XYZ_CG.units = 'in';
 aircraft.wing.skin.XYZ_CG.type = "length";
 aircraft.wing.skin.XYZ_CG.description = "vector of X, Y, Z coordinates for wing skin CG";
+
+% vertical tail skin weight and CG
+
+aircraft.tail.horizontal.skin.total_thickness.value = aircraft.tail.horizontal.skin.thickness.value.*2;
+aircraft.tail.horizontal.skin.total_thickness.units = aircraft.tail.horizontal.skin.thickness.units;
+aircraft.tail.horizontal.skin.total_thickness.type = "length";
+aircraft.tail.horizontal.skin.total_thickness.description = "total thickness of both top and bottom surfaces of horizontal tail skin";
+
+if strcmp(string(aircraft.tail.horizontal.skin.thickness.units), "m")
+    aircraft.tail.horizontal.skin.thickness.value = aircraft.tail.horizontal.skin.thickness.value.*10^2;
+    aircraft.tail.horizontal.skin.thickness.units = 'cm';
+else
+    error('Unit mismatch: computation of horizontal tail mass per unit area is not possible.')
+end
+
+if strcmp(string(aircraft.tail.horizontal.skin.density.units), "g/cm^3") && strcmp(string(aircraft.tail.horizontal.skin.thickness.units), "cm")
+aircraft.tail.horizontal.skin.mass_per_unit_area.value = aircraft.tail.horizontal.skin.density.value.*aircraft.tail.horizontal.skin.thickness.value;
+aircraft.tail.horizontal.skin.mass_per_unit_area.units = 'g/cm^2';
+aircraft.tail.horizontal.skin.mass_per_unit_area.description = "mass per unit area of the horizontal tail skin";
+else
+    error('Unit mismatch: computation of tail.horizontal mass is not possible.');
+end
+
+% convert planform area to cm^2
+if strcmp(string(aircraft.tail.horizontal.S.units), "ft^2")
+    % convert ft^2 to m^2
+    [aircraft, ~] = conv_aircraft_units(aircraft, 0, "aircraft.tail.horizontal.S", "m^2");
+
+    % convert m^2 to cm^2
+    aircraft.tail.horizontal.S.value = 10000.*aircraft.tail.horizontal.S.value;
+    aircraft.tail.horizontal.S.units = 'cm^2';
+else
+    error('Unit mismatch: computation of horizontal tail skin mass is not possible.')
+end
+
+if strcmp(string(aircraft.tail.horizontal.S.units), "cm^2")
+aircraft.tail.horizontal.skin.mass.value = aircraft.tail.horizontal.skin.mass_per_unit_area.value.*aircraft.tail.horizontal.S.value;
+aircraft.tail.horizontal.skin.mass.units = 'g';
+aircraft.tail.horizontal.skin.mass.type = "mass";
+aircraft.tail.horizontal.skin.mass.description = "mass of composite horizontal tail skin (not including spar, foam, or anything else)";
+
+% convert to kg
+aircraft.tail.horizontal.skin.mass.value = aircraft.tail.horizontal.skin.mass.value.*10^(-3);
+aircraft.tail.horizontal.skin.mass.units = 'kg';
+else
+    error('Unit mismatch: computation of horizontal tail skin mass is not possible.')
+end
+
+% if g is in imperial units, convert to metric
+if ~strcmp(string(constants.g.units), "m/s^2")
+    constants.g.value = 9.81;
+    constants.g.units = 'm/s^2';
+end
+
+aircraft.tail.horizontal.skin.weight.value = aircraft.tail.horizontal.skin.mass.value.*constants.g.value;
+aircraft.tail.horizontal.skin.weight.units = 'N';
+aircraft.tail.horizontal.skin.weight.type = "force";
+aircraft.tail.horizontal.skin.weight.description = "weight of composite horizontal tail skin (not including spar, foam, or anything else)";
+
+aircraft.tail.horizontal.skin.XYZ_CG.value = [d_tail + chord_HT/2, 0, radius_outer+thickness_HT/2];
+aircraft.tail.horizontal.skin.XYZ_CG.units = 'in';
+aircraft.tail.horizontal.skin.XYZ_CG.type = "length";
+aircraft.tail.horizontal.skin.XYZ_CG.description = "vector of X, Y, Z coordinates for horizontal tail skin CG";
+
+% vertical tail skin CG and weight
+
+aircraft.tail.vertical.skin.total_thickness.value = aircraft.tail.vertical.skin.thickness.value.*2;
+aircraft.tail.vertical.skin.total_thickness.units = aircraft.tail.vertical.skin.thickness.units;
+aircraft.tail.vertical.skin.total_thickness.type = "length";
+aircraft.tail.vertical.skin.total_thickness.description = "total thickness of both top and bottom surfaces of vertical tail skin";
+
+if strcmp(string(aircraft.tail.vertical.skin.thickness.units), "m")
+    aircraft.tail.vertical.skin.thickness.value = aircraft.tail.vertical.skin.thickness.value.*10^2;
+    aircraft.tail.vertical.skin.thickness.units = 'cm';
+else
+    error('Unit mismatch: computation of vertical tail mass per unit area is not possible.')
+end
+
+if strcmp(string(aircraft.tail.vertical.skin.density.units), "g/cm^3") && strcmp(string(aircraft.tail.vertical.skin.thickness.units), "cm")
+aircraft.tail.vertical.skin.mass_per_unit_area.value = aircraft.tail.vertical.skin.density.value.*aircraft.tail.vertical.skin.thickness.value;
+aircraft.tail.vertical.skin.mass_per_unit_area.units = 'g/cm^2';
+aircraft.tail.vertical.skin.mass_per_unit_area.description = "mass per unit area of the vertical tail skin";
+else
+    error('Unit mismatch: computation of tail.vertical mass is not possible.');
+end
+
+% convert planform area to cm^2
+if strcmp(string(aircraft.tail.vertical.S.units), "ft^2")
+    % convert ft^2 to m^2
+    [aircraft, ~] = conv_aircraft_units(aircraft, 0, "aircraft.tail.vertical.S", "m^2");
+
+    % convert m^2 to cm^2
+    aircraft.tail.vertical.S.value = 10000.*aircraft.tail.vertical.S.value;
+    aircraft.tail.vertical.S.units = 'cm^2';
+else
+    error('Unit mismatch: computation of vertical tail skin mass is not possible.')
+end
+
+if strcmp(string(aircraft.tail.vertical.S.units), "cm^2")
+aircraft.tail.vertical.skin.mass.value = aircraft.tail.vertical.skin.mass_per_unit_area.value.*aircraft.tail.vertical.S.value./2; % divide by 2 for vertical tail as only half of the vertical tail span is manufactured
+aircraft.tail.vertical.skin.mass.units = 'g';
+aircraft.tail.vertical.skin.mass.type = "mass";
+aircraft.tail.vertical.skin.mass.description = "mass of composite vertical tail skin (not including spar, foam, or anything else)";
+
+% convert to kg
+aircraft.tail.vertical.skin.mass.value = aircraft.tail.vertical.skin.mass.value.*10^(-3);
+aircraft.tail.vertical.skin.mass.units = 'kg';
+else
+    error('Unit mismatch: computation of vertical tail skin mass is not possible.')
+end
+
+% if g is in imperial units, convert to metric
+if ~strcmp(string(constants.g.units), "m/s^2")
+    constants.g.value = 9.81;
+    constants.g.units = 'm/s^2';
+end
+
+aircraft.tail.vertical.skin.weight.value = aircraft.tail.vertical.skin.mass.value.*constants.g.value;
+aircraft.tail.vertical.skin.weight.units = 'N';
+aircraft.tail.vertical.skin.weight.type = "force";
+aircraft.tail.vertical.skin.weight.description = "weight of composite vertical tail skin (not including spar, foam, or anything else)";
+
+aircraft.tail.vertical.skin.XYZ_CG.value = [d_tail + chord_VT/2, 0, radius_outer+width_VT/2];
+aircraft.tail.vertical.skin.XYZ_CG.units = 'in';
+aircraft.tail.vertical.skin.XYZ_CG.type = "length";
+aircraft.tail.vertical.skin.XYZ_CG.description = "vector of X, Y, Z coordinates for vertical tail skin CG";
 
 else
     error('displayAircraft.m must be rewritten to support nonconventional (T or U shaped) tails.');
