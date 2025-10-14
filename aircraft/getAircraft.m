@@ -148,6 +148,11 @@ aircraft.fuselage.length.units = 'ft';
 aircraft.fuselage.length.type = "length";
 aircraft.fuselage.length.description = "Length of fuselage";
 
+aircraft.fuselage.hull.thickness.value = 0.25;
+aircraft.fuselage.hull.thickness.units = 'in';
+aircraft.fuselage.hull.thickness.type = "length";
+aircraft.fuselage.hull.thickness.description = "difference between inner and outer radius of fuselage hull";
+
 aircraft.landing_gear.weight.value = 4;
 aircraft.landing_gear.weight.units = 'N';
 aircraft.landing_gear.weight.type = "force";

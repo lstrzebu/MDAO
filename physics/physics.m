@@ -234,7 +234,7 @@ fprintf('Completed static stability checks for loaded aircraft (Mission 2).\n')
 
 %% 5. Dynamic Stability (M2)
 
-% fprintf('Completed verification of Mission 2 feasibility.\n')
+fprintf('Completed verification of Mission 2 feasibility.\n')
 
 else
 

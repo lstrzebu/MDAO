@@ -9,9 +9,11 @@ structNames = ["aircraft.fuselage.diameter";
     "aircraft.tail.horizontal.c";
     "aircraft.tail.vertical.b";
     "aircraft.tail.vertical.c"; 
-    "aircraft.fuselage.protrusion"];
+    "aircraft.fuselage.protrusion";
+    "aircraft.fuselage.hull.thickness";];
 
 desiredUnits = ["in";
+    "in";
     "in";
     "in";
     "in";
@@ -35,7 +37,7 @@ if strcmp(tailType(1), 'C')
 D = aircraft.fuselage.diameter.value;
 
 % Define cylinder parameters
-radius = D./2;
+radius_outer = D./2;
 fuselage_length = aircraft.fuselage.length.value;
 
 % Define the center of the cylinder
@@ -58,7 +60,7 @@ cylinder_matrix = zeros(sz+1, sz+1, sz+1);
 dist_sq = (Y - center_y).^2 + (Z - center_z).^2;
 
 % Create the logical mask for the cylinder
-is_inside_cylinder = (dist_sq <= radius^2) & (X >= min_x) & (X <= max_x);
+is_inside_cylinder = (dist_sq <= radius_outer^2) & (X >= min_x) & (X <= max_x);
 
 % Assign the mask to the matrix
 cylinder_matrix(is_inside_cylinder) = 1;
@@ -82,14 +84,14 @@ width = b./2;    % Width of the wing (half-span) in the y-direction
 
 % interactively obtain lifting surface thickness from airfoil name
 eval(sprintf('thicknessMultiplier = 0.%s;', aircraft.wing.airfoil_name(8:9)))
-thickness = thicknessMultiplier.*chord; % Thickness of the wing in the z-direction
+thickness_wing = thicknessMultiplier.*chord; % Thickness of the wing in the z-direction
 
 assumptions(end+1).name = "Wing Attachment Z Coordinate";
 assumptions(end+1).description = "Assume the bottom z coordinate of wing attachment is approximately 85% of the way toward the top half of the fuselage";
 assumptions(end+1).rationale = "hand calcs based on SolidWorks fuselage model 'Fuselage with structure.SLDASM' located in folder Airframe-20251013T130855Z-1-001. Model was downloaded at 1215 EST 13 October 2025, at which point it had been last modified October 8. Hand calcs may be found in 'Hand Calcs for Wing Attachment Z Coordinate Assumption.txt.'";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
-vertical_wing_center = 0.85*radius; % put the wing 4/5 of the way toward the top half of the fuselage
+vertical_wing_center = 0.85*radius_outer + thickness_wing/2; % put the wing 4/5 of the way toward the top half of the fuselage
 
 
 % --- Define Vertices (corners of the prism) ---
@@ -104,14 +106,14 @@ vertical_wing_center = 0.85*radius; % put the wing 4/5 of the way toward the top
 % |/    |/
 % 8-----7
 V = [
-    0, -width, vertical_wing_center-thickness/2; % 1: Bottom left front
-    chord, -width, vertical_wing_center-thickness/2; % 2: Bottom right front
-    chord, width, vertical_wing_center-thickness/2;  % 3: Bottom right back
-    0, width, vertical_wing_center-thickness/2;      % 4: Bottom left back
-    0, -width, vertical_wing_center+thickness/2;      % 5: Top left front
-    chord, -width, vertical_wing_center+thickness/2; % 6: Top right front
-    chord, width, vertical_wing_center+thickness/2;  % 7: Top right back
-    0, width, vertical_wing_center+thickness/2       % 8: Top left back
+    0, -width, vertical_wing_center-thickness_wing/2; % 1: Bottom left front
+    chord, -width, vertical_wing_center-thickness_wing/2; % 2: Bottom right front
+    chord, width, vertical_wing_center-thickness_wing/2;  % 3: Bottom right back
+    0, width, vertical_wing_center-thickness_wing/2;      % 4: Bottom left back
+    0, -width, vertical_wing_center+thickness_wing/2;      % 5: Top left front
+    chord, -width, vertical_wing_center+thickness_wing/2; % 6: Top right front
+    chord, width, vertical_wing_center+thickness_wing/2;  % 7: Top right back
+    0, width, vertical_wing_center+thickness_wing/2       % 8: Top left back
 ];
 
 x_coords = V(:, 1);
@@ -157,7 +159,7 @@ eval(sprintf('thicknessMultiplier_HT = 0.%s;', aircraft.tail.horizontal.airfoil_
 thickness_HT = thicknessMultiplier_HT.*chord_HT; % Thickness of the HT in the z-direction
 
 % assumptions.aircraft.wing_placement = "assume the z coordinate of wing attachment is approximately 4/5 of the way toward the top half of the fuselage";
-horizontal_tail_z_center = radius; % put the HT 4/5 of the way toward the top half of the fuselage
+horizontal_tail_z_center = radius_outer; % put the HT 4/5 of the way toward the top half of the fuselage
 
 
 % --- Define Vertices (corners of the prism) ---
@@ -225,7 +227,7 @@ thickness_VT = thicknessMultiplier_VT.*chord_VT; % Thickness of the VT in the y-
 
 %assumptions.aircraft.wing_placement = "assume the z coordinate of wing attachment is approximately 4/5 of the way toward the top half of the fuselage";
 vertical_tail_y_center = 0; % put the VT in the center of the aircraft
-vertical_tail_z_bottom = radius;
+vertical_tail_z_bottom = radius_outer;
 
 % --- Define Vertices (corners of the prism) ---
 % A rectangular wing is a prism. There are 8 vertices in total.
@@ -293,6 +295,215 @@ if max_x < d_tail - chord_HT % ensure HT fully attached to fuselage
 elseif aircraft.fuselage.protrusion.value < 0 % ensure wing fully attached to fuselage
     error('Floating wing: fuselage too far backward.')
 end
+
+%% CG Calculation
+
+assumptions(end+1).name = "Foam Density";
+assumptions(end+1).description = "Assume a foam density of approximately zero. Will want to weigh in lab and replace this assumption in future";
+assumptions(end+1).rationale = "No access to foam to weigh at the moment and no knowledge of what type of foam we're using";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+aircraft.wing.skin.density.value = mean([1.15 2.25]);
+aircraft.wing.skin.density.units = 'g/cm^3';
+aircraft.wing.skin.density.type = "density";
+aircraft.wing.skin.density.description = "Mass density of composite used for wing skin";
+
+assumptions(end+1).name = "Carbon Fiber Density";
+assumptions(end+1).description = sprintf("Assume an average carbon fiber density over the wing of approximately %.2f %s", aircraft.wing.skin.density.value, aircraft.wing.skin.density.units);
+assumptions(end+1).rationale = "No access to carbon fiber to weigh at the moment and no knowledge of what type of carbon fiber or plexiglass we're using. Averaging limits found online here: https://goodwinds.com/composite-resources/carbon-vs-fiberglass-2/#:~:text=Density,in%20tight%20tolerance%20composites%20machining. Will want to change this later";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+aircraft.wing.skin.thickness.value = 0.2/1000;
+aircraft.wing.skin.thickness.units = 'm';
+aircraft.wing.skin.thickness.type = "length";
+aircraft.wing.skin.thickness.description = "Thickness of composite wing skin (i.e. the thickness of a single layer of skin, which wraps around both sides of lifting surface)";
+
+assumptions(end+1).name = "Composite Wing Skin Thickness";
+assumptions(end+1).description = sprintf("Assume a wing skin thickness of approximately %.2f %s", aircraft.wing.skin.thickness.value, aircraft.wing.skin.thickness.units);
+assumptions(end+1).rationale = "Unknown";
+assumptions(end+1).responsible_engineer = "Sam Prochnau";
+
+aircraft.wing.spar.outer_diameter.value = 0.75*0.0254; 
+aircraft.wing.spar.outer_diameter.units = 'm';
+aircraft.wing.spar.outer_diameter.type = "length";
+aircraft.wing.spar.outer_diameter.description = "outer diameter of wing spar";
+
+aircraft.wing.spar.outer_radius.value = aircraft.wing.spar.outer_diameter.value./2;
+aircraft.wing.spar.outer_radius.units = aircraft.wing.spar.outer_diameter.units;
+aircraft.wing.spar.outer_radius.type = "length";
+aircraft.wing.spar.outer_radius.description = "outer radius of wing spar";
+
+aircraft.wing.spar.thickness.value = (1/16)*0.0254;
+aircraft.wing.spar.thickness.units = 'm';
+aircraft.wing.spar.thickness.type = "length";
+aircraft.wing.spar.thickness.description = "Difference between inner and outer radius of wing spar";
+
+aircraft.wing.spar.inner_radius.value = aircraft.wing.spar.outer_radius.value - aircraft.wing.spar.thickness.value;
+aircraft.wing.spar.inner_radius.units = 'm';
+aircraft.wing.spar.inner_radius.type = "length";
+aircraft.wing.spar.inner_radius.description = "Inner radius of wing spar";
+
+assumptions(end+1).name = "Wing Spar X Coordinate";
+assumptions(end+1).description = "Assume wing spar is located at 50% of the chord length";
+assumptions(end+1).rationale = "Temporary assumption, change later";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+assumptions(end+1).name = "Wing Spar Z Coordinate";
+assumptions(end+1).description = "Assume wing spar is located at 50% of the wing thickness";
+assumptions(end+1).rationale = "Temporary assumption, change later";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+aircraft.wing.spar.XYZ_CG.value = [0.5.*aircraft.wing.c.value, 0, vertical_wing_center];
+aircraft.wing.spar.XYZ_CG.units = aircraft.wing.c.units; % vertical_wing_center also has units of inches, like the wing chord (if units check has been done correctly)
+aircraft.wing.spar.XYZ_CG.type = "length";
+aircraft.wing.spar.XYZ_CG.description = "vector of X, Y, Z coordinates for wing spar center of gravity";
+
+% assume spar weight
+aircraft.wing.spar.weight.value = 0.5;
+aircraft.wing.spar.weight.units = 'lbf';
+aircraft.wing.spar.weight.type = "force";
+aircraft.wing.spar.weight.description = "weight of wing spar";
+
+assumptions(end+1).name = "Wing Spar Weight";
+assumptions(end+1).description = sprintf("Assume wing spar weighs %.2f %s", aircraft.wing.spar.weight.value, aircraft.wing.spar.weight.units);
+assumptions(end+1).rationale = "Temporary assumption, change later";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+aircraft.fuselage.XYZ_CG.value = [center_x, center_y, center_z];
+aircraft.fuselage.XYZ_CG.units = 'in';
+aircraft.fuselage.XYZ_CG.type = "length";
+aircraft.fuselage.XYZ_CG.description = "vector of X, Y, Z coordinates of fuselage CG";
+
+assumptions(end+1).name = "Fuselage Weight";
+assumptions(end+1).description = "Neglect structural bulkheads; only consider fuselage as a cylinder with a given length, diameter, and thickness.";
+assumptions(end+1).rationale = "Simplicity of calculation. Change later";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+assumptions(end+1).name = "Fuselage Material";
+assumptions(end+1).description = "Assume fuselage made of composite material";
+assumptions(end+1).rationale = "Lightweight yet durable";
+assumptions(end+1).responsible_engineer = "Eric Stout";
+
+assumptions(end+1).name = "Fuselage Material Again";
+assumptions(end+1).description = "Assume fuselage made of same composite material as wing";
+assumptions(end+1).rationale = "Simplicity of calculations for first pass";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+aircraft.fuselage.hull.density.value = aircraft.wing.skin.density.value;
+aircraft.fuselage.hull.density.units = aircraft.wing.skin.density.units;
+aircraft.fuselage.hull.density.type = "density";
+aircraft.fuselage.hull.density.description = "density of composite material used in fuselage layup";
+
+radius_inner = radius_outer - aircraft.fuselage.hull.thickness.value; % inner radius of fuselage in inches
+
+aircraft.fuselage.hull.cross_sectional_area.value = pi*(radius_outer^2 - radius_inner^2);
+aircraft.fuselage.hull.cross_sectional_area.units = 'in^2';
+aircraft.fuselage.hull.cross_sectional_area.type = "area";
+aircraft.fuselage.hull.cross_sectional_area.description = "cross sectional area of cylindrical fuselage occupied by hull material";
+
+aircraft.fuselage.hull.solid_volume.value = aircraft.fuselage.hull.cross_sectional_area.value.*fuselage_length;
+aircraft.fuselage.hull.solid_volume.units = 'in^3';
+aircraft.fuselage.hull.solid_volume.type = "vol"; % volume unit type
+aircraft.fuselage.hull.solid_volume.description = "volume of space occupied by fuselage hull material";
+
+% density in g/cm^3 and volume in in^3
+
+if strcmp(string(aircraft.fuselage.hull.density.units), "g/cm^3") && strcmp(string(aircraft.fuselage.hull.solid_volume.units), "in^3")
+    [aircraft, ~] = conv_aircraft_units(aircraft, 0, "aircraft.fuselage.hull.solid_volume", "cm^3");
+    if strcmp(string(aircraft.fuselage.hull.solid_volume.units), "cm^3")
+        aircraft.fuselage.hull.mass.value = aircraft.fuselage.hull.density.value.*aircraft.fuselage.hull.solid_volume.value;
+        aircraft.fuselage.hull.mass.units = 'g';
+        aircraft.fuselage.hull.mass.type = "mass";
+        aircraft.fuselage.hull.mass.description = "mass of fuselage hull (not including structural bulkheads)";
+    else
+        error('Unit mismatch: computation of fuselage mass not possible.')
+    end
+    else
+    error('Unit mismatch: computation of fuselage mass is not possible.')
+end
+
+if strcmp(string(aircraft.fuselage.hull.mass.units), "g")
+    aircraft.fuselage.hull.mass.value = aircraft.fuselage.hull.mass.value * 10^(-3);
+    aircraft.fuselage.hull.mass.units = 'kg';
+else
+    error('Unit mismatch: computation of fuselage weight is not possible.')
+end
+
+% if g is in imperial units, convert to metric
+if ~strcmp(string(constants.g.units), "m/s^2")
+    constants.g.value = 9.81;
+    constants.g.units = 'm/s^2';
+end
+
+if strcmp(string(aircraft.fuselage.hull.mass.units), "kg") && strcmp(string(constants.g.units), "m/s^2")
+    aircraft.fuselage.hull.weight.value = aircraft.fuselage.hull.mass.value.*constants.g.value;
+    aircraft.fuselage.hull.weight.units = 'N';
+    aircraft.fuselage.hull.weight.type = "force";
+    aircraft.fuselage.hull.weight.description = "weight of fuselage hull (not including structural bulkheads)";
+else
+    error('Unit mismatch: computation of fuselage weight is not possible.')
+end
+
+aircraft.wing.skin.total_thickness.value = aircraft.wing.skin.thickness.value.*2;
+aircraft.wing.skin.total_thickness.units = aircraft.wing.skin.thickness.units;
+aircraft.wing.skin.total_thickness.type = "length";
+aircraft.wing.skin.total_thickness.description = "total thickness of both top and bottom surfaces of wing skin";
+
+if strcmp(string(aircraft.wing.skin.thickness.units), "m")
+    aircraft.wing.skin.thickness.value = aircraft.wing.skin.thickness.value.*10^2;
+    aircraft.wing.skin.thickness.units = 'cm';
+else
+    error('Unit mismatch: computation of wing mass per unit area is not possible.')
+end
+
+if strcmp(string(aircraft.wing.skin.density.units), "g/cm^3") && strcmp(string(aircraft.wing.skin.thickness.units), "cm")
+aircraft.wing.skin.mass_per_unit_area.value = aircraft.wing.skin.density.value.*aircraft.wing.skin.thickness.value;
+aircraft.wing.skin.mass_per_unit_area.units = 'g/cm^2';
+aircraft.wing.skin.mass_per_unit_area.description = "mass per unit area of the wing skin";
+else
+    error('Unit mismatch: computation of wing mass is not possible.');
+end
+
+% convert planform area to cm^2
+if strcmp(string(aircraft.wing.S.units), "ft^2")
+    % convert ft^2 to m^2
+    [aircraft, ~] = conv_aircraft_units(aircraft, 0, "aircraft.wing.S", "m^2");
+
+    % convert m^2 to cm^2
+    aircraft.wing.S.value = 10000.*aircraft.wing.S.value;
+    aircraft.wing.S.units = 'cm^2';
+else
+    error('Unit mismatch: computation of wing skin mass is not possible.')
+end
+
+if strcmp(string(aircraft.wing.S.units), "cm^2")
+aircraft.wing.skin.mass.value = aircraft.wing.skin.mass_per_unit_area.value.*aircraft.wing.S.value;
+aircraft.wing.skin.mass.units = 'g';
+aircraft.wing.skin.mass.type = "mass";
+aircraft.wing.skin.mass.description = "mass of composite wing skin (not including spar, foam, or anything else)";
+
+% convert to kg
+aircraft.wing.skin.mass.value = aircraft.wing.skin.mass.value.*10^(-3);
+aircraft.wing.skin.mass.units = 'kg';
+else
+    error('Unit mismatch: computation of wing skin mass is not possible.')
+end
+
+% if g is in imperial units, convert to metric
+if ~strcmp(string(constants.g.units), "m/s^2")
+    constants.g.value = 9.81;
+    constants.g.units = 'm/s^2';
+end
+
+aircraft.wing.skin.weight.value = aircraft.wing.skin.mass.value.*constants.g.value;
+aircraft.wing.skin.weight.units = 'N';
+aircraft.wing.skin.weight.type = "force";
+aircraft.wing.skin.weight.description = "weight of composite wing skin (not including spar, foam, or anything else)";
+
+aircraft.wing.skin.XYZ_CG.value = [chord/2, 0, vertical_wing_center+thickness_wing/2];
+aircraft.wing.skin.XYZ_CG.units = 'in';
+aircraft.wing.skin.XYZ_CG.type = "length";
+aircraft.wing.skin.XYZ_CG.description = "vector of X, Y, Z coordinates for wing skin CG";
 
 else
     error('displayAircraft.m must be rewritten to support nonconventional (T or U shaped) tails.');
