@@ -10,9 +10,13 @@ structNames = ["aircraft.fuselage.diameter";
     "aircraft.tail.vertical.b";
     "aircraft.tail.vertical.c"; 
     "aircraft.fuselage.protrusion";
-    "aircraft.fuselage.hull.thickness";];
+    "aircraft.fuselage.hull.thickness";
+    "aircraft.propulsion.motor.length";
+    "aircraft.propulsion.motor.diameter_outer";];
 
 desiredUnits = ["in";
+    "in";
+    "in";
     "in";
     "in";
     "in";
@@ -67,7 +71,9 @@ cylinder_matrix(is_inside_cylinder) = 1;
 
 % Visualize the cylinder
 figure;
+hold on;
 isosurface(X, Y, Z, cylinder_matrix, 0.5);
+% alpha(gca, 0.5); % transparency to see CG later
 axis equal;
 title(sprintf('%s'), aircraft.title.value);
 xlabel('X (in)');
@@ -383,6 +389,11 @@ aircraft.wing.spar.inner_radius.units = 'm';
 aircraft.wing.spar.inner_radius.type = "length";
 aircraft.wing.spar.inner_radius.description = "Inner radius of wing spar";
 
+assumptions(end+1).name = "Number of Wing Spars";
+assumptions(end+1).description = "Assume a single wing spar";
+assumptions(end+1).rationale = "Temporary assumption, change later";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
 assumptions(end+1).name = "Wing Spar X Coordinate";
 assumptions(end+1).description = "Assume wing spar is located at 50% of the chord length";
 assumptions(end+1).rationale = "Temporary assumption, change later";
@@ -409,10 +420,10 @@ assumptions(end+1).description = sprintf("Assume wing spar weighs %.2f %s", airc
 assumptions(end+1).rationale = "Temporary assumption, change later";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
-aircraft.fuselage.XYZ_CG.value = [center_x, center_y, center_z];
-aircraft.fuselage.XYZ_CG.units = 'in';
-aircraft.fuselage.XYZ_CG.type = "length";
-aircraft.fuselage.XYZ_CG.description = "vector of X, Y, Z coordinates of fuselage CG";
+aircraft.fuselage.hull.XYZ_CG.value = [center_x, center_y, center_z];
+aircraft.fuselage.hull.XYZ_CG.units = 'in';
+aircraft.fuselage.hull.XYZ_CG.type = "length";
+aircraft.fuselage.hull.XYZ_CG.description = "vector of X, Y, Z coordinates of fuselage CG";
 
 assumptions(end+1).name = "Fuselage Weight";
 assumptions(end+1).description = "Neglect structural bulkheads; only consider fuselage as a cylinder with a given length, diameter, and thickness.";
@@ -672,6 +683,110 @@ aircraft.tail.vertical.skin.XYZ_CG.value = [d_tail + chord_VT/2, 0, radius_outer
 aircraft.tail.vertical.skin.XYZ_CG.units = 'in';
 aircraft.tail.vertical.skin.XYZ_CG.type = "length";
 aircraft.tail.vertical.skin.XYZ_CG.description = "vector of X, Y, Z coordinates for vertical tail skin CG";
+
+assumptions(end+1).name = "Motor CG Location";
+assumptions(end+1).description = "Model motor as a uniform density cylinder whose frontmost surface is flush with the nose of the aircraft and whose centerline lies along the centerline of the fuselage";
+assumptions(end+1).rationale = "Simplicity of calculations for first pass. The uniform density parts seems reasonable as motors are designed to be balanced.";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+aircraft.propulsion.motor.XYZ_CG.value = [-aircraft.fuselage.protrusion.value+aircraft.propulsion.motor.length.value/2, 0, 0];
+aircraft.propulsion.motor.XYZ_CG.units = 'in';
+aircraft.propulsion.motor.XYZ_CG.type = "length";
+aircraft.propulsion.motor.XYZ_CG.description = "vector of X, Y, Z coordinates for the motor CG";
+
+assumptions(end+1).name = "ESC CG Location";
+assumptions(end+1).description = "Model ESC as a point mass that sits 5 inches behind the rear of the motor";
+assumptions(end+1).rationale = "Arbitrary, could vary as needed by human engineering judgment or consider iterating through computationally";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+aircraft.propulsion.ESC.XYZ_CG.value = [-aircraft.fuselage.protrusion.value + aircraft.propulsion.motor.length.value + 5, 0, 0];
+aircraft.propulsion.ESC.XYZ_CG.units = 'in';
+aircraft.propulsion.ESC.XYZ_CG.type = "length";
+aircraft.propulsion.ESC.XYZ_CG.description = "vector of X, Y, Z coordinates for the ESC CG";
+
+assumptions(end+1).name = "Propeller CG Location";
+assumptions(end+1).description = "Assume propeller is balanced such that its CG lies exactly in the center of its volume. Furthermore, assume this propeller sits at the nose of the aircraft";
+assumptions(end+1).rationale = "Propellers must be designed to balanced to avoid wobble or providing additional torque on the shaft... however this is still an assumption";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+aircraft.propulsion.propeller.XYZ_CG.value = [-aircraft.fuselage.protrusion.value, 0, 0];
+aircraft.propulsion.propeller.XYZ_CG.units = 'in';
+aircraft.propulsion.propeller.XYZ_CG.type = "length";
+aircraft.propulsion.propeller.XYZ_CG.description = "vector of X, Y, Z coordinates for the propeller CG";
+
+assumptions(end+1).name = "Battery CG Location";
+assumptions(end+1).description = "Assume battery CG sits 5 inches behind the rear of the motor";
+assumptions(end+1).rationale = "Propellers must be designed to balanced to avoid wobble or providing additional torque on the shaft... however this is still an assumption";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+aircraft.propulsion.battery.XYZ_CG.value = [-aircraft.fuselage.protrusion.value + aircraft.propulsion.motor.length.value + 5, 0, 0];
+aircraft.propulsion.battery.XYZ_CG.units = 'in';
+aircraft.propulsion.battery.XYZ_CG.type = "length";
+aircraft.propulsion.battery.XYZ_CG.description = "vector of X, Y, Z coordinates for the battery CG";
+
+assumptions(end+1).name = "Servo Contribution to Aircraft CG";
+assumptions(end+1).description = "Neglect weight and location of all servos";
+assumptions(end+1).rationale = "Need MDAO done fast, plus this is variable. In the future I want a number of servos with coordinate systems and their CGs tracked";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+assumptions(end+1).name = "Landing Gear Contribution to Aircraft CG";
+assumptions(end+1).description = "Neglect weight and location of landing gear";
+assumptions(end+1).rationale = "Need MDAO done fast";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+structNames = ["aircraft.fuselage.hull.weight";
+    "aircraft.tail.horizontal.skin.weight";
+    "aircraft.tail.vertical.skin.weight";
+    "aircraft.propulsion.motor.weight";
+    "aircraft.propulsion.ESC.weight";
+    "aircraft.propulsion.propeller.weight";
+    "aircraft.propulsion.battery.weight";
+    "aircraft.fuselage.hull.XYZ_CG";
+    "aircraft.tail.horizontal.skin.XYZ_CG";
+    "aircraft.tail.vertical.skin.XYZ_CG";
+    "aircraft.propulsion.motor.XYZ_CG";
+    "aircraft.propulsion.ESC.XYZ_CG";
+    "aircraft.propulsion.propeller.XYZ_CG";
+    "aircraft.propulsion.battery.XYZ_CG"];
+desiredUnits = ["N";
+    "N";
+    "N";
+    "N";
+    "N";
+    "N";
+    "N";
+    "in";
+    "in";
+    "in";
+    "in";
+    "in";
+    "in";
+    "in"];
+[aircraft, ~] = conv_aircraft_units(aircraft, 0, structNames, desiredUnits);
+
+part_weights = [aircraft.fuselage.hull.weight.value;
+    aircraft.tail.horizontal.skin.weight.value;
+    aircraft.tail.vertical.skin.weight.value;
+    aircraft.propulsion.motor.weight.value;
+    aircraft.propulsion.ESC.weight.value;
+    aircraft.propulsion.propeller.weight.value;
+    aircraft.propulsion.battery.weight.value];
+part_cgs = [aircraft.fuselage.hull.XYZ_CG.value;
+    aircraft.tail.horizontal.skin.XYZ_CG.value;
+    aircraft.tail.vertical.skin.XYZ_CG.value;
+    aircraft.propulsion.motor.XYZ_CG.value;
+    aircraft.propulsion.ESC.XYZ_CG.value;
+    aircraft.propulsion.propeller.XYZ_CG.value;
+    aircraft.propulsion.battery.XYZ_CG.value];
+
+aircraft.XYZ_CG.value = composite_cg(part_weights, part_cgs);
+aircraft.XYZ_CG.units = 'in';
+aircraft.XYZ_CG.type = "length";
+aircraft.XYZ_CG.description = "vector of X, Y, Z coordinates for empty aircraft CG. That is, the CG of the system including the: fuselage skin, wing spar, horizontal tail skin, vertical tail skin, motor, ESC, propeller, and battery.";
+
+alpha(gca, 0.5);
+plot3(aircraft.XYZ_CG.value(1), aircraft.XYZ_CG.value(2), aircraft.XYZ_CG.value(3), 'ro', 'MarkerSize', 15, 'LineWidth', 2, ...
+          'MarkerEdgeColor', 'r', 'DisplayName', 'CG');
 
 else
     error('displayAircraft.m must be rewritten to support nonconventional (T or U shaped) tails.');

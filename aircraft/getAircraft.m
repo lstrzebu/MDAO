@@ -187,6 +187,7 @@ aircraft.propulsion.propeller.index.description = "Which number (from 1 to the n
 batteryTable = readmatrix('6S Battery Data Condensed.xlsx'); % Name might change
 aircraft.propulsion.battery.weight.value = batteryTable(batteryIndex,8) * (9.81/1000); % in N
 aircraft.propulsion.battery.weight.units = 'N';
+aircraft.propulsion.battery.weight.type = "force";
 aircraft.propulsion.battery.weight.description = "Weight of the battery utilized for the propulsion system";
 aircraft.propulsion.battery.capacity.value = batteryTable(batteryIndex, 7); % in Wh
 aircraft.propulsion.battery.capacity.units = 'Wh';
@@ -196,6 +197,7 @@ aircraft.propulsion.battery.capacity.description = "Total propulsion battery cap
 motorTable = readmatrix('Motor Data Condensed.xlsx'); % Name might change
 aircraft.propulsion.motor.weight.value = motorTable(motorIndex, 13) * (9.81/1000); % in N
 aircraft.propulsion.motor.weight.units = 'N';
+aircraft.propulsion.motor.weight.type = "force";
 aircraft.propulsion.motor.weight.description = "Weight of motor";
 aircraft.propulsion.motor.kV.value = motorTable(motorIndex, 3)';
 aircraft.propulsion.motor.kV.units = 'RPM/V';
@@ -215,11 +217,20 @@ aircraft.propulsion.motor.power.max.description = "maximum power the motor is ra
 aircraft.propulsion.motor.voltage.max.value = motorTable(motorIndex, 5); % in Volts
 aircraft.propulsion.motor.voltage.max.units = 'V';
 aircraft.propulsion.motor.voltage.max.description = "maximum voltage the motor is rated for";
+aircraft.propulsion.motor.length.value = motorTable(motorIndex, 17)*10^(-3); % in m
+aircraft.propulsion.motor.length.units = 'm';
+aircraft.propulsion.motor.length.type = "length";
+aircraft.propulsion.motor.length.description = "length of motor";
+aircraft.propulsion.motor.diameter_outer.value = motorTable(motorIndex, 18)*10^(-3); % in m
+aircraft.propulsion.motor.diameter_outer.units = 'm';
+aircraft.propulsion.motor.diameter_outer.type = "length";
+aircraft.propulsion.motor.diameter_outer.description = "outer diameter of motor";
 
 % Read Big Prop Spreadsheet
 propTable = readtable('Prop Data.xlsx'); % Name might change
 aircraft.propulsion.propeller.weight.value = (propTable{propIndex, 2} * 28.3495) * (9.81/1000); % converted to N
 aircraft.propulsion.propeller.weight.units = 'N';
+aircraft.propulsion.propeller.weight.type = "force";
 aircraft.propulsion.propeller.weight.description = "weight of propeller";
 aircraft.propulsion.propeller.name = propTable{propIndex, 1};
 
@@ -257,11 +268,13 @@ aircraft.propulsion.ESC.weight.description = "weight (force) of electronic speed
 if strcmp(string(constants.g.units), "m/s^2")
     aircraft.propulsion.ESC.weight.value = aircraft.propulsion.ESC.mass.value.*constants.g.value;
     aircraft.propulsion.ESC.weight.units = 'N';
+    aircraft.propulsion.ESC.weight.type = "force";
 elseif strcmp(string(constants.g.units), "ft/s^2")
     constants.g.value = 9.81;
     constants.g.units = 'm/s^2';
     aircraft.propulsion.ESC.weight.value = aircraft.propulsion.ESC.mass.value.*constants.g.value;
     aircraft.propulsion.ESC.weight.units = 'N';
+    aircraft.propulsion.ESC.weight.type = "force";
 else
     error('Unit mismatch: calculation of ESC weight not possible. Failed to recognize units of gravitational acceleration constant.');
 end
