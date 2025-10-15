@@ -779,13 +779,18 @@ part_cgs = [aircraft.fuselage.hull.XYZ_CG.value;
     aircraft.propulsion.propeller.XYZ_CG.value;
     aircraft.propulsion.battery.XYZ_CG.value];
 
-aircraft.XYZ_CG.value = composite_cg(part_weights, part_cgs);
-aircraft.XYZ_CG.units = 'in';
-aircraft.XYZ_CG.type = "length";
-aircraft.XYZ_CG.description = "vector of X, Y, Z coordinates for empty aircraft CG. That is, the CG of the system including the: fuselage skin, wing spar, horizontal tail skin, vertical tail skin, motor, ESC, propeller, and battery.";
+aircraft.weight.unloaded.value = sum(part_weights);
+aircraft.weight.unloaded.units = 'N';
+aircraft.weight.unloaded.type = "force";
+aircraft.weight.unloaded.description = "Weight of aircraft with no payload (no ducks, pucks, or banner)";
+
+aircraft.unloaded.XYZ_CG.value = composite_cg(part_weights, part_cgs);
+aircraft.unloaded.XYZ_CG.units = 'in';
+aircraft.unloaded.XYZ_CG.type = "length";
+aircraft.unloaded.XYZ_CG.description = "vector of X, Y, Z coordinates for empty aircraft CG. That is, the CG of the system including the: fuselage skin, wing spar, horizontal tail skin, vertical tail skin, motor, ESC, propeller, and battery.";
 
 alpha(gca, 0.5);
-plot3(aircraft.XYZ_CG.value(1), aircraft.XYZ_CG.value(2), aircraft.XYZ_CG.value(3), 'ro', 'MarkerSize', 15, 'LineWidth', 2, ...
+plot3(aircraft.unloaded.XYZ_CG.value(1), aircraft.unloaded.XYZ_CG.value(2), aircraft.unloaded.XYZ_CG.value(3), 'ro', 'MarkerSize', 15, 'LineWidth', 2, ...
           'MarkerEdgeColor', 'r', 'DisplayName', 'CG');
 
 else

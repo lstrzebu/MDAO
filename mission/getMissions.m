@@ -247,7 +247,7 @@ else
 end
 
 % check if units are equal
-unitsToCompare = [string(aircraft.weight.empty.units), ...
+unitsToCompare = [string(aircraft.weight.unloaded.units), ...
     string(aircraft.payload.passengers.weight.units), ...
     string(aircraft.payload.cargo.weight.units)];
 % Compare each string to the first one
@@ -256,7 +256,7 @@ comparisonResults = strcmp(unitsToCompare, unitsToCompare(1));
 equalUnits = all(comparisonResults);
 
 if equalUnits
-aircraft.weight.loaded.value = aircraft.weight.empty.value + aircraft.payload.passengers.weight.value + aircraft.payload.cargo.weight.value; 
+aircraft.weight.loaded.value = aircraft.weight.unloaded.value + aircraft.payload.passengers.weight.value + aircraft.payload.cargo.weight.value; 
 aircraft.weight.loaded.units = char(unitsToCompare(1));
 aircraft.weight.loaded.type = "force";
 aircraft.weight.loaded.description = "maximum gross takeoff weight for aircraft for Mission 2";
