@@ -111,7 +111,7 @@ assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
 
 % step = 2; 
-minP = 1; stepP = 1; maxP = 9; 
+minP = 1; stepP = 1; maxP = 30; 
 minC = 1; stepC = 1; maxC = 4;
 minL = 1; stepL = 1; maxL = 8; 
 minBL = 10; stepBL = 5; maxBL = 15;
@@ -145,6 +145,11 @@ TPBCvec = minTPBC:stepTPBC:maxTPBC;
 
 % Flatten into an n x 5 matrix (each row is a combination: [pVal, cVal, lVal, blVal, TPBCval])
 missions = [P(:), C(:), L(:), BL(:), TPBC(:)];
+
+
+% logical mask for missions to ensure (number of ducks) >= 3*(number of pucks)
+ducks_pucks_mask = missions(:,1) >= 3.*missions(:,2);
+missions = missions(ducks_pucks_mask, :);
 
 % For testing only (DELETE afterwards):
 missions = missions(1,:);
@@ -206,6 +211,7 @@ end
 if strcmp(string(aircraft.payload.passengers.mass.units), "kg") && strcmp(string(constants.g.units), "m/s^2")
     aircraft.payload.passengers.weight.value = aircraft.payload.passengers.mass.value.*constants.g.value;
     aircraft.payload.passengers.weight.units = 'N';
+    aircraft.payload.passengers.weight.type = "force";
     aircraft.payload.passengers.weight.description = "total weight of all passengers (ducks) on the aircraft (Mission 2)";
 else
     error('Unit mismatch: computation of total rubber duck weight is not possible.')
@@ -241,32 +247,136 @@ end
 if strcmp(string(aircraft.payload.cargo.mass.units), "kg") && strcmp(string(constants.g.units), "m/s^2")
     aircraft.payload.cargo.weight.value = aircraft.payload.cargo.mass.value.*constants.g.value;
     aircraft.payload.cargo.weight.units = 'N';
+    aircraft.payload.cargo.weight.type = "force";
     aircraft.payload.cargo.weight.description = "total weight of all cargo (ducks) on the aircraft (Mission 2)";
 else
     error('Unit mismatch: computation of total hockye puck weight is not possible.')
 end
 
-% check if units are equal
-unitsToCompare = [string(aircraft.weight.unloaded.units), ...
-    string(aircraft.payload.passengers.weight.units), ...
-    string(aircraft.payload.cargo.weight.units)];
-% Compare each string to the first one
-comparisonResults = strcmp(unitsToCompare, unitsToCompare(1));
-% Check if all comparisons are true
-equalUnits = all(comparisonResults);
-
-if equalUnits
-aircraft.weight.loaded.value = aircraft.weight.unloaded.value + aircraft.payload.passengers.weight.value + aircraft.payload.cargo.weight.value; 
-aircraft.weight.loaded.units = char(unitsToCompare(1));
-aircraft.weight.loaded.type = "force";
-aircraft.weight.loaded.description = "maximum gross takeoff weight for aircraft for Mission 2";
-else
-    error('Unit mismatch: maximum gross takeoff weight could not be computed. Ensure the weights of aircraft components share the same units.')
-end
+% % check if units are equal
+% unitsToCompare = [string(aircraft.weight.unloaded.units), ...
+%     string(aircraft.payload.passengers.weight.units), ...
+%     string(aircraft.payload.cargo.weight.units)];
+% % Compare each string to the first one
+% comparisonResults = strcmp(unitsToCompare, unitsToCompare(1));
+% % Check if all comparisons are true
+% equalUnits = all(comparisonResults);
+% 
+% if equalUnits
+% aircraft.weight.loaded.value = aircraft.weight.unloaded.value + aircraft.payload.passengers.weight.value + aircraft.payload.cargo.weight.value; 
+% aircraft.weight.loaded.units = char(unitsToCompare(1));
+% aircraft.weight.loaded.type = "force";
+% aircraft.weight.loaded.description = "maximum gross takeoff weight for aircraft for Mission 2";
+% else
+%     error('Unit mismatch: maximum gross takeoff weight could not be computed. Ensure the weights of aircraft components share the same units.')
+% end
 
 mission.weather.air_density.value = 0.002377; % SSL density (change later)
 mission.weather.air_density.units = 'slug/ft^3';
 mission.weather.air_density.description = "density of air at competition location on competition day";
 mission.weather.air_density.type = "density";
+
+aircraft.payload.cargo.XYZ_CG = aircraft.unloaded.XYZ_CG;
+aircraft.payload.cargo.XYZ_CG.description = "vector of X, Y, Z coordinates for CG of pucks";
+
+% duck dimensions
+aircraft.payload.passengers.individual.width.value = mean([2.0 2.3]);
+aircraft.payload.passengers.individual.width.units = 'in';
+aircraft.payload.passengers.individual.width.type = "length";
+aircraft.payload.passengers.individual.width.description = "average width of rubber duck";
+
+assumptions(end+1).name = "Rubber Duck Width";
+assumptions(end+1).description = sprintf("Assume average rubber duck width (including padding/spacing and restraint) of %.2f %s. This is obtained by multiplying the mean of 2.0 and 2.3 by 110%.", aircraft.payload.passengers.individual.width.value, aircraft.payload.passengers.individual.width.units);
+assumptions(end+1).rationale = "Source: competition rules. Assumption is applying the average";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+aircraft.payload.passengers.individual.length.value = 1.1*mean([2.0 2.5]);
+aircraft.payload.passengers.individual.length.units = 'in';
+aircraft.payload.passengers.individual.length.type = "length";
+aircraft.payload.passengers.individual.length.description = "average length of rubber duck";
+
+assumptions(end+1).name = "Rubber Duck Length";
+assumptions(end+1).description = sprintf("Assume average rubber duck length (including padding/spacing and restraint) of %.2f %s. This is obtained by multiplying the mean of 2.0 and 2.5 by 110%.", aircraft.payload.passengers.individual.width.value, aircraft.payload.passengers.individual.width.units);
+assumptions(end+1).rationale = "Source: competition rules. Assumption is applying the average";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+if strcmp(string(aircraft.payload.passengers.individual.length.units), "in") && strcmp(string(aircraft.payload.passengers.individual.width.units), "in")
+aircraft.payload.passengers.individual.area.value = aircraft.payload.passengers.individual.length.value.*aircraft.payload.passengers.individual.width.value;
+aircraft.payload.passengers.individual.area.units = "in^2";
+aircraft.payload.passengers.individual.area.type = "area";
+aircraft.payload.passengers.individual.area.description = "average area occupied by a rubber duck";
+else
+    error('Unit mismatch: calculation of average rubber duck area is not possible.');
+end
+
+ducksPerRow = 2;
+assumptions(end+1).name = "Rubber Ducks per Row";
+assumptions(end+1).description = "Assume 2 rubber ducks per row of seating in the fuselage";
+assumptions(end+1).rationale = "Would take a very wide fuselage to accomodate more than 2 ducks per row";
+assumptions(end+1).responsible_engineer = "Eric Stout";
+
+% calculate max number of rows of ducks the fuselage can hold
+if strcmp(string(aircraft.fuselage.length.units), string(aircraft.payload.passengers.individual.length.units))
+maxRows = floor((aircraft.fuselage.length.value/2)/aircraft.payload.passengers.individual.length.value);
+else
+    error('Unit mismatch: computation of maximum number of ducks not possible.');
+end
+maxDucks = maxRows.*2;
+
+% remove missions with too many ducks to fit into the fuselage
+max_ducks_mask = missions(:,1) <= maxDucks;
+missions = missions(max_ducks_mask, :);
+
+% start placing ducks at front right of available areas and work way to
+% left and backwards
+aircraft.payload.passengers.available_area.value = (2.*aircraft.payload.passengers.individual.width.value).*(aircraft.fuselage.length.value./2);
+aircraft.payload.passengers.available_area.units = "in^2";
+aircraft.payload.passengers.available_area.type = "area";
+aircraft.payload.passengers.available_area.description = "area in fuselage available to accomodate additional ducks";
+
+aircraft.payload.passengers.individual.max_height.value = 2.5;
+aircraft.payload.passengers.individual.max_height.units = 'in';
+aircraft.payload.passengers.individual.max_height.type = "length";
+aircraft.payload.passengers.individual.max_height.description = "maximum height of a rubber duck";
+
+assumptions(end+1).name = "Rubber Duck Locations";
+assumptions(end+1).description = "Assume rubber ducks are placed in a plane in the rear half of the fuselage with an extra 10% of their width and length used as spacing/for restraints and an extra 50% of their maximum height used as spacing between the tops of the ducks and the heighest point of the fuselage";
+assumptions(end+1).rationale = "Get something working for MDAO; replace with one of multiple fuselages later";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+if strcmp(string(aircraft.fuselage.protrusion.units), "in") && strcmp(string(aircraft.fuselage.length.units), "in") && strcmp(string(aircraft.payload.passengers.individual.length.units), "in") && strcmp(string(aircraft.payload.passengers.individual.width.units), "in") && strcmp(string(aircraft.fuselage.diameter.units), "in") && strcmp(string(aircraft.fuselage.hull.thickness.units), "in") && strcmp(aircraft.payload.passengers.individual.max_height.units, "in")
+    for i = 1:aircraft.payload.passengers.number.value
+        rowNum = ceil(i/2); 
+
+        % if i is odd, place duck on right hand side of aircraft
+        % if i is even, place duck on left hand side of aircraft
+        if rem(i, 2) ~= 0
+            aircraft.payload.passengers.XYZ_CG.value(i, :) = [-aircraft.fuselage.protrusion.value + aircraft.fuselage.length.value + (rowNum-1).*aircraft.payload.passengers.individual.length.value + aircraft.payload.passengers.individual.length.value/2, aircraft.payload.passengers.individual.width.value, aircraft.fuselage.diameter.value - aircraft.fuselage.hull.thickness.value - aircraft.payload.passengers.individual.max_height.value]; 
+        else
+            aircraft.payload.passengers.XYZ_CG.value(i, :) = [-aircraft.fuselage.protrusion.value + aircraft.fuselage.length.value + (rowNum-1).*aircraft.payload.passengers.individual.length.value + aircraft.payload.passengers.individual.length.value/2, -aircraft.payload.passengers.individual.width.value, aircraft.fuselage.diameter.value - aircraft.fuselage.hull.thickness.value - aircraft.payload.passengers.individual.max_height.value]; 
+        end
+        aircraft.payload.passengers.XYZ_CG.units = 'in';
+        aircraft.payload.passengers.XYZ_CG.length = "length";
+        aircraft.payload.passengers.XYZ_CG.description = "array where each row is the X, Y, Z coordinates of a rubber duck CG";
+    end
+else
+    error('Unit mismatch: computation of rubber duck CGs is not possible.')
+end
+
+% ensure units match up prior to loaded weight calculation
+structNames = ["aircraft.weight.unloaded";
+"aircraft.payload.passengers.weight";
+"aircraft.payload.cargo.weight"];
+desiredUnits = ["N";
+    "N";
+    "N"];
+[aircraft, ~] = conv_aircraft_units(aircraft, 0, structNames, desiredUnits);
+
+aircraft.weight.loaded.value = sum([aircraft.weight.unloaded.value, aircraft.payload.passengers.weight.value, aircraft.payload.cargo.weight.value]);
+aircraft.weight.loaded.units = 'N';
+aircraft.weight.loaded.type = "force";
+aircraft.weight.loaded.description = "total weight of aircraft + payload, where payload is all ducks and all pucks for Mission 2";
+
+
 
 fprintf('Done generating mission ideas.\n')

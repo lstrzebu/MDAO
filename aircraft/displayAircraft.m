@@ -12,7 +12,7 @@ structNames = ["aircraft.fuselage.diameter";
     "aircraft.fuselage.protrusion";
     "aircraft.fuselage.hull.thickness";
     "aircraft.propulsion.motor.length";
-    "aircraft.propulsion.motor.diameter_outer";];
+    "aircraft.propulsion.motor.diameter_outer"];
 
 desiredUnits = ["in";
     "in";
