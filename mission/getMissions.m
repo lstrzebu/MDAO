@@ -254,7 +254,7 @@ else
 end
 
 % % check if units are equal
-% unitsToCompare = [string(aircraft.weight.unloaded.units), ...
+% unitsToCompare = [string(aircraft.unloaded.weight.units), ...
 %     string(aircraft.payload.passengers.weight.units), ...
 %     string(aircraft.payload.cargo.weight.units)];
 % % Compare each string to the first one
@@ -263,10 +263,10 @@ end
 % equalUnits = all(comparisonResults);
 % 
 % if equalUnits
-% aircraft.weight.loaded.value = aircraft.weight.unloaded.value + aircraft.payload.passengers.weight.value + aircraft.payload.cargo.weight.value; 
-% aircraft.weight.loaded.units = char(unitsToCompare(1));
-% aircraft.weight.loaded.type = "force";
-% aircraft.weight.loaded.description = "maximum gross takeoff weight for aircraft for Mission 2";
+% aircraft.loaded.weight.value = aircraft.unloaded.weight.value + aircraft.payload.passengers.weight.value + aircraft.payload.cargo.weight.value; 
+% aircraft.loaded.weight.units = char(unitsToCompare(1));
+% aircraft.loaded.weight.type = "force";
+% aircraft.loaded.weight.description = "maximum gross takeoff weight for aircraft for Mission 2";
 % else
 %     error('Unit mismatch: maximum gross takeoff weight could not be computed. Ensure the weights of aircraft components share the same units.')
 % end
@@ -351,20 +351,42 @@ if strcmp(string(aircraft.fuselage.protrusion.units), "in") && strcmp(string(air
         % if i is odd, place duck on right hand side of aircraft
         % if i is even, place duck on left hand side of aircraft
         if rem(i, 2) ~= 0
-            aircraft.payload.passengers.XYZ_CG.value(i, :) = [-aircraft.fuselage.protrusion.value + aircraft.fuselage.length.value + (rowNum-1).*aircraft.payload.passengers.individual.length.value + aircraft.payload.passengers.individual.length.value/2, aircraft.payload.passengers.individual.width.value, aircraft.fuselage.diameter.value - aircraft.fuselage.hull.thickness.value - aircraft.payload.passengers.individual.max_height.value]; 
+            aircraft.payload.passengers.individual.XYZ_CG.value(i, :) = [-aircraft.fuselage.protrusion.value + aircraft.fuselage.length.value + (rowNum-1).*aircraft.payload.passengers.individual.length.value + aircraft.payload.passengers.individual.length.value/2, aircraft.payload.passengers.individual.width.value, aircraft.fuselage.diameter.value - aircraft.fuselage.hull.thickness.value - aircraft.payload.passengers.individual.max_height.value]; 
         else
-            aircraft.payload.passengers.XYZ_CG.value(i, :) = [-aircraft.fuselage.protrusion.value + aircraft.fuselage.length.value + (rowNum-1).*aircraft.payload.passengers.individual.length.value + aircraft.payload.passengers.individual.length.value/2, -aircraft.payload.passengers.individual.width.value, aircraft.fuselage.diameter.value - aircraft.fuselage.hull.thickness.value - aircraft.payload.passengers.individual.max_height.value]; 
+            aircraft.payload.passengers.individual.XYZ_CG.value(i, :) = [-aircraft.fuselage.protrusion.value + aircraft.fuselage.length.value + (rowNum-1).*aircraft.payload.passengers.individual.length.value + aircraft.payload.passengers.individual.length.value/2, -aircraft.payload.passengers.individual.width.value, aircraft.fuselage.diameter.value - aircraft.fuselage.hull.thickness.value - aircraft.payload.passengers.individual.max_height.value]; 
         end
-        aircraft.payload.passengers.XYZ_CG.units = 'in';
-        aircraft.payload.passengers.XYZ_CG.length = "length";
-        aircraft.payload.passengers.XYZ_CG.description = "array where each row is the X, Y, Z coordinates of a rubber duck CG";
+        aircraft.payload.passengers.individual.XYZ_CG.units = 'in';
+        aircraft.payload.passengers.individual.XYZ_CG.type = "length";
+        aircraft.payload.passengers.individual.XYZ_CG.description = "array where each row is the X, Y, Z coordinates of a rubber duck CG";
     end
 else
     error('Unit mismatch: computation of rubber duck CGs is not possible.')
 end
 
+if strcmp(string(aircraft.payload.passengers.individual.mass.average.units), "oz")
+    aircraft.payload.passengers.individual.mass.average.value = aircraft.payload.passengers.individual.mass.average.value./35.274;
+    aircraft.payload.passengers.individual.mass.average.units = 'kg';
+else
+    error('Unit mismatch: computation of rubber duck CGs is not possible.')
+end
+
+if strcmp(string(constants.g.units), "m/s^2")
+duck_weights = zeros([aircraft.payload.passengers.number.value, 1]);
+duck_weights(:) = aircraft.payload.passengers.individual.mass.average.value.*constants.g.value; % kg * m/s^2 = N
+else
+    error('Unit mismatch: computation of rubber duck CGs is not possible.');
+end
+
+duck_cgs = aircraft.payload.passengers.individual.XYZ_CG.value; % units should be inches 
+
+% calculate net duck CG
+aircraft.payload.passengers.XYZ_CG.value = composite_cg(duck_weights, duck_cgs); % output units match input units
+aircraft.payload.passengers.XYZ_CG.units = aircraft.payload.passengers.individual.XYZ_CG.units;
+aircraft.payload.passengers.XYZ_CG.type = "length";
+aircraft.payload.passengers.XYZ_CG.description = "net CG of all ducks onboard aircraft";
+
 % ensure units match up prior to loaded weight calculation
-structNames = ["aircraft.weight.unloaded";
+structNames = ["aircraft.unloaded.weight";
 "aircraft.payload.passengers.weight";
 "aircraft.payload.cargo.weight"];
 desiredUnits = ["N";
@@ -372,10 +394,34 @@ desiredUnits = ["N";
     "N"];
 [aircraft, ~] = conv_aircraft_units(aircraft, 0, structNames, desiredUnits);
 
-aircraft.weight.loaded.value = sum([aircraft.weight.unloaded.value, aircraft.payload.passengers.weight.value, aircraft.payload.cargo.weight.value]);
-aircraft.weight.loaded.units = 'N';
-aircraft.weight.loaded.type = "force";
-aircraft.weight.loaded.description = "total weight of aircraft + payload, where payload is all ducks and all pucks for Mission 2";
+% ensure units match up prior to loaded CG calculation
+structNames = ["aircraft.unloaded.XYZ_CG";
+"aircraft.payload.passengers.XYZ_CG";
+"aircraft.payload.cargo.XYZ_CG"];
+desiredUnits = ["in";
+    "in";
+    "in"];
+[aircraft, ~] = conv_aircraft_units(aircraft, 0, structNames, desiredUnits);
+
+% prepare for loaded weight and loaded CG calculations
+weights = [aircraft.unloaded.weight.value; 
+    aircraft.payload.passengers.weight.value;
+    aircraft.payload.cargo.weight.value];
+cgs = [aircraft.unloaded.XYZ_CG.value; 
+    aircraft.payload.passengers.XYZ_CG.value;
+    aircraft.payload.cargo.XYZ_CG.value];
+
+% loaded weight calculation
+aircraft.loaded.weight.value = sum(weights);
+aircraft.loaded.weight.units = 'N';
+aircraft.loaded.weight.type = "force";
+aircraft.loaded.weight.description = "total weight of aircraft + payload, where payload is all ducks and all pucks for Mission 2";
+
+% loaded CG calculation
+aircraft.loaded.XYZ_CG.value = composite_cg(weights, cgs);
+aircraft.loaded.XYZ_CG.units = 'in';
+aircraft.loaded.XYZ_CG.type = "length";
+aircraft.loaded.XYZ_CG.description = "vector of X, Y, Z coordinates for loaded aircraft CG (loaded aircraft includes payload of ducks, pucks)";
 
 
 

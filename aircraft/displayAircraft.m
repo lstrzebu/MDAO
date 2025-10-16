@@ -779,10 +779,10 @@ part_cgs = [aircraft.fuselage.hull.XYZ_CG.value;
     aircraft.propulsion.propeller.XYZ_CG.value;
     aircraft.propulsion.battery.XYZ_CG.value];
 
-aircraft.weight.unloaded.value = sum(part_weights);
-aircraft.weight.unloaded.units = 'N';
-aircraft.weight.unloaded.type = "force";
-aircraft.weight.unloaded.description = "Weight of aircraft with no payload (no ducks, pucks, or banner)";
+aircraft.unloaded.weight.value = sum(part_weights);
+aircraft.unloaded.weight.units = 'N';
+aircraft.unloaded.weight.type = "force";
+aircraft.unloaded.weight.description = "Weight of aircraft with no payload (no ducks, pucks, or banner)";
 
 aircraft.unloaded.XYZ_CG.value = composite_cg(part_weights, part_cgs);
 aircraft.unloaded.XYZ_CG.units = 'in';
