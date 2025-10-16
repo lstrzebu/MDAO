@@ -15,10 +15,10 @@ fprintf('Verifying Mission 2 feasibility... \n')
 %% 1. Static Stability (M2)
 fprintf('Running static stability checks for loaded aircraft (Mission 2)... \n')
 
-aircraft.dynamics.X_CG.value = 1;
-aircraft.dynamics.X_CG.units = 'm';
-aircraft.dynamics.X_CG.description = "X coordinate for CG location according to AVL coordinate system: x positive rear, y positive to the right hand wing, and z positive up. Origin at LE of wing";
-aircraft.dynamics.X_CG.type = "length";
+% aircraft.dynamics.X_CG.value = 1;
+% aircraft.dynamics.X_CG.units = 'm';
+% aircraft.dynamics.X_CG.description = "X coordinate for CG location according to AVL coordinate system: x positive rear, y positive to the right hand wing, and z positive up. Origin at LE of wing";
+% aircraft.dynamics.X_CG.type = "length";
 % aircraft.loaded.weight.value
 % mission.weather.air_density.value % from getMission
 % S,b,d_tail,i_t,C_r_ht,C_t_ht,b_ht % from getAircraft
@@ -118,7 +118,7 @@ aircraft.dynamics.stability.static.failure.description = "discrete value indicat
 %     strcmp(string(aircraft.wing.Cm0.units), "");
 %     strcmp(string(mission.weather.air_density.units), "kg/m^3")];
 
-structNames = ["aircraft.dynamics.X_CG";
+structNames = ["aircraft.loaded.XYZ_CG";
     "aircraft.loaded.weight";
     "aircraft.wing.S";
     "aircraft.wing.b";
@@ -170,7 +170,7 @@ desiredUnits = ["m";
 [aircraft, mission] = conv_aircraft_units(aircraft, mission, structNames, desiredUnits);
 %mission = conv_aircraft_units(mission, missionStructNames, missionDesiredUnits);
 
-unitsAgree = [strcmp(string(aircraft.dynamics.X_CG.units), "m"); 
+unitsAgree = [strcmp(string(aircraft.loaded.XYZ_CG.units), "m"); 
     strcmp(string(aircraft.loaded.weight.units), "N");
     strcmp(string(aircraft.wing.S.units), "m^2");
     strcmp(string(aircraft.wing.b.units), "m");
@@ -201,7 +201,7 @@ if all(unitsAgree)
     aircraft.dynamics.CL_trim.value,...
     aircraft.dynamics.v_trim.value,...
     aircraft.dynamics.alpha_trim.value,...
-    aircraft.dynamics.stability.static.failure.value] = StaticStab(aircraft.dynamics.X_CG.value,...
+    aircraft.dynamics.stability.static.failure.value] = StaticStab(aircraft.unloaded.XYZ_CG.value(1),...
     aircraft.loaded.weight.value,...
     aircraft.wing.S.value,...
     aircraft.wing.b.value,...
