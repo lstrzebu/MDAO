@@ -423,6 +423,364 @@ aircraft.loaded.XYZ_CG.units = 'in';
 aircraft.loaded.XYZ_CG.type = "length";
 aircraft.loaded.XYZ_CG.description = "vector of X, Y, Z coordinates for loaded aircraft CG (loaded aircraft includes payload of ducks, pucks)";
 
+assumptions(end+1).name = "Neglect Rubber Duck Moment of Inertia";
+assumptions(end+1).description = "Assume that moment of inertia of each individual duck (and therefore of the ducks collectively) are approximately zero";
+assumptions(end+1).rationale = "Rubber ducks are light and small";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
+aircraft.payload.passengers.MOI.value = zeros(3);
+aircraft.payload.passengers.MOI.units = '';
+aircraft.payload.passengers.MOI.type = "MOI";
+aircraft.payload.passengers.MOI.description = "moment of inertia of all ducks about the origin of the coordinate system";
+
+aircraft.payload.cargo.individual.radius.value = 3/2;
+aircraft.payload.cargo.individual.radius.units = 'in';
+aircraft.payload.cargo.individual.radius.type = "length";
+aircraft.payload.cargo.individual.radius.description = "radius of a standard hockey puck";
+
+aircraft.payload.cargo.individual.height.value = 1;
+aircraft.payload.cargo.individual.height.units = 'in';
+aircraft.payload.cargo.individual.height.type = "length";
+aircraft.payload.cargo.individual.height.description = "height of a standard hockey puck";
+
+
+% compute the total pucks MOI as the MOI of a cylinder whose axis is
+% parallel to the x axis
+m = aircraft.payload.cargo.mass.value; % mass of the net cylinder of stacked pucks (kg)
+r = aircraft.payload.cargo.individual.radius.value; % radius of the net cylinder of stacked pucks (in)
+numPucks = missions(:, 2);
+h = numPucks.*aircraft.payload.cargo.individual.height.value; % height of the net cylinder of stacked pucks (in)
+I_par = m.*(r.^2)./2; % parallel moment of inertia of cylinder
+I_perp = (1/12).*m.*(h.^2 + 3.*r.^2); % perpendicular moment of inertia of cylinder
+I_xx = I_par;
+I_yy = I_perp;
+I_zz = I_perp;
+I = zeros(3);
+I(1,1) = I_xx;
+I(2,2) = I_yy;
+I(3,3) = I_zz;
+aircraft.payload.cargo.MOI.value = I;
+aircraft.payload.cargo.MOI.units = 'kg*in^2';
+aircraft.payload.cargo.MOI.type = "MOI";
+aircraft.payload.cargo.MOI.description = "moment of inertia matrix for all pucks about the CG of the net stacked cylinder of pucks";
+
+% % Wing MOI 
+% if strcmp(string(aircraft.wing.skin.XYZ_CG.units), "in")
+%     cm_wing = aircraft.wing.skin.XYZ_CG.value';
+% else
+%     error('Unit mismatch: computation of wing skin MOI not possible.')
+% end
+
+if strcmp(string(aircraft.wing.skin.mass.units), "kg") && strcmp(string(aircraft.wing.b.units), "in") && strcmp(string(aircraft.wing.c.units), "in")
+    mass_wing = aircraft.wing.skin.mass.value; % [kg]
+    b_wing = aircraft.wing.b.value;
+    c_wing = aircraft.wing.c.value;
+    
+    % Mass moments of inertia about the wing's cm
+    I_xx_wing = (1/12)*(mass_wing)*(b_wing^2); % kg*in^2
+    I_yy_wing = (1/12)*(mass_wing)*(c_wing^2); % kg*in^@
+    I_zz_wing = I_xx_wing + I_yy_wing; % kg*in^2
+
+    % Product moments of inertia about wings CM are zero because wing is
+    % symmetrical
+    I_xy_wing = 0;
+    I_yz_wing = 0;
+    I_xz_wing = 0;
+
+    I_wing  = [I_xx_wing, I_xy_wing, I_xz_wing; ...
+        I_xy_wing, I_yy_wing, I_yz_wing; ...
+        I_xz_wing, I_yz_wing, I_zz_wing];
+
+else
+    error('Unit mismatch: computation of wing skin MOI not possible.')
+end
+
+aircraft.wing.skin.MOI.value = I_wing;
+aircraft.wing.skin.MOI.units = 'kg*in^2';
+aircraft.wing.skin.MOI.type = "MOI";
+aircraft.wing.skin.MOI.description = "moment of inertia matrix for wings about their own center of mass";
+
+% HT MOI 
+if strcmp(string(aircraft.tail.horizontal.skin.XYZ_CG.units), "in")
+    cm_HT = aircraft.tail.horizontal.skin.XYZ_CG.value';
+else
+    error('Unit mismatch: computation of horizontal tail skin MOI not possible.')
+end
+
+if strcmp(string(aircraft.tail.horizontal.skin.mass.units), "kg") && strcmp(string(aircraft.tail.horizontal.b.units), "in") && strcmp(string(aircraft.tail.horizontal.c.units), "in")
+    mass_HT = aircraft.tail.horizontal.skin.mass.value; % [kg]
+    b_HT = aircraft.tail.horizontal.b.value;
+    c_HT = aircraft.tail.horizontal.c.value;
+    
+    % Mass moments of inertia about the horizontal tail's cm
+    I_xx_HT = (1/12)*(mass_HT)*(b_HT^2); % kg*in^2
+    I_yy_HT = (1/12)*(mass_HT)*(c_HT^2); % kg*in^2
+    I_zz_HT = I_xx_HT + I_yy_HT; % kg*in^2
+
+    % Product moments of inertia about horizontal tails CM are zero because horizontal tail is
+    % symmetrical
+    I_xy_HT = 0;
+    I_yz_HT = 0;
+    I_xz_HT = 0;
+
+    I_HT  = [I_xx_HT, I_xy_HT, I_xz_HT; ...
+        I_xy_HT, I_yy_HT, I_yz_HT; ...
+        I_xz_HT, I_yz_HT, I_zz_HT];
+
+else
+    error('Unit mismatch: computation of horizontal tail skin MOI not possible.')
+end
+
+aircraft.tail.horizontal.skin.MOI.value = I_HT;
+aircraft.tail.horizontal.skin.MOI.units = 'kg*in^2';
+aircraft.tail.horizontal.skin.MOI.type = "MOI";
+aircraft.tail.horizontal.skin.MOI.description = "moment of inertia matrix for horizontal tail about its own center of mass";
+
+% VT MOI 
+if strcmp(string(aircraft.tail.vertical.skin.XYZ_CG.units), "in")
+    cm_VT = aircraft.tail.vertical.skin.XYZ_CG.value';
+else
+    error('Unit mismatch: computation of vertical tail skin MOI not possible.')
+end
+
+if strcmp(string(aircraft.tail.vertical.skin.mass.units), "kg") && strcmp(string(aircraft.tail.vertical.b.units), "in") && strcmp(string(aircraft.tail.vertical.c.units), "in")
+    mass_VT = aircraft.tail.vertical.skin.mass.value; % [kg]
+    b_VT = aircraft.tail.vertical.b.value;
+    c_VT = aircraft.tail.vertical.c.value;
+    
+    % Mass moments of inertia about the vertical tail's cm
+    I_xx_VT = (1/12)*(mass_VT)*((b_VT/2)^2); % kg*in^2
+    I_zz_VT = (1/12)*(mass_VT)*(c_VT^2); % kg*in^2
+    I_yy_VT = I_xx_VT + I_zz_VT; % kg*in^2
+
+    % Product moments of inertia about vertical tails CM are zero because vertical tail is
+    % symmetrical
+    I_xy_VT = 0;
+    I_yz_VT = 0;
+    I_xz_VT = 0;
+
+    I_VT  = [I_xx_VT, I_xy_VT, I_xz_VT; ...
+        I_xy_VT, I_yy_VT, I_yz_VT; ...
+        I_xz_VT, I_yz_VT, I_zz_VT];
+
+else
+    error('Unit mismatch: computation of vertical tail skin MOI not possible.')
+end
+
+aircraft.tail.vertical.skin.MOI.value = I_VT;
+aircraft.tail.vertical.skin.MOI.units = 'kg*in^2';
+aircraft.tail.vertical.skin.MOI.type = "MOI";
+aircraft.tail.vertical.skin.MOI.description = "moment of inertia matrix for vertical tail about its own center of mass";
+
+% prepare to calculate motor MOI
+if strcmp(string(constants.g.units), "m/s^2") && strcmp(string(aircraft.propulsion.motor.weight.units), "N")
+    aircraft.propulsion.motor.mass.value = aircraft.propulsion.motor.weight.value./constants.g.value;
+    aircraft.propulsion.motor.mass.units = 'kg';
+    aircraft.propulsion.motor.mass.type = "mass";
+    aircraft.propulsion.motor.mass.description = "mass of motor (modeled as a uniform density cylinder, slightly inaccurate due to stator length differing from shaft length)";
+else
+    error('Unit mismatch: computation of motor MOI is not possible.')
+end
+
+% compute the motor MOI as the MOI of a uniform density cylinder whose axis is parallel to the x axis
+m = aircraft.propulsion.motor.mass.value; % mass of the motor cylinder (kg)
+r = aircraft.propulsion.motor.diameter_outer.value./2; % radius of the motor cylinder (in)
+h = aircraft.propulsion.motor.length.value; % height of the motor cylinder (in)
+I_par = m.*(r.^2)./2; % parallel moment of inertia of cylinder
+I_perp = (1/12).*m.*(h.^2 + 3.*r.^2); % perpendicular moment of inertia of cylinder
+I_xx = I_par;
+I_yy = I_perp;
+I_zz = I_perp;
+I = zeros(3);
+I(1,1) = I_xx;
+I(2,2) = I_yy;
+I(3,3) = I_zz;
+aircraft.propulsion.motor.MOI.value = I;
+aircraft.propulsion.motor.MOI.units = 'kg*in^2';
+aircraft.propulsion.motor.MOI.type = "MOI";
+aircraft.propulsion.motor.MOI.description = "moment of inertia matrix for motor";
+
+aircraft.propulsion.ESC.MOI.value = zeros(3);
+aircraft.propulsion.ESC.MOI.units = 'kg*in^2';
+aircraft.propulsion.ESC.MOI.type = "MOI";
+aircraft.propulsion.ESC.MOI.description = "moment of inertia matrix for electronic speed controller (ESC)";
+
+assumptions(end+1).name = "Neglect ESC MOI";
+assumptions(end+1).description = "Assume the moments of inertia for the ESC are approximately zero";
+assumptions(end+1).rationale = "The ESC weighs only 126 grams";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+% prepare to calculate propeller MOI
+if strcmp(string(constants.g.units), "m/s^2") && strcmp(string(aircraft.propulsion.propeller.weight.units), "N")
+    aircraft.propulsion.propeller.mass.value = aircraft.propulsion.propeller.weight.value./constants.g.value;
+    aircraft.propulsion.propeller.mass.units = 'kg';
+    aircraft.propulsion.propeller.mass.type = "mass";
+    aircraft.propulsion.propeller.mass.description = "mass of propeller (modeled as a flat disk)";
+else
+    error('Unit mismatch: computation of propeller MOI is not possible.')
+end
+
+% compute the propeller MOI as the MOI of a flat disk
+m = aircraft.propulsion.propeller.mass.value; % mass (kg)
+r = aircraft.propulsion.propeller.diameter.value/2; % radius (in)
+I_xx = 0.5*m*r^2;
+I_yy = 0.25*m*r^2;
+I_zz = I_yy;
+I = zeros(3);
+I(1,1) = I_xx;
+I(2,2) = I_yy;
+I(3,3) = I_zz;
+aircraft.propulsion.propeller.MOI.value = I;
+aircraft.propulsion.propeller.MOI.units = 'kg*in^2';
+aircraft.propulsion.propeller.MOI.type = "MOI";
+aircraft.propulsion.propeller.MOI.description = "moment of inertia matrix for propeller";
+
+% prepare to calculate battery MOI
+if strcmp(string(constants.g.units), "m/s^2") && strcmp(string(aircraft.propulsion.battery.weight.units), "N")
+    aircraft.propulsion.battery.mass.value = aircraft.propulsion.battery.weight.value./constants.g.value;
+    aircraft.propulsion.battery.mass.units = 'kg';
+    aircraft.propulsion.battery.mass.type = "mass";
+    aircraft.propulsion.battery.mass.description = "mass of battery";
+else
+    error('Unit mismatch: computation of battery MOI is not possible.')
+end
+
+% compute the battery MOI as the MOI of a rectangular prism
+m = aircraft.propulsion.battery.mass.value; % kg
+l = aircraft.propulsion.battery.length.value; % in
+w = aircraft.propulsion.battery.width.value; % in
+h = aircraft.propulsion.battery.height.value; % in 
+
+assumptions(end+1).name = "Battery Orientation";
+assumptions(end+1).description = "Assume the battery has an identical z coordinate to the aircraft CG. The battery length is in line with the y axis, the width is in line with the x axis, and the height is in line with the z axis.";
+assumptions(end+1).rationale = "Orienting the battery with length along the y axis will help the aircraft resist roll. Change later";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+% l along y
+% w along x
+% h along z
+
+% https://mechanicsmap.psu.edu/websites/centroidtables/centroids3D/centroids3D.html
+% w along x therefore their w = my w
+% h along y therefore their h = my l
+% d along z therefore their d = my h
+
+I_xx = (1/12)*m*(l^2 + h^2);
+I_yy = (1/12)*m*(h^2 + w^2);
+I_zz = (1/12)*m*(l^2 + w^2);
+I = zeros(3);
+I(1,1) = I_xx;
+I(2,2) = I_yy;
+I(3,3) = I_zz;
+aircraft.propulsion.battery.MOI.value = I;
+aircraft.propulsion.battery.MOI.units = 'kg*in^2';
+aircraft.propulsion.battery.MOI.type = "MOI";
+aircraft.propulsion.battery.MOI.description = "moment of inertia matrix for battery";
+
+% Calculate net MOI for unloaded aircraft
+
+units = [aircraft.fuselage.hull.XYZ_CG.units;
+aircraft.wing.skin.XYZ_CG.units;
+aircraft.tail.horizontal.skin.XYZ_CG.units;
+aircraft.tail.vertical.skin.XYZ_CG.units;
+aircraft.propulsion.motor.XYZ_CG.units;
+aircraft.propulsion.ESC.XYZ_CG.units;
+aircraft.propulsion.propeller.XYZ_CG.units;
+aircraft.propulsion.battery.XYZ_CG.units];
+unitsAgree = strcmp(units, "in");
+if all(unitsAgree)
+cg_locations = {aircraft.fuselage.hull.XYZ_CG.value', ...
+    aircraft.wing.skin.XYZ_CG.value', ...
+aircraft.tail.horizontal.skin.XYZ_CG.value', ...
+aircraft.tail.vertical.skin.XYZ_CG.value', ...
+aircraft.propulsion.motor.XYZ_CG.value', ...
+aircraft.propulsion.ESC.XYZ_CG.value', ...
+aircraft.propulsion.propeller.XYZ_CG.value', ...
+aircraft.propulsion.battery.XYZ_CG.value'};
+else
+    error('Unit mismatch: calculation of unloaded aircraft MOI not possible.')
+end
+
+units = [aircraft.fuselage.hull.mass.units;
+aircraft.wing.skin.mass.units;
+aircraft.tail.horizontal.skin.mass.units;
+aircraft.tail.vertical.skin.mass.units;
+aircraft.propulsion.motor.mass.units;
+aircraft.propulsion.ESC.mass.units;
+aircraft.propulsion.propeller.mass.units;
+aircraft.propulsion.battery.mass.units];
+unitsAgree = strcmp(units, "kg");
+if all(unitsAgree)
+masses = {aircraft.fuselage.hull.mass.value, ...
+    aircraft.wing.skin.mass.value, ...
+aircraft.tail.horizontal.skin.mass.value, ...
+aircraft.tail.vertical.skin.mass.value, ...
+aircraft.propulsion.motor.mass.value, ...
+aircraft.propulsion.ESC.mass.value, ...
+aircraft.propulsion.propeller.mass.value, ...
+aircraft.propulsion.battery.mass.value};
+else
+    error('Unit mismatch: calculation of unloaded aircraft MOI not possible.')
+end
+
+aircraft.fuselage.hull.MOI.value = zeros(3);
+aircraft.fuselage.hull.MOI.units = 'kg*in^2';
+aircraft.fuselage.hull.MOI.type = "MOI";
+aircraft.fuselage.hull.MOI.description = "moment of inertia of fuselage hull (not including structural bulkheads)";
+
+assumptions(end+1).name = "Neglect Fuselage MOI";
+assumptions(end+1).description = "For now, until I get values from Sam... neglect fuselage MOI";
+assumptions(end+1).rationale = "Temporary";
+assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+
+units = [aircraft.fuselage.hull.MOI.units;
+aircraft.wing.skin.MOI.units;
+aircraft.tail.horizontal.skin.MOI.units;
+aircraft.tail.vertical.skin.MOI.units;
+aircraft.propulsion.motor.MOI.units;
+aircraft.propulsion.ESC.MOI.units;
+aircraft.propulsion.propeller.MOI.units;
+aircraft.propulsion.battery.MOI.units];
+unitsAgree = strcmp(units, "kg*in^2");
+if all(unitsAgree)
+I_matrices = {aircraft.fuselage.hull.MOI.value, ...
+    aircraft.wing.skin.MOI.value, ...
+aircraft.tail.horizontal.skin.MOI.value, ...
+aircraft.tail.vertical.skin.MOI.value, ...
+aircraft.propulsion.motor.MOI.value, ...
+aircraft.propulsion.ESC.MOI.value, ...
+aircraft.propulsion.propeller.MOI.value, ...
+aircraft.propulsion.battery.MOI.value};
+else
+    error('Unit mismatch: calculation of unloaded aircraft MOI not possible.')
+end
+
+%I_matrices = {I_wing,I_fuselage,I_duck_1,I_duck_2};
+
+aircraft.unloaded.MOI.units = 'kg*in^2';
+aircraft.unloaded.MOI.type = "MOI";
+aircraft.unloaded.MOI.description = "moments of inertia of unloaded aircraft";
+aircraft.unloaded.mass.units = 'kg';
+aircraft.unloaded.mass.type = "mass";
+aircraft.unloaded.mass.description = "mass of unloaded aircraft";
+aircraft.unloaded.XYZ_CG_2.units = 'in';
+aircraft.unloaded.XYZ_CG_2.type = "length";
+aircraft.unloaded.XYZ_CG_2.description = "vector of X, Y, Z coordinates of CG location for unloaded aircraft";
+[aircraft.unloaded.MOI.value,aircraft.unloaded.mass.value,aircraft.unloaded.XYZ_CG_2.value] = InertiaCalc(cg_locations,masses,I_matrices);
+
+% Flipping product moment of inertia signs
+% (AVL Defines the I_ab values with a flipped sign)
+I_xy = -1.*I_tot(1,2);
+I_yz = -1.*I_tot(2,3);
+I_xz = -1.*I_tot(1,3);
+
+I_tot(1,2) = I_xy;
+I_tot(2,1) = I_xy;
+
+I_tot(2,3) = I_yz;
+I_tot(3,2) = I_yz;
+
+I_tot(1,3) = I_xz;
+I_tot(3,1) = I_xz;
 
 fprintf('Done generating mission ideas.\n')

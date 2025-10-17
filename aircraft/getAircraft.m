@@ -192,6 +192,16 @@ aircraft.propulsion.battery.weight.description = "Weight of the battery utilized
 aircraft.propulsion.battery.capacity.value = batteryTable(batteryIndex, 7); % in Wh
 aircraft.propulsion.battery.capacity.units = 'Wh';
 aircraft.propulsion.battery.capacity.description = "Total propulsion battery capacity";
+aircraft.propulsion.battery.length.value = batteryTable(batteryIndex, 10); 
+aircraft.propulsion.battery.length.units = 'in';
+aircraft.propulsion.battery.length.type = "length";
+aircraft.propulsion.battery.length.description = "length of battery";
+aircraft.propulsion.battery.width = aircraft.propulsion.battery.length;
+aircraft.propulsion.battery.width.value = batteryTable(batteryIndex, 11);
+aircraft.propulsion.battery.width.description = "width of battery";
+aircraft.propulsion.battery.height = aircraft.propulsion.battery.length;
+aircraft.propulsion.battery.height.value = batteryTable(batteryIndex, 12);
+aircraft.propulsion.battery.height.description = "height of battery";
 
 % Read Motor Spreadsheet
 motorTable = readmatrix('Motor Data Condensed.xlsx'); % Name might change
@@ -233,6 +243,11 @@ aircraft.propulsion.propeller.weight.units = 'N';
 aircraft.propulsion.propeller.weight.type = "force";
 aircraft.propulsion.propeller.weight.description = "weight of propeller";
 aircraft.propulsion.propeller.name = propTable{propIndex, 1};
+
+aircraft.propulsion.propeller.diameter.value = str2double(propTable{propIndex, 3}{1}); 
+aircraft.propulsion.propeller.diameter.units = 'in';
+aircraft.propulsion.propeller.diameter.type = "length";
+aircraft.propulsion.propeller.diameter.description = "diameter of propeller";
 
 % Reading specific prop spreadsheet
 aircraft.propulsion.propeller.filename = strcat('PER3_', aircraft.propulsion.propeller.name{1}, '.xlsx');
