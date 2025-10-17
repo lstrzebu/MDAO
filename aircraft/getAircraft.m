@@ -156,6 +156,11 @@ aircraft.tail.config.units = '';
 aircraft.tail.config.type = "non";
 aircraft.tail.config.description = "Whether the current design's tail is Conventional, U-Shaped (Dual Fin), or T-Shaped (High Tail)";
 
+aircraft.tail.vertical.taper_ratio.value = 0;
+aircraft.tail.vertical.taper_ratio.units = '';
+aircraft.tail.vertical.taper_ratio.type = "non";
+aircraft.tail.vertical.taper_ratio.description = "Taper ratio of vertical tail";
+
 assumptions(end+1).name = "Cylindrical Approximation of Fuselage";
 assumptions(end+1).description = "Model fuselage as a perfect cylinder having a diameter equal to the true fuselage's height.";
 assumptions(end+1).rationale = "It is not worth the effort to exactly model the fuselage for aerodynamic calculations. Using a diameter equal to the true fuselage's height (rather than width) results in a more conservative estimate as the true fuselage will have less drag this way.";

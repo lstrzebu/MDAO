@@ -1,4 +1,4 @@
-function [X_NP,C_L_trim,V_trim,alpha_FRL_trim,failure] = StaticStab(X_CG,W,S,b,d_tail,i_t,C_r_ht,C_t_ht,b_ht,a_wb,a_tail,alpha_0L_wb,C_M0_wb,air_density)
+function [X_NP,C_L_trim,V_trim,alpha_FRL_trim,failure, failure_message] = StaticStab(X_CG,W,S,b,d_tail,i_t,C_r_ht,C_t_ht,b_ht,a_wb,a_tail,alpha_0L_wb,C_M0_wb,air_density)
 %STATICSTAB evaluates the static stability properties of the aircraft.
 %           Dimensions can be metric or imperial, but the have to be
 %           consistent.
@@ -132,16 +132,16 @@ if X_CG < X_NP
 
     failure = Cm_failure_key;
 
-    fprintf("Static Stability Failed! The CG is behind the NP\n")
+    failure_message = "Static Stability Failed! The CG is behind the NP";
 elseif C_L_trim < 0 
 
     failure = Cl_failure_key;
 
-    fprintf("Static Stability Failed! The aircraft is statically stable but trims at a negative lift\n")
+    failure_message = "Static Stability Failed! The aircraft is statically stable but trims at a negative lift";
 else
     failure = 0;
 
-    fprintf("Static Stability Succeeded.\n")
+    failure_message = "Static Stability Succeeded.";
 end
 
 end % End of function

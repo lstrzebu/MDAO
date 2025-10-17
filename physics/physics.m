@@ -201,7 +201,8 @@ if all(unitsAgree)
     aircraft.physics.CL_trim.value,...
     aircraft.physics.v_trim.value,...
     aircraft.physics.alpha_trim.value,...
-    aircraft.physics.stability.static.failure.value] = StaticStab(aircraft.unloaded.XYZ_CG.value(1),... % m
+    aircraft.physics.stability.static.failure.value,...
+    failure_message] = StaticStab(aircraft.unloaded.XYZ_CG.value(1),... % m
     aircraft.loaded.weight.value,... % N
     aircraft.wing.S.value,... % m^2
     aircraft.wing.b.value,... % m
@@ -219,9 +220,13 @@ else
     error('Unit mismatch: static stability analysis not possible. For convention, ensure static stability analysis functions are called with SI units (except for angles, which should use degrees rather than radians).')
 end
 
-% move on to another design 
+% move on to another design if needed (and explain why)
 if aircraft.physics.stability.static.failure.value ~= 0
     aircraft.continue_design_analysis = false;
+    % failure message already assigned by static stability function, just
+    % need to print it out
+else
+    clear failure_message
 end
 
 fprintf('Completed static stability checks for loaded aircraft (Mission 2).\n')
@@ -264,7 +269,35 @@ fprintf('Completed static stability checks for loaded aircraft (Mission 2).\n')
 
 %% 5. Dynamic Stability (M2)
 
-USETORUN_RunDymanicStab % run dynamic stability analysis
+if aircraft.continue_design_analysis
+    USETORUN_RunDymanicStab % run dynamic stability analysis
+
+% interpret dynamic stability results
+if Static_failure ~= 0 || Trim_failure ~= 0 || dynamic_failure_mode ~= 0
+    aircraft.continue_design_analysis = false;
+    if Static_failure ~=0
+        failure_message = "Static Stability Failed! The CG is behind the NP";
+    elseif Trim_failure ~= 0
+        failure_message = "Static Stability Failed! The aircraft is statically stable but trims at a negative lift";
+    elseif dynamic_failure_mode ~= 0
+        switch dynamic_failure_mode
+            case eigen_key
+                failure_message = "Dynamic Stability Failed! AVL eigenvalue output does not show the expected 5 Dynamic modes. Double-check that your mass and inertia values make sense. Possible Fix - Increase your I_yy and/or I_zz values and ensure they are reflecting the wing/tail placements\.";
+            case phugoid_key
+                failure_message = "Dynamic Stability Failed! Phugoid mode is undamped. Possible Fix - Move your NP closer to your CG. An overly statically stable aircraft is often dynamically unstable.";
+            case dutch_roll_key
+                failure_message = "Dynamic Stability Failed! Dutch Roll mode is undamped. Possible Fix - Decrease Wing Sweep and/or dihedral.";
+            case SPO_key
+                failure_message = "Dynamic Stability Failed! SPO mode is underdamped. Possible Fix - Move lifting surfaces farther from CG.";
+            case spiral_key
+                failure_message = "Dynamic Stability Failed! Spiral mode is undamped. Possible Fix - Decrease Tail Fin Size and/or Increase Dihedral. Spiral is caused by strong directional stability and weak lateral stability.";
+            case roll_key
+                failure_message = "Dynamic Stability Failed! Rolling mode is underdamped\n. Possible Fix - Increase Wing Dihedral.";
+        end
+    end
+end
+end
+
 
 fprintf('Completed verification of Mission 2 feasibility.\n')
 

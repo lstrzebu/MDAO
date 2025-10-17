@@ -1,3 +1,5 @@
+cd 'physics\stability\Dynamic Stab' % enter flight stability directory (for AVL call)
+
 iterationNumber = 1; % for testing
 design_title               = sprintf("Design #%d", iterationNumber);
 
@@ -58,9 +60,17 @@ else
     error('Unit mismatch: dynamic stability analysis not possible.')
 end
 
+structNames = ["aircraft.tail.horizontal.skin.XYZ_CG";
+    "aircraft.wing.skin.XYZ_CG";
+    "aircraft.tail.horizontal.S";
+    "aircraft.tail.vertical.S";
+    "aircraft.loaded.MOI"];
+desiredUnits = ["m"; "m"; "m^2"; "m^2"; "kg*m^2"];
+[aircraft, ~] = conv_aircraft_units(aircraft, 0, structNames, desiredUnits);
+
 % z-location of the tail
 %z_tail  = 0.5;
-if strcmp(tail_config, "C") && strcmp(string(aircraft.tail.horizontal.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.wing.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.tail.horizontal.c), "m")
+if strcmp(tail_config, "C") && strcmp(string(aircraft.tail.horizontal.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.wing.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.tail.horizontal.c.units), "m")
     z_tail = aircraft.tail.horizontal.skin.XYZ_CG.value(3) - aircraft.wing.skin.XYZ_CG.value(3); % z distance between wing and horizontal tail
     C_r_fuselage = aircraft.tail.horizontal.c.value; % for conventional tail, the root chord of the part of the tail connected to the fuselage is the root chord of the horizontal tail
 else
@@ -78,6 +88,7 @@ else
 end
 
 lambda_ht = aircraft.tail.horizontal.taper_ratio.value;
+lambda_vt = aircraft.tail.vertical.taper_ratio.value;
 
 % lambda_ht = 2/3;
 
@@ -85,7 +96,7 @@ lambda_ht = aircraft.tail.horizontal.taper_ratio.value;
 % Vertical Tail Properties
 %S_vt = 0.25;
 if strcmp(string(aircraft.tail.vertical.S.units), "m^2")
-    S_VT = aircraft.tail.vertical.S.value;
+    S_vt = aircraft.tail.vertical.S.value;
 else
     error('Unit mismatch: dynamic stability analysis not possible.')
 end
@@ -226,3 +237,8 @@ else
     end
 
 end
+
+% return to home directory
+cd ..
+cd ..
+cd ..
