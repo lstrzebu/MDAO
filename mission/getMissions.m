@@ -768,6 +768,7 @@ aircraft.unloaded.XYZ_CG_2.type = "length";
 aircraft.unloaded.XYZ_CG_2.description = "vector of X, Y, Z coordinates of CG location for unloaded aircraft";
 [aircraft.unloaded.MOI.value,aircraft.unloaded.mass.value,aircraft.unloaded.XYZ_CG_2.value] = InertiaCalc(cg_locations,masses,I_matrices);
 
+I_tot = aircraft.unloaded.MOI.value;
 % Flipping product moment of inertia signs
 % (AVL Defines the I_ab values with a flipped sign)
 I_xy = -1.*I_tot(1,2);
@@ -782,5 +783,117 @@ I_tot(3,2) = I_yz;
 
 I_tot(1,3) = I_xz;
 I_tot(3,1) = I_xz;
+
+aircraft.unloaded.MOI.value = I_tot;
+
+% Calculate net MOI for loaded aircraft
+units = [aircraft.payload.passengers.XYZ_CG.units;
+    aircraft.payload.cargo.XYZ_CG.units;
+    aircraft.fuselage.hull.XYZ_CG.units;
+aircraft.wing.skin.XYZ_CG.units;
+aircraft.tail.horizontal.skin.XYZ_CG.units;
+aircraft.tail.vertical.skin.XYZ_CG.units;
+aircraft.propulsion.motor.XYZ_CG.units;
+aircraft.propulsion.ESC.XYZ_CG.units;
+aircraft.propulsion.propeller.XYZ_CG.units;
+aircraft.propulsion.battery.XYZ_CG.units];
+unitsAgree = strcmp(units, "in");
+if all(unitsAgree)
+cg_locations = {aircraft.payload.passengers.XYZ_CG.value', ...
+    aircraft.payload.cargo.XYZ_CG.value', ...
+    aircraft.fuselage.hull.XYZ_CG.value', ...
+    aircraft.wing.skin.XYZ_CG.value', ...
+aircraft.tail.horizontal.skin.XYZ_CG.value', ...
+aircraft.tail.vertical.skin.XYZ_CG.value', ...
+aircraft.propulsion.motor.XYZ_CG.value', ...
+aircraft.propulsion.ESC.XYZ_CG.value', ...
+aircraft.propulsion.propeller.XYZ_CG.value', ...
+aircraft.propulsion.battery.XYZ_CG.value'};
+else
+    error('Unit mismatch: calculation of loaded aircraft MOI not possible.')
+end
+
+units = [aircraft.payload.passengers.mass.units;
+    aircraft.payload.cargo.mass.units;
+    aircraft.fuselage.hull.mass.units;
+aircraft.wing.skin.mass.units;
+aircraft.tail.horizontal.skin.mass.units;
+aircraft.tail.vertical.skin.mass.units;
+aircraft.propulsion.motor.mass.units;
+aircraft.propulsion.ESC.mass.units;
+aircraft.propulsion.propeller.mass.units;
+aircraft.propulsion.battery.mass.units];
+unitsAgree = strcmp(units, "kg");
+if all(unitsAgree)
+masses = {aircraft.payload.passengers.mass.value, ...
+    aircraft.payload.cargo.mass.value, ...
+    aircraft.fuselage.hull.mass.value, ...
+    aircraft.wing.skin.mass.value, ...
+aircraft.tail.horizontal.skin.mass.value, ...
+aircraft.tail.vertical.skin.mass.value, ...
+aircraft.propulsion.motor.mass.value, ...
+aircraft.propulsion.ESC.mass.value, ...
+aircraft.propulsion.propeller.mass.value, ...
+aircraft.propulsion.battery.mass.value};
+else
+    error('Unit mismatch: calculation of loaded aircraft MOI not possible.')
+end
+
+units = [aircraft.payload.passengers.MOI.units;
+    aircraft.payload.cargo.MOI.units;
+    aircraft.fuselage.hull.MOI.units;
+aircraft.wing.skin.MOI.units;
+aircraft.tail.horizontal.skin.MOI.units;
+aircraft.tail.vertical.skin.MOI.units;
+aircraft.propulsion.motor.MOI.units;
+aircraft.propulsion.ESC.MOI.units;
+aircraft.propulsion.propeller.MOI.units;
+aircraft.propulsion.battery.MOI.units];
+unitsAgree = strcmp(units, "kg*in^2");
+if all(unitsAgree)
+I_matrices = {aircraft.payload.passengers.MOI.value, ...
+    aircraft.payload.cargo.MOI.value, ...
+    aircraft.fuselage.hull.MOI.value, ...
+    aircraft.wing.skin.MOI.value, ...
+aircraft.tail.horizontal.skin.MOI.value, ...
+aircraft.tail.vertical.skin.MOI.value, ...
+aircraft.propulsion.motor.MOI.value, ...
+aircraft.propulsion.ESC.MOI.value, ...
+aircraft.propulsion.propeller.MOI.value, ...
+aircraft.propulsion.battery.MOI.value};
+else
+    error('Unit mismatch: calculation of loaded aircraft MOI not possible.')
+end
+
+%I_matrices = {I_wing,I_fuselage,I_duck_1,I_duck_2};
+
+aircraft.loaded.MOI.units = 'kg*in^2';
+aircraft.loaded.MOI.type = "MOI";
+aircraft.loaded.MOI.description = "moments of inertia of loaded aircraft";
+aircraft.loaded.mass.units = 'kg';
+aircraft.loaded.mass.type = "mass";
+aircraft.loaded.mass.description = "mass of loaded aircraft";
+aircraft.loaded.XYZ_CG_2.units = 'in';
+aircraft.loaded.XYZ_CG_2.type = "length";
+aircraft.loaded.XYZ_CG_2.description = "vector of X, Y, Z coordinates of CG location for loaded aircraft";
+[aircraft.loaded.MOI.value,aircraft.loaded.mass.value,aircraft.loaded.XYZ_CG_2.value] = InertiaCalc(cg_locations,masses,I_matrices);
+
+I_tot = aircraft.loaded.MOI.value;
+% Flipping product moment of inertia signs
+% (AVL Defines the I_ab values with a flipped sign)
+I_xy = -1.*I_tot(1,2);
+I_yz = -1.*I_tot(2,3);
+I_xz = -1.*I_tot(1,3);
+
+I_tot(1,2) = I_xy;
+I_tot(2,1) = I_xy;
+
+I_tot(2,3) = I_yz;
+I_tot(3,2) = I_yz;
+
+I_tot(1,3) = I_xz;
+I_tot(3,1) = I_xz;
+
+aircraft.loaded.MOI.value = I_tot;
 
 fprintf('Done generating mission ideas.\n')
