@@ -15,10 +15,10 @@ fprintf('Verifying Mission 2 feasibility... \n')
 %% 1. Static Stability (M2)
 fprintf('Running static stability checks for loaded aircraft (Mission 2)... \n')
 
-% aircraft.dynamics.X_CG.value = 1;
-% aircraft.dynamics.X_CG.units = 'm';
-% aircraft.dynamics.X_CG.description = "X coordinate for CG location according to AVL coordinate system: x positive rear, y positive to the right hand wing, and z positive up. Origin at LE of wing";
-% aircraft.dynamics.X_CG.type = "length";
+% aircraft.physics.X_CG.value = 1;
+% aircraft.physics.X_CG.units = 'm';
+% aircraft.physics.X_CG.description = "X coordinate for CG location according to AVL coordinate system: x positive rear, y positive to the right hand wing, and z positive up. Origin at LE of wing";
+% aircraft.physics.X_CG.type = "length";
 % aircraft.loaded.weight.value
 % mission.weather.air_density.value % from getMission
 % S,b,d_tail,i_t,C_r_ht,C_t_ht,b_ht % from getAircraft
@@ -78,33 +78,33 @@ aircraft.tail.horizontal.a.description = "3D lift-curve slope of horizontal tail
 
 
 % use SI units when calling static stability analysis function (however angles are in degrees)
-aircraft.dynamics.X_NP.units = 'm';
-aircraft.dynamics.X_NP.type = "length";
-aircraft.dynamics.X_NP.description = "X location of neutral point  according to AVL coordinate system: x positive rear, y positive to the right hand wing, and z positive up. Origin at LE of wing";
-aircraft.dynamics.CL_trim.units = '';
-aircraft.dynamics.CL_trim.type = "non";
+aircraft.physics.X_NP.units = 'm';
+aircraft.physics.X_NP.type = "length";
+aircraft.physics.X_NP.description = "X location of neutral point  according to AVL coordinate system: x positive rear, y positive to the right hand wing, and z positive up. Origin at LE of wing";
+aircraft.physics.CL_trim.units = '';
+aircraft.physics.CL_trim.type = "non";
 
 assumptions(end+1).name = "Total Lift Approximation";
 assumptions(end+1).description = "Assume that total trimmed lift coefficient for all lifting surfaces approximately equals total trimmed lift coefficient for entire aircraft";
 assumptions(end+1).rationale = "Lift effects of fuselage seem laborious to model although it would be feasible to do so";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
-aircraft.dynamics.CL_trim.description = "total trimmed lift coefficient of aircraft";
-aircraft.dynamics.v_trim.units = 'm/s';
-aircraft.dynamics.v_trim.type = "vel";
-aircraft.dynamics.v_trim.description = "freestream velocity during trimmed flight";
-aircraft.dynamics.alpha_trim.units = 'deg';
-aircraft.dynamics.alpha_trim.type = "ang";
-aircraft.dynamics.alpha_trim.description = "angle of attack (with respect to fuselage reference line) during trimmed flight";
-aircraft.dynamics.stability.static.failure.units = '';
-aircraft.dynamics.stability.static.failure.type = "non";
-aircraft.dynamics.stability.static.failure.description = "discrete value indicating the presence and mode of static failure: 0 = statically stable, 1 = inadequate pitching moment coefficient gradient (bad Cm_alpha), and 2 = inadequate trimmed lift coefficient (bad CL_trim)";
+aircraft.physics.CL_trim.description = "total trimmed lift coefficient of aircraft";
+aircraft.physics.v_trim.units = 'm/s';
+aircraft.physics.v_trim.type = "vel";
+aircraft.physics.v_trim.description = "freestream velocity during trimmed flight";
+aircraft.physics.alpha_trim.units = 'deg';
+aircraft.physics.alpha_trim.type = "ang";
+aircraft.physics.alpha_trim.description = "angle of attack (with respect to fuselage reference line) during trimmed flight";
+aircraft.physics.stability.static.failure.units = '';
+aircraft.physics.stability.static.failure.type = "non";
+aircraft.physics.stability.static.failure.description = "discrete value indicating the presence and mode of static failure: 0 = statically stable, 1 = inadequate pitching moment coefficient gradient (bad Cm_alpha), and 2 = inadequate trimmed lift coefficient (bad CL_trim)";
 
 % indicator of which type of unit conversion to use via the MATLAB Aerospace Toolbox: acc for acceleration units, vel for velocity units, etc: https://www.mathworks.com/help/aerotbx/unit-conversions-1.html
 
 
 % start test %
-% unitsAgree = [strcmp(string(aircraft.dynamics.X_CG.units), "m"); 
+% unitsAgree = [strcmp(string(aircraft.physics.X_CG.units), "m"); 
 %     strcmp(string(aircraft.loaded.weight.units), "N");
 %     strcmp(string(aircraft.wing.S.units), "m^2");
 %     strcmp(string(aircraft.wing.b.units), "m");
@@ -122,7 +122,7 @@ structNames = ["aircraft.loaded.XYZ_CG";
     "aircraft.loaded.weight";
     "aircraft.wing.S";
     "aircraft.wing.b";
-    "aircraft.tail.horizontal.d_tail";
+    "aircraft.tail.d_tail";
     "aircraft.tail.horizontal.i_tail";
     "aircraft.tail.horizontal.c";
     "aircraft.tail.horizontal.b";
@@ -148,7 +148,7 @@ desiredUnits = ["m";
 
 %variableTypes = 
 
-% structName = "aircraft.dynamics.X_CG";
+% structName = "aircraft.physics.X_CG";
 %variableType = "length";
 % desiredUnits = "m";
 
@@ -174,7 +174,7 @@ unitsAgree = [strcmp(string(aircraft.loaded.XYZ_CG.units), "m");
     strcmp(string(aircraft.loaded.weight.units), "N");
     strcmp(string(aircraft.wing.S.units), "m^2");
     strcmp(string(aircraft.wing.b.units), "m");
-    strcmp(string(aircraft.tail.horizontal.d_tail.units), "m");
+    strcmp(string(aircraft.tail.d_tail.units), "m");
     strcmp(string(aircraft.tail.horizontal.i_tail.units), "deg");
     strcmp(string(aircraft.tail.horizontal.c.units), "m");
     strcmp(string(aircraft.tail.horizontal.b.units), "m");
@@ -186,8 +186,8 @@ unitsAgree = [strcmp(string(aircraft.loaded.XYZ_CG.units), "m");
 
 % end test %
 
-% aircraft.dynamics.X_CG.value = convlength(aircraft.dynamics.X_CG.value, aircraft.dynamics.X_CG.units, "m"); 
-% aircraft.dynamics.X_CG.units = "m";
+% aircraft.physics.X_CG.value = convlength(aircraft.physics.X_CG.value, aircraft.physics.X_CG.units, "m"); 
+% aircraft.physics.X_CG.units = "m";
 
 if all(unitsAgree)
     % capture assumptions embedded in the static stability analysis function call
@@ -197,30 +197,30 @@ if all(unitsAgree)
     assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
     % call static stability analysis function
-    [aircraft.dynamics.X_NP.value,...
-    aircraft.dynamics.CL_trim.value,...
-    aircraft.dynamics.v_trim.value,...
-    aircraft.dynamics.alpha_trim.value,...
-    aircraft.dynamics.stability.static.failure.value] = StaticStab(aircraft.unloaded.XYZ_CG.value(1),...
-    aircraft.loaded.weight.value,...
-    aircraft.wing.S.value,...
-    aircraft.wing.b.value,...
-    aircraft.tail.horizontal.d_tail.value,...
-    aircraft.tail.horizontal.i_tail.value,...
-    aircraft.tail.horizontal.c.value,...
-    aircraft.tail.horizontal.c.value,...
-    aircraft.tail.horizontal.b.value,...
-    aircraft.wing.a_wb.value,...
-    aircraft.tail.horizontal.a.value,...
-    aircraft.wing.alpha_0L_wb.value,...
-    aircraft.wing.Cm0.value,...
-    mission.weather.air_density.value);
+    [aircraft.physics.X_NP.value,...
+    aircraft.physics.CL_trim.value,...
+    aircraft.physics.v_trim.value,...
+    aircraft.physics.alpha_trim.value,...
+    aircraft.physics.stability.static.failure.value] = StaticStab(aircraft.unloaded.XYZ_CG.value(1),... % m
+    aircraft.loaded.weight.value,... % N
+    aircraft.wing.S.value,... % m^2
+    aircraft.wing.b.value,... % m
+    aircraft.tail.d_tail.value,... % m
+    aircraft.tail.horizontal.i_tail.value,... % deg
+    aircraft.tail.horizontal.c.value,... % m
+    aircraft.tail.horizontal.c.value,... % m 
+    aircraft.tail.horizontal.b.value,... % m
+    aircraft.wing.a_wb.value,... % /deg
+    aircraft.tail.horizontal.a.value,... % /deg
+    aircraft.wing.alpha_0L_wb.value,... % deg
+    aircraft.wing.Cm0.value,... % non
+    mission.weather.air_density.value); % kg/m^3
 else
     error('Unit mismatch: static stability analysis not possible. For convention, ensure static stability analysis functions are called with SI units (except for angles, which should use degrees rather than radians).')
 end
 
 % move on to another design 
-if aircraft.dynamics.stability.static.failure.value ~= 0
+if aircraft.physics.stability.static.failure.value ~= 0
     aircraft.continue_design_analysis = false;
 end
 
@@ -228,11 +228,43 @@ fprintf('Completed static stability checks for loaded aircraft (Mission 2).\n')
 
 %% 2. Aerodynamics (M2)
 
+% W_loaded 
+% W_ref, b_w, c_w, b_t, c_t, l_fuse, t_ref, d_fuse, A_banner, AR_banner
+% 
+% [L, ...
+%     L_2, ...
+%     D, ...
+%     C_D_Total, ...
+%     CL_trim_tot, ...
+%     V_stall, ... 
+%     speed_boolean, ... 
+%     alpha_boolean] = AeroCode_2(W, ...
+%     V, ...
+%     C_L_Total, ...
+%     b_w, ...
+%     c_w, ...
+%     b_t, ...
+%     c_t, ...
+%     l_fuse, ...
+%     d_fuse, ...
+%     A_banner, ...
+%     AR_banner, ...
+%     alpha_trim, ...
+%     stall_w, ...
+%     CLa_w, ...
+%     W_ref, ...
+%     alphaL0_w, ...
+%     Cla_t, ...
+%     t_ref, ...
+%     alphaL0_t);
+
 %% 3. Propulsion (M2)
 
 %% 4. Structures (M2)
 
 %% 5. Dynamic Stability (M2)
+
+USETORUN_RunDymanicStab % run dynamic stability analysis
 
 fprintf('Completed verification of Mission 2 feasibility.\n')
 

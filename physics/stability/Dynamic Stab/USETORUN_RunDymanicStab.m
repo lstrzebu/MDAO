@@ -1,66 +1,118 @@
-design_title               = "TheCHC";
+iterationNumber = 1; % for testing
+design_title               = sprintf("Design #%d", iterationNumber);
 
 file_name           = "QuackPack";
 
-airfoil_file        = "clarky.dat";
+airfoil_file        = sprintf("%s.dat", aircraft.wing.airfoil_name);
+% airfoil_file        = "clarky.dat";
+% Htail_airfoil_file  = "n0012-TAIL.dat";
+% Vtail_airfoil_file  = "n0012-TAIL.dat";
+Htail_airfoil_file = sprintf("%s.dat", aircraft.tail.horizontal.airfoil_name);
+Vtail_airfoil_file = sprintf("%s.dat", aircraft.tail.vertical.airfoil_name);
 
-Htail_airfoil_file  = "n0012-TAIL.dat";
-
-Vtail_airfoil_file  = "n0012-TAIL.dat";
-
-tail_config = "C";
+% tail_config = "C";
+tail_config = string(aircraft.tail.config.value(1));
 
 delete_files = true;
 
 %% Wing Geometry
 
-mass    = 35;   % [kg]
+% mass    = 35;   % [kg]
+if strcmp(string(aircraft.loaded.mass.units), "kg")
+    mass = aircraft.loaded.mass.value; 
+else
+    error('Unit mismatch: dynamic stability analysis not possible.')
+end
 
-% Wing Properties
-S       = 5;    % Directly used for lift equation
-b       = 5;    % Between 3 in and 5 in
+if strcmp(string(aircraft.wing.S.units), "m^2") && strcmp(string(aircraft.wing.b.units), "m")
+    S = aircraft.wing.S.value; 
+    b = aircraft.wing.b.value;
+else
+    error('Unit mismatch: dynamic stability analysis not possible.')
+end
+% % Wing Properties
+% S       = 5;    % Directly used for lift equation
+% b       = 5;    % Between 3 ft and 5 ft
 
-dihedral_angle = 5; % [°]
-
-
-
+% dihedral_angle = 5; % [°]
+if strcmp(string(aircraft.wing.dihedral.units), "deg")
+    dihedral_angle = aircraft.wing.dihedral.value;
+else
+    error('Unit mismatch: dynamic stability analysis not possible.')
+end
 
 %% Tail Configuration Parameters
 
 % Tail Position Properties
-d_tail  = 5; % Distance from LE of wing to LE of tail
-i_t     = 3;
+% d_tail  = 5; % Distance from LE of wing to LE of tail
+if strcmp(string(aircraft.tail.d_tail.units), "m")
+    d_tail = aircraft.tail.d_tail.value;
+else
+    error('Unit mismatch: dynamic stability analysis not possible.')
+end
+
+% i_t     = 3;
+if strcmp(string(aircraft.tail.horizontal.i_tail.units), "deg")
+    i_t = aircraft.tail.horizontal.i_tail.value;
+else
+    error('Unit mismatch: dynamic stability analysis not possible.')
+end
 
 % z-location of the tail
-z_tail  = 0.5;
+%z_tail  = 0.5;
+if strcmp(tail_config, "C") && strcmp(string(aircraft.tail.horizontal.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.wing.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.tail.horizontal.c), "m")
+    z_tail = aircraft.tail.horizontal.skin.XYZ_CG.value(3) - aircraft.wing.skin.XYZ_CG.value(3); % z distance between wing and horizontal tail
+    C_r_fuselage = aircraft.tail.horizontal.c.value; % for conventional tail, the root chord of the part of the tail connected to the fuselage is the root chord of the horizontal tail
+else
+    error('Dynamic stability function must be rewritten to use tail types other than conventional.')
+end
 
-
-C_r_fuselage = 0.75;
+% C_r_fuselage = 0.75;
 
 % Horizontal Tail Properties
-S_ht = 0.75;
+%S_ht = 0.75;
+if strcmp(string(aircraft.tail.horizontal.S.units), "m^2")
+    S_ht = aircraft.tail.horizontal.S.value;
+else
+    error('Unit mismatch: dynamic stability analysis not possible.')
+end
 
-lambda_ht = 2/3;
+lambda_ht = aircraft.tail.horizontal.taper_ratio.value;
+
+% lambda_ht = 2/3;
 
 
 % Vertical Tail Properties
-S_vt = 0.25;
-
-lambda_vt = 0.7;
+%S_vt = 0.25;
+if strcmp(string(aircraft.tail.vertical.S.units), "m^2")
+    S_VT = aircraft.tail.vertical.S.value;
+else
+    error('Unit mismatch: dynamic stability analysis not possible.')
+end
 
 
 %% Mass Parameters
 
 % Center of mass
-x_cm                = -0.4;         % [m]
+% x_cm                = -0.4;         % [m]
+% y_cm                = 0;            % [m]
+% z_cm                = -0.1;         % [m]
+if strcmp(string(aircraft.loaded.XYZ_CG.units), "m")
+    x_cm = aircraft.loaded.XYZ_CG.value(1);
+    y_cm = aircraft.loaded.XYZ_CG.value(2);
+    z_cm = aircraft.loaded.XYZ_CG.value(3);
+else
+    error('Unit mismatch: dynamic stability analysis not possible.')
+end
 
-y_cm                = 0;            % [m]
-
-z_cm                = -0.1;         % [m]
-
-I_matrix    = [1.9, 0, -0.5; ...
-               0, 220, 0; ...
-               -0.5, 0, 159.4];
+% I_matrix    = [1.9, 0, -0.5; ...
+%                0, 220, 0; ...
+%                -0.5, 0, 159.4];
+if strcmp(string(aircraft.loaded.MOI.units), "kg*m^2")
+    I_matrix = aircraft.loaded.MOI.value;
+else
+    error('Unit mismatch: dynamic stability analysis not possible.')
+end
 
 dynamic_failure_mode = 0; % assume no failure until proven otherwise
 

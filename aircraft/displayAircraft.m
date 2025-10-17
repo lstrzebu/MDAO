@@ -4,7 +4,7 @@ structNames = ["aircraft.fuselage.diameter";
     "aircraft.fuselage.length";
     "aircraft.wing.c";
     "aircraft.wing.b";
-    "aircraft.tail.horizontal.d_tail";
+    "aircraft.tail.d_tail";
     "aircraft.tail.horizontal.b";
     "aircraft.tail.horizontal.c";
     "aircraft.tail.vertical.b";
@@ -155,7 +155,7 @@ patch('Vertices', V, 'Faces', F, 'FaceColor', [0.7, 0.7, 0.7]); % Draw the wing
 
 %% Tail
 % --- Horizontal Tail Dimensions ---
-d_tail = aircraft.tail.horizontal.d_tail.value; % distance from LE of wing (origin) to LE of tail
+d_tail = aircraft.tail.d_tail.value; % distance from LE of wing (origin) to LE of tail
 chord_HT = aircraft.tail.horizontal.c.value;    % Length of the HT (chord) in the x-direction
 b_HT = aircraft.tail.horizontal.b.value;
 width_HT = b_HT./2;    % Width of the HT (half-span) in the y-direction

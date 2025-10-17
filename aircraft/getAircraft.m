@@ -18,6 +18,17 @@ aircraft.continue_design_analysis.units = '';
 aircraft.continue_design_analysis.type = "non";
 aircraft.continue_design_analysis.description = "boolean used to skip suboptimal aircraft designs if flaw is found";
 
+ii = length(assumptions) + 1;
+assumptions(ii).name = "Dihedral";
+assumptions(ii).description = "Assume zero dihedral angle";
+assumptions(ii).rationale = "First pass of MDAO, change later";
+assumptions(ii).responsible_engineer = "Liam Trzebunia";
+
+aircraft.wing.dihedral.value = 0;
+aircraft.wing.dihedral.units = 'deg';
+aircraft.wing.dihedral.type = "ang";
+aircraft.wing.dihedral.description = "Dihedral angle of wing";
+
 aircraft.wing.c.value = 1; % mean aerodynamic chord
 aircraft.wing.c.units = 'ft';
 aircraft.wing.c.type = "length";
@@ -62,15 +73,32 @@ aircraft.wing.airfoil_name = 'NACA 2412';
 aircraft.tail.horizontal.airfoil_name = 'NACA 0012';
 aircraft.tail.vertical.airfoil_name = 'NACA 0012';
 
-aircraft.tail.horizontal.d_tail.value = 4;
-aircraft.tail.horizontal.d_tail.units = 'ft';
-aircraft.tail.horizontal.d_tail.type = "length";
-aircraft.tail.horizontal.d_tail.description = "Distance from LE of wing to LE of tail";
+ii = length(assumptions) + 1;
+assumptions(ii).name = "Tail Arm (Leading Edge)";
+assumptions(ii).description = "Assume the leading edge (LE) of both horizontal and vertical tail share the same distance from the leading edge of the wing";
+assumptions(ii).rationale = "First pass of MDAO, change later";
+assumptions(ii).responsible_engineer = "Liam Trzebunia";
+
+aircraft.tail.d_tail.value = 4;
+aircraft.tail.d_tail.units = 'ft';
+aircraft.tail.d_tail.type = "length";
+aircraft.tail.d_tail.description = "Distance from LE of wing to LE of both tails";
 
 aircraft.tail.horizontal.i_tail.value = 0;
 aircraft.tail.horizontal.i_tail.units = 'deg';
 aircraft.tail.horizontal.i_tail.type = "ang";
 aircraft.tail.horizontal.i_tail.description = "Tail incidence angle based on fuselage reference line";
+
+aircraft.tail.horizontal.taper_ratio.value = 0;
+aircraft.tail.horizontal.taper_ratio.units = '';
+aircraft.tail.horizontal.taper_ratio.type = "non";
+aircraft.tail.horizontal.taper_ratio.description = "taper ratio of horizontal tail";
+
+ii = length(assumptions) + 1;
+assumptions(ii).name = "Horizontal Tail Taper Ratio";
+assumptions(ii).description = "Assume zero horizontal tail taper";
+assumptions(ii).rationale = "First pass of MDAO, change later";
+assumptions(ii).responsible_engineer = "Liam Trzebunia";
 
 aircraft.tail.horizontal.b.value = 2;
 aircraft.tail.horizontal.b.units = 'ft';
