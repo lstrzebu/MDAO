@@ -128,7 +128,7 @@ V_trim = sqrt((W)/((1/2)*air_density*C_L_trim*S)); % [m/s]
 Cm_failure_key = 1;
 Cl_failure_key = 2;
 % If the CG is further aft of NP
-if X_CG < X_NP
+if X_CG > X_NP
 
     failure = Cm_failure_key;
 

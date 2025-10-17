@@ -220,11 +220,14 @@ else
     error('Unit mismatch: static stability analysis not possible. For convention, ensure static stability analysis functions are called with SI units (except for angles, which should use degrees rather than radians).')
 end
 
+iterationNumber = 1; % for testing
+
 % move on to another design if needed (and explain why)
 if aircraft.physics.stability.static.failure.value ~= 0
     aircraft.continue_design_analysis = false;
     % failure message already assigned by static stability function, just
     % need to print it out
+    fprintf('%s\nRejected Design %d.\n', failure_message, iterationNumber)
 else
     clear failure_message
 end
@@ -295,7 +298,9 @@ if Static_failure ~= 0 || Trim_failure ~= 0 || dynamic_failure_mode ~= 0
                 failure_message = "Dynamic Stability Failed! Rolling mode is underdamped\n. Possible Fix - Increase Wing Dihedral.";
         end
     end
+    fprintf('%s\nRejected Design %dn', failure_message, iterationNumber);
 end
+
 end
 
 
