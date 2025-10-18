@@ -115,7 +115,8 @@ minP = 1; stepP = 1; maxP = 30;
 minC = 1; stepC = 1; maxC = 4;
 minL = 1; stepL = 1; maxL = 8; 
 minBL = 10; stepBL = 5; maxBL = 15;
-minTPBC = 25; stepTPBC = 25; maxTPBC = 100;
+TPBCscal = aircraft.propulsion.battery.capacity.value; % scalar for total propulsion battery capacity: units of Wh
+%minTPBC = 25; stepTPBC = 25; maxTPBC = 100;
 % coarse = zeros([length(minP:maxP), length(minC:maxC), length(minL:maxL), length(minBL:maxBL), length(minTPBC:maxTPBC)]);
 % 
 % for pVal = minP:maxP
@@ -138,14 +139,14 @@ pVec = minP:stepP:maxP;
 cVec = minC:stepC:maxC;
 lVec = minL:stepL:maxL;
 blVec = minBL:stepBL:maxBL;
-TPBCvec = minTPBC:stepTPBC:maxTPBC;
+%PBCvec = minTPBC:stepTPBC:maxTPBC;
 
 % Generate the multi-dimensional grids
-[P, C, L, BL, TPBC] = ndgrid(pVec, cVec, lVec, blVec, TPBCvec);
+[P, C, L, BL] = ndgrid(pVec, cVec, lVec, blVec);
 
 % Flatten into an n x 5 matrix (each row is a combination: [pVal, cVal, lVal, blVal, TPBCval])
-missions = [P(:), C(:), L(:), BL(:), TPBC(:)];
-
+missions = [P(:), C(:), L(:), BL(:)];
+missions(:, 5) = TPBCscal; % no variation of propulsion battery capacity during mission generation... only during aircraft generation 
 
 % logical mask for missions to ensure (number of ducks) >= 3*(number of pucks)
 ducks_pucks_mask = missions(:,1) >= 3.*missions(:,2);

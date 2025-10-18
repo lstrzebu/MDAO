@@ -301,6 +301,7 @@ aircraft.propulsion.propeller.diameter.description = "diameter of propeller";
 % Reading specific prop spreadsheet
 aircraft.propulsion.propeller.filename = strcat('PER3_', aircraft.propulsion.propeller.name{1}, '.xlsx');
 aircraft.propulsion.propeller.data.value = readmatrix(aircraft.propulsion.propeller.filename);
+aircraft.propulsion.propeller.data.type = "non"; % nondimensional as a whole; do not convert units
 aircraft.propulsion.propeller.data.description = "prop data parameters that Bruno's propulsion function takes as an input";
 
 % Provide drag, weight, and vTrim data in N and m/s

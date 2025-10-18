@@ -365,6 +365,85 @@ aircraft.continue_design_analysis = true;
 
 %% 3. Propulsion (M2)
 
+structNames = ["aircraft.wing.c";
+    "aircraft.fuselage.length";
+    "aircraft.fuselage.diameter";
+    "aircraft.wing.alpha_stall";
+    "aircraft.tail.horizontal.alpha_0L_t"];
+desiredUnits = ["m";
+    "m";
+    "m";
+    "deg";
+    "deg"];
+
+[aircraft, ~] = conv_aircraft_units(aircraft, 0, structNames, desiredUnits);
+
+unitsAgree = [strcmp(string(aircraft.loaded.weight.units), "N"); 
+    strcmp(string(aircraft.physics.D.units), "N");
+    strcmp(string(aircraft.propulsion.battery.capacity.units), "Wh");
+    strcmp(string(aircraft.physics.v_trim.units), "m/s");
+    strcmp(string(aircraft.propulsion.motor.voltage.max.units), "V");
+    strcmp(string(aircraft.propulsion.motor.kV.units), "RPM/V");
+    strcmp(string(aircraft.propulsion.motor.resistance.units), "ohm");
+    strcmp(string(aircraft.propulsion.motor.current.no_load.units), "A");
+    strcmp(string(aircraft.propulsion.motor.current.max.units), "A");
+    strcmp(string(aircraft.propulsion.motor.power.max.units), "W")];
+% no need to programatically check units of propeller data
+% (aircraft.propulsion.propeller.data), they were checked manually against
+% the spreadsheet
+
+% W_loaded 
+% W_ref, b_w, c_w, b_t, c_t, l_fuse, t_ref, d_fuse, A_banner, AR_banner
+
+if all(unitsAgree)
+
+[aircraft.physics.P_trim.value, ...
+    aircraft.physics.max_flight_time.value, ...
+    mission.physics.TW_ratio.value, ...
+    mission.physics.RPM.value, ...
+    mission.physics.propulsion.FOS.value, ...
+    safetyCheck] = PropulsionCalc(aircraft.loaded.weight.value, ...
+    aircraft.physics.D.value, ...
+    aircraft.propulsion.battery.capacity.value, ...
+    aircraft.physics.v_trim.value, ...
+    aircraft.propulsion.motor.voltage.max.value, ...
+    aircraft.propulsion.motor.kV.value, ...
+    aircraft.propulsion.motor.resistance.value, ...
+    aircraft.propulsion.motor.current.no_load.value, ...
+    aircraft.propulsion.motor.current.max.value, ...
+    aircraft.propulsion.motor.power.max.value, ...
+    aircraft.propulsion.propeller.data.value);
+
+aircraft.physics.P_trim.units = 'W';
+aircraft.physics.P_trim.type = "pow";
+aircraft.physics.P_trim.description = "power utilized during cruise";
+aircraft.physics.max_flight_time.units = 's';
+aircraft.physics.max_flight_time.type = "time";
+aircraft.physics.max_flight_time.description = "maximum cruising flight time according to propulsion analysis";
+mission.physics.TW_ratio.units = '';
+mission.physics.TW_ratio.type = "non";
+mission.physics.TW_ratio.description = "thrust-to-weight ratio of aircraft for the current mission being considered. Note that this will change from mission to mission";
+mission.physics.RPM.units = "RPM";
+mission.physics.RPM.type = "angvel"; % angular velocity dimensional type
+mission.physics.RPM.description = "RPM of motor in cruise for the mission being considered";
+mission.physics.propulsion.FOS.units = '';
+mission.physics.propulsion.FOS.type = "non";
+mission.physics.propulsion.FOS.description = "factors of safety of the Voltage, Current, and Power for the propulsion system";
+else
+    error('Unit mismatch: propulsion analysis not possible.')
+end
+
+if ~safetyCheck 
+    aircraft.continue_design_analysis = false;
+    failure_message = "Propulsion system has insufficient electrical factors of safety.";
+    fprintf('%s\nRejected Design %d.\n', failure_message, iterationNumber);
+end
+
+
+% for TESTING ONLY, DELETE later: run other analyses even if the design
+% failed
+aircraft.continue_design_analysis = true;
+
 %% 4. Structures (M2)
 
 %% 5. Dynamic Stability (M2)
