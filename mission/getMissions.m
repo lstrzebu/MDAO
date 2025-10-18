@@ -272,10 +272,12 @@ end
 %     error('Unit mismatch: maximum gross takeoff weight could not be computed. Ensure the weights of aircraft components share the same units.')
 % end
 
-mission.weather.air_density.value = 0.002377; % SSL density (change later)
-mission.weather.air_density.units = 'slug/ft^3';
-mission.weather.air_density.description = "density of air at competition location on competition day";
-mission.weather.air_density.type = "density";
+mission(1).weather.air_density.value = 0.002377; % SSL density (change later)
+mission(1).weather.air_density.units = 'slug/ft^3';
+mission(1).weather.air_density.type = "density";
+mission(1).weather.air_density.description = "density of air at competition location on competition day";
+mission(2).weather.air_density = mission(1).weather.air_density;
+mission(3).weather.air_density = mission(1).weather.air_density;
 
 aircraft.payload.cargo.XYZ_CG = aircraft.unloaded.XYZ_CG;
 aircraft.payload.cargo.XYZ_CG.description = "vector of X, Y, Z coordinates for CG of pucks";
