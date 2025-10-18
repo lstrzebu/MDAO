@@ -3,127 +3,134 @@
 
 fprintf('Verifying Mission 2 feasibility for %s... \n', iterName)
 %% 1. Static Stability (M2)
-fprintf('Analyzing Mission 2 static stability for %s... \n', iterName)
 
-% use SI units when calling static stability analysis function (however angles are in degrees)
-mission(2).physics.X_NP.units = 'm';
-mission(2).physics.X_NP.type = "length";
-mission(2).physics.X_NP.description = "X location of neutral point according to AVL coordinate system: x positive rear, y positive to the right hand wing, and z positive up. Origin at x = LE of wing, y dividing the aircraft symmetrically in two, and z in line with the motor shaft axis.";
-mission(2).physics.CL_trim(1).units = '';
-mission(2).physics.CL_trim(1).type = "non";
+if continue_mission_analysis.value
 
-ii = length(assumptions) + 1;
-assumptions(ii).name = "Total Lift Approximation";
-assumptions(ii).description = "Assume that total trimmed lift coefficient for all lifting surfaces approximately equals total trimmed lift coefficient for entire aircraft";
-assumptions(ii).rationale = "Lift effects of fuselage seem laborious to model although it would be feasible to do so";
-assumptions(ii).responsible_engineer = "Liam Trzebunia";
+    fprintf('Analyzing Mission 2 static stability for %s... \n', iterName)
 
-mission(2).physics.CL_trim(1).description = "total trimmed lift coefficient of aircraft (from static stability analysis)";
-mission(2).physics.v_trim.units = 'm/s';
-mission(2).physics.v_trim.type = "vel";
-mission(2).physics.v_trim.description = "freestream velocity during trimmed flight (from static stability function)";
-mission(2).physics.alpha_trim.units = 'deg';
-mission(2).physics.alpha_trim.type = "ang";
-mission(2).physics.alpha_trim.description = "angle of attack (with respect to fuselage reference line) during trimmed flight";
-mission(2).physics.stability.static.failure.units = '';
-mission(2).physics.stability.static.failure.type = "non";
-mission(2).physics.stability.static.failure.description = "discrete value indicating the presence and mode of static failure: 0 = statically stable, 1 = inadequate pitching moment coefficient gradient (bad Cm_alpha), and 2 = inadequate trimmed lift coefficient (bad CL_trim)";
+    % use SI units when calling static stability analysis function (however angles are in degrees)
+    mission(2).physics.X_NP.units = 'm';
+    mission(2).physics.X_NP.type = "length";
+    mission(2).physics.X_NP.description = "X location of neutral point according to AVL coordinate system: x positive rear, y positive to the right hand wing, and z positive up. Origin at x = LE of wing, y dividing the aircraft symmetrically in two, and z in line with the motor shaft axis.";
+    mission(2).physics.CL_trim(1).units = '';
+    mission(2).physics.CL_trim(1).type = "non";
 
-structNames = ["aircraft.loaded.XYZ_CG";
-    "aircraft.loaded.weight";
-    "aircraft.wing.S";
-    "aircraft.wing.b";
-    "aircraft.tail.d_tail";
-    "aircraft.tail.horizontal.i_tail";
-    "aircraft.tail.horizontal.c";
-    "aircraft.tail.horizontal.b";
-    "aircraft.wing.a_wb";
-    "aircraft.tail.horizontal.a";
-    "aircraft.wing.alpha_0L_wb";
-    "aircraft.wing.Cm0";
-    "mission(2).weather.air_density"];
-desiredUnits = ["m";
-    "N";
-    "m^2";
-    "m";
-    "m";
-    "deg";
-    "m";
-    "m";
-    "/deg";
-    "/deg";
-    "deg";
-    "";
-    "kg/m^3"];
-
-[aircraft, mission] = conv_aircraft_units(aircraft, mission, structNames, desiredUnits);
-
-unitsAgree = [strcmp(string(aircraft.loaded.XYZ_CG.units), "m");
-    strcmp(string(aircraft.loaded.weight.units), "N");
-    strcmp(string(aircraft.wing.S.units), "m^2");
-    strcmp(string(aircraft.wing.b.units), "m");
-    strcmp(string(aircraft.tail.d_tail.units), "m");
-    strcmp(string(aircraft.tail.horizontal.i_tail.units), "deg");
-    strcmp(string(aircraft.tail.horizontal.c.units), "m");
-    strcmp(string(aircraft.tail.horizontal.b.units), "m");
-    strcmp(string(aircraft.wing.a_wb.units), "/deg");
-    strcmp(string(aircraft.tail.horizontal.a.units), "/deg");
-    strcmp(string(aircraft.wing.alpha_0L_wb.units), "deg");
-    strcmp(string(aircraft.wing.Cm0.units), "");
-    strcmp(string(mission(2).weather.air_density.units), "kg/m^3")];
-
-if all(unitsAgree)
-    % capture assumptions embedded in the static stability analysis function call
     ii = length(assumptions) + 1;
-    assumptions(ii).name = "Wing-Body System Zero-Lift Pitching Moment Coefficient Approximation";
-    assumptions(ii).description = "Assume that the Cm0 of the wing approximately equals the Cm0 of the wing-body system";
-    assumptions(ii).rationale = "Zero-lifting pitching moment coefficient for fuselage seems laborious to model although it would be feasible to do so";
+    assumptions(ii).name = "Total Lift Approximation";
+    assumptions(ii).description = "Assume that total trimmed lift coefficient for all lifting surfaces approximately equals total trimmed lift coefficient for entire aircraft";
+    assumptions(ii).rationale = "Lift effects of fuselage seem laborious to model although it would be feasible to do so";
     assumptions(ii).responsible_engineer = "Liam Trzebunia";
 
-    % call static stability analysis function
-    [mission(2).physics.X_NP.value,...
-        mission(2).physics.CL_trim(1).value,...
-        mission(2).physics.v_trim.value,...
-        mission(2).physics.alpha_trim.value,...
-        mission(2).physics.stability.static.failure.value,...
-        failure_message] = StaticStab(aircraft.loaded.XYZ_CG.value(1),... % m
-        aircraft.loaded.weight.value,... % N
-        aircraft.wing.S.value,... % m^2
-        aircraft.wing.b.value,... % m
-        aircraft.tail.d_tail.value,... % m
-        aircraft.tail.horizontal.i_tail.value,... % deg
-        aircraft.tail.horizontal.c.value,... % m
-        aircraft.tail.horizontal.c.value,... % m
-        aircraft.tail.horizontal.b.value,... % m
-        aircraft.wing.a_wb.value,... % /deg
-        aircraft.tail.horizontal.a.value,... % /deg
-        aircraft.wing.alpha_0L_wb.value,... % deg
-        aircraft.wing.Cm0.value,... % non
-        mission(2).weather.air_density.value); % kg/m^3
-else
-    error('Unit mismatch: static stability analysis not possible. For convention, ensure static stability analysis functions are called with SI units (except for angles, which should use degrees rather than radians).')
-end
+    mission(2).physics.CL_trim(1).description = "total trimmed lift coefficient of aircraft (from static stability analysis)";
+    mission(2).physics.v_trim.units = 'm/s';
+    mission(2).physics.v_trim.type = "vel";
+    mission(2).physics.v_trim.description = "freestream velocity during trimmed flight (from static stability function)";
+    mission(2).physics.alpha_trim.units = 'deg';
+    mission(2).physics.alpha_trim.type = "ang";
+    mission(2).physics.alpha_trim.description = "angle of attack (with respect to fuselage reference line) during trimmed flight";
+    mission(2).physics.stability.static.failure.units = '';
+    mission(2).physics.stability.static.failure.type = "non";
+    mission(2).physics.stability.static.failure.description = "discrete value indicating the presence and mode of static failure: 0 = statically stable, 1 = inadequate pitching moment coefficient gradient (bad Cm_alpha), and 2 = inadequate trimmed lift coefficient (bad CL_trim)";
 
-% move on to another design if needed (and explain why)
-if mission(2).physics.stability.static.failure.value ~= 0
-    continue_mission_analysis.value = false;
-    % failure message already assigned by static stability function, just
-    % need to print it out
-    fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d\n', failure_message, aircraftIteration, missionIteration)
-else
-    clear failure_message
+    structNames = ["aircraft.loaded.XYZ_CG";
+        "aircraft.loaded.weight";
+        "aircraft.wing.S";
+        "aircraft.wing.b";
+        "aircraft.tail.d_tail";
+        "aircraft.tail.horizontal.i_tail";
+        "aircraft.tail.horizontal.c";
+        "aircraft.tail.horizontal.b";
+        "aircraft.wing.a_wb";
+        "aircraft.tail.horizontal.a";
+        "aircraft.wing.alpha_0L_wb";
+        "aircraft.wing.Cm0";
+        "mission(2).weather.air_density"];
+    desiredUnits = ["m";
+        "N";
+        "m^2";
+        "m";
+        "m";
+        "deg";
+        "m";
+        "m";
+        "/deg";
+        "/deg";
+        "deg";
+        "";
+        "kg/m^3"];
+
+    [aircraft, mission] = conv_aircraft_units(aircraft, mission, structNames, desiredUnits);
+
+    unitsAgree = [strcmp(string(aircraft.loaded.XYZ_CG.units), "m");
+        strcmp(string(aircraft.loaded.weight.units), "N");
+        strcmp(string(aircraft.wing.S.units), "m^2");
+        strcmp(string(aircraft.wing.b.units), "m");
+        strcmp(string(aircraft.tail.d_tail.units), "m");
+        strcmp(string(aircraft.tail.horizontal.i_tail.units), "deg");
+        strcmp(string(aircraft.tail.horizontal.c.units), "m");
+        strcmp(string(aircraft.tail.horizontal.b.units), "m");
+        strcmp(string(aircraft.wing.a_wb.units), "/deg");
+        strcmp(string(aircraft.tail.horizontal.a.units), "/deg");
+        strcmp(string(aircraft.wing.alpha_0L_wb.units), "deg");
+        strcmp(string(aircraft.wing.Cm0.units), "");
+        strcmp(string(mission(2).weather.air_density.units), "kg/m^3")];
+
+    if all(unitsAgree)
+        % capture assumptions embedded in the static stability analysis function call
+        ii = length(assumptions) + 1;
+        assumptions(ii).name = "Wing-Body System Zero-Lift Pitching Moment Coefficient Approximation";
+        assumptions(ii).description = "Assume that the Cm0 of the wing approximately equals the Cm0 of the wing-body system";
+        assumptions(ii).rationale = "Zero-lifting pitching moment coefficient for fuselage seems laborious to model although it would be feasible to do so";
+        assumptions(ii).responsible_engineer = "Liam Trzebunia";
+
+        % call static stability analysis function
+        [mission(2).physics.X_NP.value,...
+            mission(2).physics.CL_trim(1).value,...
+            mission(2).physics.v_trim.value,...
+            mission(2).physics.alpha_trim.value,...
+            mission(2).physics.stability.static.failure.value,...
+            failure_message] = StaticStab(aircraft.loaded.XYZ_CG.value(1),... % m
+            aircraft.loaded.weight.value,... % N
+            aircraft.wing.S.value,... % m^2
+            aircraft.wing.b.value,... % m
+            aircraft.tail.d_tail.value,... % m
+            aircraft.tail.horizontal.i_tail.value,... % deg
+            aircraft.tail.horizontal.c.value,... % m
+            aircraft.tail.horizontal.c.value,... % m
+            aircraft.tail.horizontal.b.value,... % m
+            aircraft.wing.a_wb.value,... % /deg
+            aircraft.tail.horizontal.a.value,... % /deg
+            aircraft.wing.alpha_0L_wb.value,... % deg
+            aircraft.wing.Cm0.value,... % non
+            mission(2).weather.air_density.value); % kg/m^3
+    else
+        error('Unit mismatch: static stability analysis not possible. For convention, ensure static stability analysis functions are called with SI units (except for angles, which should use degrees rather than radians).')
+    end
+
+    fprintf('Completed Mission 2 static stability analysis for %s\n', iterName)
+
+    % move on to another design if needed (and explain why)
+    if mission(2).physics.stability.static.failure.value ~= 0
+        continue_mission_analysis.value = false;
+        % failure message already assigned by static stability function, just
+        % need to print it out
+        fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d.\n', failure_message, aircraftIteration, missionIteration)
+    else
+        clear failure_message
+    end
+
 end
 
 % for TESTING ONLY, DELETE later: run other analyses even if the design
 % failed
 continue_mission_analysis.value = true;
 
-fprintf('Completed static stability checks for loaded aircraft (Mission 2).\n')
-
 %% 2. Dynamic Stability (M2)
-
 if continue_mission_analysis.value
+    fprintf('Analyzing Mission 2 dynamic stability for %s...\n', iterName);
     USETORUN_RunDymanicStab % run dynamic stability analysis
+
+    fprintf('Completed Mission 2 dynamic stability analysis for %s\n', iterName)
 
     % interpret dynamic stability results
     if Static_failure ~= 0 || Trim_failure ~= 0 || dynamic_failure_mode ~= 0
@@ -148,15 +155,13 @@ if continue_mission_analysis.value
                     failure_message = "Dynamic Stability Failed! Rolling mode is underdamped\n. Possible Fix - Increase Wing Dihedral.";
             end
         end
-        fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d\n', failure_message, aircraftIteration, missionIteration);
+        fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d.\n', failure_message, aircraftIteration, missionIteration);
     end
-
 end
-fprintf('Completed dynamic stability analysis for Aircraft-Mission Combination %d.%d\n', aircraftIteration, missionIteration);
 
 %% 3. Structures (M2)
-
 if continue_mission_analysis.value
+    fprintf('Analyzing Mission 2 structural integrity for %s...\n', iterName)
 
     structNames = ["mission(2).physics.alpha_trim";
         "aircraft.wing.alpha_0L_wb"];
@@ -216,6 +221,8 @@ if continue_mission_analysis.value
         error('Unit mismatch: propulsion analysis not possible.')
     end
 
+    fprintf('Completed Mission 2 structural integrity analysis for %s\n', iterName)
+
     % turn radius sometimes turns out to be less than zero for negative lift coefficients. In
     % reality, this structures function should always be called after
     % stability anlysis has weeded out designs with negative lift.
@@ -227,15 +234,16 @@ if continue_mission_analysis.value
             % else
             %     error('A design has failed, but no failure message is defined. The structural analysis function was likely invoked to analyze a design that trims at a negative lift coefficient. Consider analyzing stability upstream of the structural analysis. Alternatively, define a failure message for the structural failure mode in question.')
         end
-        fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d\n', failure_message, aircraftIteration, missionIteration);
+        fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d.\n', failure_message, aircraftIteration, missionIteration);
     end
+
 end
 
 continue_mission_analysis.value = true; % for testing only
 
 %% 4. Aerodynamics (M2)
-
 if continue_mission_analysis.value
+    fprintf('Analyzing Mission 2 aerodynamics for %s...\n', iterName)
 
     structNames = ["aircraft.wing.c";
         "aircraft.fuselage.length";
@@ -329,6 +337,8 @@ if continue_mission_analysis.value
         error('Unit mismatch: aerodynamic analysis not possible.')
     end
 
+    fprintf('Completed Mission 2 aerodynamics analysis for %s\n', iterName)
+
     if ~speed_boolean || ~alpha_boolean
         continue_mission_analysis.value = false;
         if ~speed_boolean && alpha_boolean
@@ -338,7 +348,7 @@ if continue_mission_analysis.value
         elseif ~alpha_boolean && ~speed_boolean
             failure_message = "Trimmed airspeed is less than stall speed, meaning the aircraft will stall during flight. Also, trimmed angle of attack is greater than stall angle, which is another reason for stall.";
         end
-        fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d\n', failure_message, aircraftIteration, missionIteration);
+        fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d.\n', failure_message, aircraftIteration, missionIteration);
     end
 
 end
@@ -350,6 +360,7 @@ continue_mission_analysis.value = true;
 %% 5. Propulsion (M2)
 
 if continue_mission_analysis.value
+    fprintf('Analyzing Mission 2 propulsion system for %s...\n', iterName)
 
     structNames = ["aircraft.wing.c";
         "aircraft.fuselage.length";
@@ -420,6 +431,8 @@ if continue_mission_analysis.value
         error('Unit mismatch: propulsion analysis not possible.')
     end
 
+    fprintf('Completed Mission 2 propulsion system analysis for %s\n', iterName)
+
     if ~safetyCheck || ~RPM_exists
         continue_mission_analysis.value = false;
         if ~RPM_exists
@@ -427,7 +440,7 @@ if continue_mission_analysis.value
         else
             failure_message = "Propulsion system has insufficient electrical factors of safety.";
         end
-        fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d\n', failure_message, aircraftIteration, missionIteration);
+        fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d.\n', failure_message, aircraftIteration, missionIteration);
     end
 
 end
