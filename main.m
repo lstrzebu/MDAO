@@ -4,7 +4,7 @@ clear;clc;close all;
 % Income = Mission 2 income
 % Income_Net = Mission 2 net income (income - cost)
 % Cost = Mission 2 cost
-% p = # passengers
+% p = # pasdcsengers
 % Ip1 = Fixed income per passenger
 % Ip2 = Income per passenger per lap
 % Ic1 = Fixed income per cargo
