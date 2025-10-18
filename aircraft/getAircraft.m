@@ -69,6 +69,11 @@ aircraft.wing.weight.units = 'N';
 aircraft.wing.weight.type = "force";
 aircraft.wing.weight.description = "weight of wings only";
 
+aircraft.wing.resting_angle.value = 0;
+aircraft.wing.resting_angle.units = 'deg';
+aircraft.wing.resting_angle.type = "ang";
+aircraft.wing.resting_angle.description = "wing resting angle of attack with respect to fuselage (positive pitched upwards)";
+
 aircraft.wing.airfoil_name = 'NACA 2412';
 aircraft.tail.horizontal.airfoil_name = 'NACA 0012';
 aircraft.tail.vertical.airfoil_name = 'NACA 0012';
@@ -97,6 +102,17 @@ aircraft.tail.horizontal.taper_ratio.description = "taper ratio of horizontal ta
 ii = length(assumptions) + 1;
 assumptions(ii).name = "Horizontal Tail Taper Ratio";
 assumptions(ii).description = "Assume zero horizontal tail taper";
+assumptions(ii).rationale = "First pass of MDAO, change later";
+assumptions(ii).responsible_engineer = "Liam Trzebunia";
+
+aircraft.tail.horizontal.resting_angle.value = 0;
+aircraft.tail.horizontal.resting_angle.units = 'deg';
+aircraft.tail.horizontal.resting_angle.type = "ang";
+aircraft.tail.horizontal.resting_angle.description = "horizontal tail resting angle of attack with respect to fuselage (positive pitched upwards)";
+
+ii = length(assumptions) + 1;
+assumptions(ii).name = "Lifting Surface Resting Angles of Attack";
+assumptions(ii).description = "Assume zero resting angle of attack for wing and horizontal tail";
 assumptions(ii).rationale = "First pass of MDAO, change later";
 assumptions(ii).responsible_engineer = "Liam Trzebunia";
 
