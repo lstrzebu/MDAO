@@ -82,7 +82,7 @@ CD_o = CD_o_fuse + CD_o_gear + CD_o_pro + CD_o_FP;
 %% Induced drag (Eqns 12.48 & 12.49)
 e_oswa = 1.78*(1 - 0.045*AR^0.68) - 0.64;  % Oswald efficiency
 K = 1/(pi*AR*e_oswa);
-CD_i = K * C_L_total^2;
+CD_i = K * C_L_Total^2;
 
 %% Banner info
 
