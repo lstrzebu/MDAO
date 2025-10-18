@@ -518,9 +518,16 @@ if aircraft.continue_design_analysis.value == true
         error('Unit mismatch: propulsion analysis not possible.')
     end
 
-    if ~safetyCheck
+    % turn radius sometimes turns out to be less than zero for negative lift coefficients. In
+    % reality, this structures function should always be called after
+    % stability anlysis has weeded out designs with negative lift.
+    if mission.physics.turn_radius.minimum.value < 0 || mission.structures.num_fasteners.minimum.value > constants.wing.max_num_fasteners.value || mission.physics.bank_angle.value > 90 
         aircraft.continue_design_analysis = false;
-        failure_message = "Propulsion system has insufficient electrical factors of safety.";
+        if mission.structures.num_fasteners.minimum.value > constants.wing.max_num_fasteners.value
+        failure_message = sprintf("Design would notionally require at least %d fasteners, more than the allotted maximum of %d.", mission.structures.num_fasteners.minimum.value, constants.wing.max_num_fasteners.value);
+        else
+            error('A design has failed, but no failure message is defined. The structural analysis function was likely invoked to analyze a design that trims at a negative lift coefficient. Consider analyzing stability upstream of the structural analysis. Alternatively, define a failure message for the structural failure mode in question.')
+        end
         fprintf('%s\nRejecting Aircraft-Mission Combination %d.\n', failure_message, iterationNumber);
     end
 

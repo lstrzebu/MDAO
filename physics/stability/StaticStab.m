@@ -100,7 +100,6 @@ C_M0        = C_M0_wb + a_tail*V_bar_ht*(epsilon_0 + i_t_0L);
 
 C_L_trim    = c*C_M0/(X_NP - X_CG);
 
-
 %% α_trim calculation
 
 % This alpha is defined as the angle between freestream air and 0-L line of
