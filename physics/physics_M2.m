@@ -1,85 +1,9 @@
 % Analyze mission(2) 2 physics
 % Created 18 October 2025 by Liam Trzebunia
 
-fprintf('Verifying Mission 2 feasibility... \n')
-
-% P       = 1;
-% C       = 1;
-% L       = 1;
-% BL      = 1;
-% TPBC    = 75;
+fprintf('Verifying Mission 2 feasibility for %s... \n', iterName)
 %% 1. Static Stability (M2)
-fprintf('Running static stability checks for loaded aircraft (Mission 2)... \n')
-
-% aircraft.physics.X_CG.value = 1;
-% aircraft.physics.X_CG.units = 'm';
-% aircraft.physics.X_CG.description = "X coordinate for CG location according to AVL coordinate system: x positive rear, y positive to the right hand wing, and z positive up. Origin at LE of wing";
-% aircraft.physics.X_CG.type = "length";
-% aircraft.loaded.weight.value
-% mission(2).weather.air_density.value % from getMission
-% S,b,d_tail,i_t,C_r_ht,C_t_ht,b_ht % from getAircraft
-
-ii = length(assumptions) + 1;
-assumptions(ii).name = "Wing-Body System Lift-Curve Slope Approximation";
-assumptions(ii).description = "Assume that lift-curve slope of the wing approximately equals the lift-curve slope of the wing-body system";
-assumptions(ii).rationale = "Lift effects of fuselage seem laborious to model although it would be feasible to do so";
-assumptions(ii).responsible_engineer = "Liam Trzebunia";
-
-aircraft.wing.a_wb.units = '/rad';
-aircraft.wing.a_wb.type = "recang"; % reciprocal angle unit type
-aircraft.wing.a_wb.description = "3D lift-curve slope of wing";
-aircraft.wing.Cm0.units = '';
-aircraft.wing.Cm0.type = "non"; % nondimensional unit type
-aircraft.wing.Cm0.description = "pitching moment coefficient at zero lift for wing";
-aircraft.wing.alpha_0L_wb.units = 'deg';
-aircraft.wing.alpha_0L_wb.type = "ang";
-aircraft.wing.alpha_0L_wb.description = "zero-lift angle for wing";
-
-ii = length(assumptions) + 1;
-assumptions(ii).name = "Wing-Body System Zero-Lift Angle Approximation";
-assumptions(ii).description = "Assume that zero-lift angle of the wing approximately equals the lift-curve slope of the wing-body system";
-assumptions(ii).rationale = "Lift effects of fuselage seem laborious to model although it would be feasible to do so";
-assumptions(ii).responsible_engineer = "Liam Trzebunia";
-
-aircraft.wing.alpha_stall.units = 'rad';
-aircraft.wing.alpha_stall.type = "ang";
-[aircraft.wing.a_wb.value,...
-    aircraft.wing.Cm0.value,...
-    aircraft.wing.alpha_0L_wb.value,...
-    aircraft.wing.a0.value,...
-    aircraft.wing.alpha_stall.value] = CL_alpha(aircraft.wing.b.value,...
-    aircraft.wing.c.value,...
-    aircraft.fuselage.diameter.value, ...
-    0,...
-    aircraft.wing.airfoil_name);
-
-aircraft.wing.a0.units = '/rad';
-aircraft.wing.a0.type = "recang";
-aircraft.wing.a0.description = "2D lift curve slope";
-
-aircraft.tail.horizontal.a.units = '/rad';
-aircraft.tail.horizontal.a.type = "recang";
-aircraft.tail.horizontal.a.description = "3D lift-curve slope of horizontal tail";
-
-aircraft.tail.horizontal.alpha_0L_t.units = 'deg';
-aircraft.tail.horizontal.alpha_0L_t.type = "ang";
-aircraft.tail.horizontal.alpha_0L_t.description = "zero-lift angle for horizontal tail";
-[aircraft.tail.horizontal.a.value,...
-    ~,...
-    aircraft.tail.horizontal.alpha_0L_t.value,...
-    ~,...
-    ~] = CL_alpha(aircraft.tail.horizontal.b.value,...
-    aircraft.tail.horizontal.c.value,...
-    aircraft.fuselage.diameter.value, ...
-    0,...
-    aircraft.tail.horizontal.airfoil_name);
-
-% a_wb,alpha_0L_wb,C_M0_wb % from CL_alpha for wing
-% a_wb needs to be converted from /rad to /deg before calling static stab
-% alpha_0L_wb needs to be converted from rad to
-% a_tail % from CL_alpha for tail
-
-
+fprintf('Analyzing Mission 2 static stability for %s... \n', iterName)
 
 % use SI units when calling static stability analysis function (however angles are in degrees)
 mission(2).physics.X_NP.units = 'm';
@@ -105,24 +29,6 @@ mission(2).physics.stability.static.failure.units = '';
 mission(2).physics.stability.static.failure.type = "non";
 mission(2).physics.stability.static.failure.description = "discrete value indicating the presence and mode of static failure: 0 = statically stable, 1 = inadequate pitching moment coefficient gradient (bad Cm_alpha), and 2 = inadequate trimmed lift coefficient (bad CL_trim)";
 
-% indicator of which type of unit conversion to use via the MATLAB Aerospace Toolbox: acc for acceleration units, vel for velocity units, etc: https://www.mathworks.com/help/aerotbx/unit-conversions-1.html
-
-
-% start test %
-% unitsAgree = [strcmp(string(aircraft.physics.X_CG.units), "m");
-%     strcmp(string(aircraft.loaded.weight.units), "N");
-%     strcmp(string(aircraft.wing.S.units), "m^2");
-%     strcmp(string(aircraft.wing.b.units), "m");
-%     strcmp(string(aircraft.tail.horizontal.d_tail.units), "m");
-%     strcmp(string(aircraft.tail.horizontal.i_tail.units), "deg");
-%     strcmp(string(aircraft.tail.horizontal.c.units), "m");
-%     strcmp(string(aircraft.tail.horizontal.b.units), "m");
-%     strcmp(string(aircraft.wing.a_wb.units), "/deg");
-%     strcmp(string(aircraft.tail.horizontal.a.units), "/deg");
-%     strcmp(string(aircraft.wing.alpha_0L_wb.units), "deg");
-%     strcmp(string(aircraft.wing.Cm0.units), "");
-%     strcmp(string(mission(2).weather.air_density.units), "kg/m^3")];
-
 structNames = ["aircraft.loaded.XYZ_CG";
     "aircraft.loaded.weight";
     "aircraft.wing.S";
@@ -136,7 +42,6 @@ structNames = ["aircraft.loaded.XYZ_CG";
     "aircraft.wing.alpha_0L_wb";
     "aircraft.wing.Cm0";
     "mission(2).weather.air_density"];
-
 desiredUnits = ["m";
     "N";
     "m^2";
@@ -151,29 +56,7 @@ desiredUnits = ["m";
     "";
     "kg/m^3"];
 
-%variableTypes =
-
-% structName = "aircraft.physics.X_CG";
-%variableType = "length";
-% desiredUnits = "m";
-
-% if length(structNames) == length(desiredUnits)
-%
-%     for i = 1:length(structNames)
-%         structName = structNames(i);
-%         desiredUnit = desiredUnits(i);
-%         eval(sprintf('type = %s.type;', structName));
-%         if ~strcmp(type, "non")
-%             eval(sprintf('%s.value = conv%s(%s.value, %s.units, "%s");', structName, type, structName, structName, desiredUnit))
-%             eval(sprintf('%s.units = "%s";', structName, desiredUnit))
-%         end
-%     end
-% else
-%     error('Function was called with mismatching input vectors. Input two vectors of the same length.')
-% end
-
 [aircraft, mission] = conv_aircraft_units(aircraft, mission, structNames, desiredUnits);
-%mission(2) = conv_aircraft_units(mission(2), missionStructNames, missionDesiredUnits);
 
 unitsAgree = [strcmp(string(aircraft.loaded.XYZ_CG.units), "m");
     strcmp(string(aircraft.loaded.weight.units), "N");
@@ -188,11 +71,6 @@ unitsAgree = [strcmp(string(aircraft.loaded.XYZ_CG.units), "m");
     strcmp(string(aircraft.wing.alpha_0L_wb.units), "deg");
     strcmp(string(aircraft.wing.Cm0.units), "");
     strcmp(string(mission(2).weather.air_density.units), "kg/m^3")];
-
-% end test %
-
-% aircraft.physics.X_CG.value = convlength(aircraft.physics.X_CG.value, aircraft.physics.X_CG.units, "m");
-% aircraft.physics.X_CG.units = "m";
 
 if all(unitsAgree)
     % capture assumptions embedded in the static stability analysis function call
@@ -240,7 +118,7 @@ end
 % failed
 continue_mission_analysis.value = true;
 
-fprintf('Completed static stability checks for loaded aircraft (mission(2) 2).\n')
+fprintf('Completed static stability checks for loaded aircraft (Mission 2).\n')
 
 %% 2. Dynamic Stability (M2)
 

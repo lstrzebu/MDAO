@@ -380,4 +380,61 @@ end
 
 displayAircraft
 
+% calculate aerodynamic and static stability variables in preparation for
+% mission physics analyses
+ii = length(assumptions) + 1;
+assumptions(ii).name = "Wing-Body System Lift-Curve Slope Approximation";
+assumptions(ii).description = "Assume that lift-curve slope of the wing approximately equals the lift-curve slope of the wing-body system";
+assumptions(ii).rationale = "Lift effects of fuselage seem laborious to model although it would be feasible to do so";
+assumptions(ii).responsible_engineer = "Liam Trzebunia";
+
+aircraft.wing.a_wb.units = '/rad';
+aircraft.wing.a_wb.type = "recang"; % reciprocal angle unit type
+aircraft.wing.a_wb.description = "3D lift-curve slope of wing";
+aircraft.wing.Cm0.units = '';
+aircraft.wing.Cm0.type = "non"; % nondimensional unit type
+aircraft.wing.Cm0.description = "pitching moment coefficient at zero lift for wing";
+aircraft.wing.alpha_0L_wb.units = 'deg';
+aircraft.wing.alpha_0L_wb.type = "ang";
+aircraft.wing.alpha_0L_wb.description = "zero-lift angle for wing";
+
+ii = length(assumptions) + 1;
+assumptions(ii).name = "Wing-Body System Zero-Lift Angle Approximation";
+assumptions(ii).description = "Assume that zero-lift angle of the wing approximately equals the lift-curve slope of the wing-body system";
+assumptions(ii).rationale = "Lift effects of fuselage seem laborious to model although it would be feasible to do so";
+assumptions(ii).responsible_engineer = "Liam Trzebunia";
+
+aircraft.wing.alpha_stall.units = 'rad';
+aircraft.wing.alpha_stall.type = "ang";
+[aircraft.wing.a_wb.value,...
+    aircraft.wing.Cm0.value,...
+    aircraft.wing.alpha_0L_wb.value,...
+    aircraft.wing.a0.value,...
+    aircraft.wing.alpha_stall.value] = CL_alpha(aircraft.wing.b.value,...
+    aircraft.wing.c.value,...
+    aircraft.fuselage.diameter.value, ...
+    0,...
+    aircraft.wing.airfoil_name);
+
+aircraft.wing.a0.units = '/rad';
+aircraft.wing.a0.type = "recang";
+aircraft.wing.a0.description = "2D lift curve slope";
+
+aircraft.tail.horizontal.a.units = '/rad';
+aircraft.tail.horizontal.a.type = "recang";
+aircraft.tail.horizontal.a.description = "3D lift-curve slope of horizontal tail";
+
+aircraft.tail.horizontal.alpha_0L_t.units = 'deg';
+aircraft.tail.horizontal.alpha_0L_t.type = "ang";
+aircraft.tail.horizontal.alpha_0L_t.description = "zero-lift angle for horizontal tail";
+[aircraft.tail.horizontal.a.value,...
+    ~,...
+    aircraft.tail.horizontal.alpha_0L_t.value,...
+    ~,...
+    ~] = CL_alpha(aircraft.tail.horizontal.b.value,...
+    aircraft.tail.horizontal.c.value,...
+    aircraft.fuselage.diameter.value, ...
+    0,...
+    aircraft.tail.horizontal.airfoil_name);
+
 fprintf('Done generating aircraft configuration.\n')

@@ -3,6 +3,7 @@
 
 aircraftIteration = 1;
 missionIteration = 1;
+iterName = sprintf('Aircraft-Mission Combination %d.%d', aircraftIteration, missionIteration);
 
 continue_mission_analysis.value = 1;
 continue_mission_analysis.units = '';
