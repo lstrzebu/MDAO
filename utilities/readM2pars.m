@@ -7,4 +7,4 @@ varSyms = M2_given_params(:, 3);
 for i = 1:thisVar
     eval(sprintf("%s = %d;", varNames{i}, varSyms{i}));
 end
-fprintf('Done generating Mission 2 variables from competition rulesheet.\n');
+fprintf('Completed reading Mission 2 variables from competition rulesheet.\n');

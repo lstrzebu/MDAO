@@ -28,49 +28,67 @@ missionVars = [p, c, l, bl, TPBC];
 % global quantity_best
 % global mission_time_best
 
-income_net_best = 1;
+income_net_best.value = 1;
+income_net_best.units = '';
+income_net_best.type = "non";
+income_net_best.description = "highest net income score for Mission 2 of all competing teams";
 
 assumptions(end+1).name = "Best Mission 2 Net Income";
-assumptions(end+1).description = sprintf("Assume the highest net income score for Mission 2 out of any teams at the competition is %d", income_net_best);
+assumptions(end+1).description = sprintf("Assume the highest net income score for Mission 2 out of any teams at the competition is %d", income_net_best.value);
 assumptions(end+1).rationale = "None; temporary value";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
-quantity_best = 1;
+quantity_best.value = 1;
+quantity_best.units = '';
+quantity_best.type = "non";
+quantity_best.description = "best scoring parameter for Mission 3 out of any team at the competition";
 
 assumptions(end+1).name = "Best Mission 3 Scoring Parameter";
-assumptions(end+1).description = sprintf("Assume the best scoring parameter for Mission 3 out of any team at the competition is %d", quantity_best);
+assumptions(end+1).description = sprintf("Assume the best scoring parameter for Mission 3 out of any team at the competition is %d", quantity_best.value);
 assumptions(end+1).rationale = "None; temporary value";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
-mission_time_best = 62; % assume something here
+mission_time_best.value = 62; % assume something here
+mission_time_best.units = 's';
+mission_time_best.type = "time";
+mission_time_best.description = "best ground mission time out of any team at the competition";
 
 assumptions(end+1).name = "Best Ground Mission Time";
-assumptions(end+1).description = sprintf("Assume the best ground mission time out of any team at the competition is %d", mission_time_best);
+assumptions(end+1).description = sprintf("Assume the best ground mission time out of any team at the competition is %d", mission_time_best.value);
 assumptions(end+1).rationale = "None; temporary value";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
 % global proposal
 % global report
-proposal = 0.9; % assumed proposal score
+proposal.value = 0.9; % assumed proposal score
+proposal.units = '';
+proposal.type = "non";
+proposal.description = "assumed QuackPack proposal score";
 % assumptions.proposal.description = "Our score on the proposal";
-report = 0.9; % assume something here
+report.value = 0.9; % assume something here
+report.units = '';
+report.type = "non";
+report.description = "assumed QuackPack report score";
 % assumptions.report.description = "Our score on the design report";
 
 assumptions(end+1).name = "Proposal Score";
-assumptions(end+1).description = sprintf("Assume %d%% score on proposal submission", 100*proposal);
+assumptions(end+1).description = sprintf("Assume %d%% score on proposal submission", 100*proposal.value);
 assumptions(end+1).rationale = "None; temporary value";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
 assumptions(end+1).name = "Report Score";
-assumptions(end+1).description = sprintf("Assume %d%% score on report submission", 100*report);
+assumptions(end+1).description = sprintf("Assume %d%% score on report submission", 100*report.value);
 assumptions(end+1).rationale = "None; temporary value";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
 % global mission_time
-mission_time = 71; % ground mission time in seconds
+mission_time.value = 71; % ground mission time in seconds
+mission_time.units = 's';
+mission_time.type = "time";
+mission_time.description = "QuackPack ground mission completion time";
 
 assumptions(end+1).name = "Ground Mission Time";
-assumptions(end+1).description = sprintf("Assume %ds time for completion of ground mission", mission_time);
+assumptions(end+1).description = sprintf("Assume %ds time for completion of ground mission", mission_time.value);
 assumptions(end+1).rationale = "None; temporary value. In the future time ourselves practicing the ground mission and use an average of our timed practice attempts";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 

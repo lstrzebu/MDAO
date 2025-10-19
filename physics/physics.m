@@ -28,5 +28,5 @@ end
 
 %% Score Result if Physically Feasible
 if continue_mission_analysis.value
-
+    evalScore
 end
