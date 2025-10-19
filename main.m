@@ -25,6 +25,9 @@ setup
 %% Vary Design Parameters (Outer Loop)
 % In other words, select a configuration.
 
+aircraftIteration = 1;
+missionIteration = 1;
+
 getAircraft % primary output: a bunch of (global?) sizing variables
 
 % check constraints here

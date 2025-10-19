@@ -22,7 +22,7 @@ TPBC    = missions(5);
 
 readM2pars
 
-[aircraft, mission] = conv_aircraft_units(aircraft, mission, "aircraft.wing.b", "ft");
+aircraft = conv_aircraft_units(aircraft, missionIteration, "aircraft.wing.b", "ft");
 
 if strcmp(string(aircraft.wing.b.units), "ft")
 RAC = 0.05*aircraft.wing.b.value + 0.75;

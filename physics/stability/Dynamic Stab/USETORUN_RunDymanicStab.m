@@ -85,7 +85,7 @@ switch missionNumber
             "aircraft.tail.vertical.c"];
 end
 desiredUnits = ["m"; "m"; "m^2"; "m^2"; "kg*m^2"; "m"];
-[aircraft, ~] = conv_aircraft_units(aircraft, 0, structNames, desiredUnits);
+aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits);
 
 % z-location of the tail
 %z_tail  = 0.5;
@@ -148,7 +148,7 @@ switch missionNumber
         end
 
     case 3
-        [aircraft, mission] = conv_aircraft_units(aircraft, mission, "aircraft.unloaded.XYZ_CG", "m");
+        aircraft = conv_aircraft_units(aircraft, missionIteration, "aircraft.unloaded.XYZ_CG", "m");
         if strcmp(string(aircraft.unloaded.XYZ_CG.units), "m")
             x_cm = aircraft.unloaded.XYZ_CG.value(1);
             y_cm = aircraft.unloaded.XYZ_CG.value(2);

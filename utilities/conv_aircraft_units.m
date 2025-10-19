@@ -1,4 +1,4 @@
-function [aircraft, mission] = conv_aircraft_units(aircraft, mission, structNames, desiredUnits)
+function [aircraft] = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits)
 % CONV_AIRCRAFT_UNITS converts the units of parameters in the "aircraft"
 % structure common to the 2025-2026 NCSU AIAA DBF MDAO framework 
 % Liam Trzebunia

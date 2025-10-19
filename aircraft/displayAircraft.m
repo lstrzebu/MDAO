@@ -25,7 +25,7 @@ desiredUnits = ["in";
     "in";
     "in";
     "in"];
-[aircraft, ~] = conv_aircraft_units(aircraft, 0, structNames, desiredUnits);
+aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits);
 
 % inputs: 
 tailType = aircraft.tail.config.value;
@@ -401,7 +401,7 @@ aircraft.fuselage.hull.solid_volume.type = "vol";
 aircraft.fuselage.hull.solid_volume.description = "volume of space occupied by fuselage hull material";
 
 if strcmp(string(aircraft.fuselage.hull.density.units), "g/cm^3") && strcmp(string(aircraft.fuselage.hull.solid_volume.units), "in^3")
-    [aircraft, ~] = conv_aircraft_units(aircraft, 0, "aircraft.fuselage.hull.solid_volume", "cm^3");
+    aircraft = conv_aircraft_units(aircraft, missionIteration, "aircraft.fuselage.hull.solid_volume", "cm^3");
     if strcmp(string(aircraft.fuselage.hull.solid_volume.units), "cm^3")
         aircraft.fuselage.hull.mass.value = aircraft.fuselage.hull.density.value*aircraft.fuselage.hull.solid_volume.value;
         aircraft.fuselage.hull.mass.units = 'g';
@@ -456,7 +456,7 @@ else
 end
 
 if strcmp(string(aircraft.wing.S.units), "ft^2")
-    [aircraft, ~] = conv_aircraft_units(aircraft, 0, "aircraft.wing.S", "m^2");
+    aircraft = conv_aircraft_units(aircraft, missionIteration, "aircraft.wing.S", "m^2");
     aircraft.wing.S.value = 10000*aircraft.wing.S.value;
     aircraft.wing.S.units = 'cm^2';
 else
@@ -509,7 +509,7 @@ else
 end
 
 if strcmp(string(aircraft.tail.horizontal.S.units), "ft^2")
-    [aircraft, ~] = conv_aircraft_units(aircraft, 0, "aircraft.tail.horizontal.S", "m^2");
+    aircraft = conv_aircraft_units(aircraft, missionIteration, "aircraft.tail.horizontal.S", "m^2");
     aircraft.tail.horizontal.S.value = 10000*aircraft.tail.horizontal.S.value;
     aircraft.tail.horizontal.S.units = 'cm^2';
 else
@@ -558,7 +558,7 @@ else
 end
 
 if strcmp(string(aircraft.tail.vertical.S.units), "ft^2")
-    [aircraft, ~] = conv_aircraft_units(aircraft, 0, "aircraft.tail.vertical.S", "m^2");
+    aircraft = conv_aircraft_units(aircraft, missionIteration, "aircraft.tail.vertical.S", "m^2");
     aircraft.tail.vertical.S.value = 10000*aircraft.tail.vertical.S.value;
     aircraft.tail.vertical.S.units = 'cm^2';
 else
@@ -674,7 +674,7 @@ desiredUnits = ["N";
     "in";
     "in";
     "in"];
-[aircraft, ~] = conv_aircraft_units(aircraft, 0, structNames, desiredUnits);
+aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits);
 
 part_weights = [aircraft.fuselage.hull.weight.value;
     aircraft.wing.skin.weight.value;

@@ -1,8 +1,6 @@
 % Check whether an aircraft-mission combination is physically feasible
 % Created by Liam Trzebunia-Niebies on 7 October 2025
 
-aircraftIteration = 1;
-missionIteration = 1;
 iterName = sprintf('Aircraft-Mission Combination %d.%d', aircraftIteration, missionIteration);
 
 continue_mission_analysis.value = 1;

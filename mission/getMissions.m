@@ -290,12 +290,12 @@ end
 %     error('Unit mismatch: maximum gross takeoff weight could not be computed. Ensure the weights of aircraft components share the same units.')
 % end
 
-mission(1).weather.air_density.value = 0.002377; % SSL density (change later)
-mission(1).weather.air_density.units = 'slug/ft^3';
-mission(1).weather.air_density.type = "density";
-mission(1).weather.air_density.description = "density of air at competition location on competition day";
-mission(2).weather.air_density = mission(1).weather.air_density;
-mission(3).weather.air_density = mission(1).weather.air_density;
+aircraft.missions(missionIteration).mission(1).weather.air_density.value = 0.002377; % SSL density (change later)
+aircraft.missions(missionIteration).mission(1).weather.air_density.units = 'slug/ft^3';
+aircraft.missions(missionIteration).mission(1).weather.air_density.type = "density";
+aircraft.missions(missionIteration).mission(1).weather.air_density.description = "density of air at competition location on competition day";
+aircraft.missions(missionIteration).mission(2).weather.air_density = aircraft.missions(missionIteration).mission(1).weather.air_density;
+aircraft.missions(missionIteration).mission(3).weather.air_density = aircraft.missions(missionIteration).mission(1).weather.air_density;
 
 aircraft.payload.cargo.XYZ_CG = aircraft.unloaded.XYZ_CG;
 aircraft.payload.cargo.XYZ_CG.description = "vector of X, Y, Z coordinates for CG of pucks";
@@ -413,7 +413,7 @@ structNames = ["aircraft.unloaded.weight";
 desiredUnits = ["N";
     "N";
     "N"];
-[aircraft, ~] = conv_aircraft_units(aircraft, 0, structNames, desiredUnits);
+aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits);
 
 % ensure units match up prior to loaded CG calculation
 structNames = ["aircraft.unloaded.XYZ_CG";
@@ -422,7 +422,7 @@ structNames = ["aircraft.unloaded.XYZ_CG";
 desiredUnits = ["in";
     "in";
     "in"];
-[aircraft, ~] = conv_aircraft_units(aircraft, 0, structNames, desiredUnits);
+aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits);
 
 % prepare for loaded weight and loaded CG calculations
 weights = [aircraft.unloaded.weight.value; 
