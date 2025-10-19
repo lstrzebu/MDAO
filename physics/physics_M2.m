@@ -1,4 +1,4 @@
-% Analyze mission(2) 2 physics
+% Analyze Mission 2 physics
 % Created 18 October 2025 by Liam Trzebunia
 
 fprintf('Verifying Mission 2 feasibility for %s... \n', iterName)
@@ -107,7 +107,7 @@ if continue_mission_analysis.value
         error('Unit mismatch: static stability analysis not possible. For convention, ensure static stability analysis functions are called with SI units (except for angles, which should use degrees rather than radians).')
     end
 
-    fprintf('Completed Mission 2 static stability analysis for %s\n', iterName)
+    fprintf('Completed Mission 2 static stability analysis for %s.\n', iterName)
 
     % move on to another design if needed (and explain why)
     if mission(2).physics.stability.static.failure.value ~= 0
@@ -130,7 +130,7 @@ if continue_mission_analysis.value
     fprintf('Analyzing Mission 2 dynamic stability for %s...\n', iterName);
     USETORUN_RunDymanicStab % run dynamic stability analysis
 
-    fprintf('Completed Mission 2 dynamic stability analysis for %s\n', iterName)
+    fprintf('Completed Mission 2 dynamic stability analysis for %s.\n', iterName)
 
     % interpret dynamic stability results
     if Static_failure ~= 0 || Trim_failure ~= 0 || dynamic_failure_mode ~= 0
@@ -178,10 +178,6 @@ if continue_mission_analysis.value
         strcmp(string(mission(2).physics.v_trim.units), "m/s");
         strcmp(string(aircraft.unloaded.weight.units), "N");
         strcmp(string(aircraft.loaded.weight.units), "N")];
-    % no need to programatically check units of propeller data
-    % (aircraft.propulsion.propeller.data), they were checked manually against
-    % the spreadsheet
-
     % W_loaded
     % W_ref, b_w, c_w, b_t, c_t, l_fuse, t_ref, d_fuse, A_banner, AR_banner
 
@@ -218,10 +214,10 @@ if continue_mission_analysis.value
         mission(2).physics.CL_trim(3).type = "non";
         mission(2).physics.CL_trim(3).description = "trimmed lift coefficient outputted from Lift_Distr function called in structural analysis";
     else
-        error('Unit mismatch: propulsion analysis not possible.')
+        error('Unit mismatch: structural integrity analysis not possible.')
     end
 
-    fprintf('Completed Mission 2 structural integrity analysis for %s\n', iterName)
+    fprintf('Completed Mission 2 structural integrity analysis for %s.\n', iterName)
 
     % turn radius sometimes turns out to be less than zero for negative lift coefficients. In
     % reality, this structures function should always be called after
@@ -337,7 +333,7 @@ if continue_mission_analysis.value
         error('Unit mismatch: aerodynamic analysis not possible.')
     end
 
-    fprintf('Completed Mission 2 aerodynamics analysis for %s\n', iterName)
+    fprintf('Completed Mission 2 aerodynamics analysis for %s.\n', iterName)
 
     if ~speed_boolean || ~alpha_boolean
         continue_mission_analysis.value = false;
@@ -431,7 +427,7 @@ if continue_mission_analysis.value
         error('Unit mismatch: propulsion analysis not possible.')
     end
 
-    fprintf('Completed Mission 2 propulsion system analysis for %s\n', iterName)
+    fprintf('Completed Mission 2 propulsion system analysis for %s.\n', iterName)
 
     if ~safetyCheck || ~RPM_exists
         continue_mission_analysis.value = false;

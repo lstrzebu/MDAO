@@ -1,7 +1,6 @@
 cd 'physics\stability\Dynamic Stab' % enter flight stability directory (for AVL call)
 
-iterationNumber = 1; % for testing
-design_title               = sprintf("Design #%d", iterationNumber);
+design_title               = sprintf("%s", iterName);
 
 file_name           = "QuackPack";
 
@@ -20,14 +19,23 @@ delete_files = true;
 %% Wing Geometry
 
 % mass    = 35;   % [kg]
-if strcmp(string(aircraft.loaded.mass.units), "kg")
-    mass = aircraft.loaded.mass.value; 
-else
-    error('Unit mismatch: dynamic stability analysis not possible.')
+switch missionNumber
+    case 2 % mission 2... use parameters for loaded aircraft
+        if strcmp(string(aircraft.loaded.mass.units), "kg")
+            mass = aircraft.loaded.mass.value;
+        else
+            error('Unit mismatch: dynamic stability analysis not possible.')
+        end
+    case 3 % mission 3... use parameters for unloaded aircraft
+        if strcmp(string(aircraft.unloaded.mass.units), "kg")
+            mass = aircraft.unloaded.mass.value;
+        else
+            error('Unit mismatch: dynamic stability analysis not possible.')
+        end
 end
 
 if strcmp(string(aircraft.wing.S.units), "m^2") && strcmp(string(aircraft.wing.b.units), "m")
-    S = aircraft.wing.S.value; 
+    S = aircraft.wing.S.value;
     b = aircraft.wing.b.value;
 else
     error('Unit mismatch: dynamic stability analysis not possible.')
@@ -60,11 +68,20 @@ else
     error('Unit mismatch: dynamic stability analysis not possible.')
 end
 
-structNames = ["aircraft.tail.horizontal.skin.XYZ_CG";
-    "aircraft.wing.skin.XYZ_CG";
-    "aircraft.tail.horizontal.S";
-    "aircraft.tail.vertical.S";
-    "aircraft.loaded.MOI"];
+switch missionNumber
+    case 2 % mission 2... use parameters for loaded aircraft
+        structNames = ["aircraft.tail.horizontal.skin.XYZ_CG";
+            "aircraft.wing.skin.XYZ_CG";
+            "aircraft.tail.horizontal.S";
+            "aircraft.tail.vertical.S";
+            "aircraft.loaded.MOI"];
+    case 3 % mission 3... use parameters for unloaded aircraft
+        structNames = ["aircraft.tail.horizontal.skin.XYZ_CG";
+            "aircraft.wing.skin.XYZ_CG";
+            "aircraft.tail.horizontal.S";
+            "aircraft.tail.vertical.S";
+            "aircraft.unloaded.MOI"];
+end
 desiredUnits = ["m"; "m"; "m^2"; "m^2"; "kg*m^2"];
 [aircraft, ~] = conv_aircraft_units(aircraft, 0, structNames, desiredUnits);
 
@@ -108,21 +125,44 @@ end
 % x_cm                = -0.4;         % [m]
 % y_cm                = 0;            % [m]
 % z_cm                = -0.1;         % [m]
-if strcmp(string(aircraft.loaded.XYZ_CG.units), "m")
-    x_cm = aircraft.loaded.XYZ_CG.value(1);
-    y_cm = aircraft.loaded.XYZ_CG.value(2);
-    z_cm = aircraft.loaded.XYZ_CG.value(3);
-else
-    error('Unit mismatch: dynamic stability analysis not possible.')
-end
+switch missionNumber
+    case 2
+        if strcmp(string(aircraft.loaded.XYZ_CG.units), "m")
+            x_cm = aircraft.loaded.XYZ_CG.value(1);
+            y_cm = aircraft.loaded.XYZ_CG.value(2);
+            z_cm = aircraft.loaded.XYZ_CG.value(3);
+        else
+            error('Unit mismatch: dynamic stability analysis not possible.')
+        end
 
-% I_matrix    = [1.9, 0, -0.5; ...
-%                0, 220, 0; ...
-%                -0.5, 0, 159.4];
-if strcmp(string(aircraft.loaded.MOI.units), "kg*m^2")
-    I_matrix = aircraft.loaded.MOI.value;
-else
-    error('Unit mismatch: dynamic stability analysis not possible.')
+        % I_matrix    = [1.9, 0, -0.5; ...
+        %                0, 220, 0; ...
+        %                -0.5, 0, 159.4];
+        if strcmp(string(aircraft.loaded.MOI.units), "kg*m^2")
+            I_matrix = aircraft.loaded.MOI.value;
+        else
+            error('Unit mismatch: dynamic stability analysis not possible.')
+        end
+
+    case 3
+        [aircraft, mission] = conv_aircraft_units(aircraft, mission, "aircraft.unloaded.XYZ_CG", "m");
+        if strcmp(string(aircraft.unloaded.XYZ_CG.units), "m")
+            x_cm = aircraft.unloaded.XYZ_CG.value(1);
+            y_cm = aircraft.unloaded.XYZ_CG.value(2);
+            z_cm = aircraft.unloaded.XYZ_CG.value(3);
+        else
+            error('Unit mismatch: dynamic stability analysis not possible.')
+        end
+
+        % I_matrix    = [1.9, 0, -0.5; ...
+        %                0, 220, 0; ...
+        %                -0.5, 0, 159.4];
+        if strcmp(string(aircraft.unloaded.MOI.units), "kg*m^2")
+            I_matrix = aircraft.unloaded.MOI.value;
+        else
+            error('Unit mismatch: dynamic stability analysis not possible.')
+        end
+
 end
 
 dynamic_failure_mode = 0; % assume no failure until proven otherwise
@@ -165,7 +205,7 @@ if failure_eigen
     % fprintf("Possible Fix - Increase your I_yy and/or I_zz values and ensure they are reflecting the wing/tail placements\n\n")
 
 
-% if the eigenvalues do make sense
+    % if the eigenvalues do make sense
 else
 
     % -------------------------------------------------------------------------
@@ -191,10 +231,10 @@ else
 
     if Dutch_roll_failure
         dynamic_failure_mode = dutch_roll_key;
-    %     fprintf("Dynamic Stability Failed! Dutch Roll mode is undamped\n")
-    %     fprintf("Possible Fix - Decrease Wing Sweep and/or dihedral\n\n")
+        %     fprintf("Dynamic Stability Failed! Dutch Roll mode is undamped\n")
+        %     fprintf("Possible Fix - Decrease Wing Sweep and/or dihedral\n\n")
     end
-    
+
     % -------------------------------------------------------------------------
     % SPO Failure
     % -------------------------------------------------------------------------
@@ -204,11 +244,11 @@ else
 
     if SPO_failure
         dynamic_failure_mode = SPO_key;
-    %     fprintf("Dynamic Stability Failed! SPO mode is underdamped\n")
-    %     fprintf("Possible Fix - Move lifting surfaces farther from CG\n\n")
+        %     fprintf("Dynamic Stability Failed! SPO mode is underdamped\n")
+        %     fprintf("Possible Fix - Move lifting surfaces farther from CG\n\n")
     end
-    
-    
+
+
     % -------------------------------------------------------------------------
     % Spiral Failure
     % -------------------------------------------------------------------------
@@ -231,7 +271,7 @@ else
     roll_key = 6;
 
     if Roll_failure
-        dynamic_failure_mode = roll_key; % roll failure mode 
+        dynamic_failure_mode = roll_key; % roll failure mode
         % fprintf("Dynamic Stability Failed! Rolling mode is underdamped\n")
         % fprintf("Possible Fix - Increase Wing Dihedral\n\n")
     end

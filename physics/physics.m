@@ -12,6 +12,7 @@ continue_mission_analysis.description = "boolean used to skip suboptimal mission
 
 %% Mission 2 Physics Analysis
 if continue_mission_analysis.value
+    missionNumber = 2;
     physics_M2
 else
     fprintf('Skipping Mission 2 analysis for rejected Aircraft-Mission Combination %d.%d\n', aircraftIteration, missionIteration)
@@ -19,7 +20,13 @@ end
 
 %% Mission 3 Physics Analysis
 if continue_mission_analysis.value
+    missionNumber = 3;
     physics_M3
 else
     fprintf('Skipping Mission 3 analysis for rejected Aircraft-Mission Combination %d.%d\n', aircraftIteration, missionIteration)
+end
+
+%% Score Result if Physically Feasible
+if continue_mission_analysis.value
+
 end
