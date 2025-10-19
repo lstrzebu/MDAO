@@ -74,24 +74,27 @@ switch missionNumber
             "aircraft.wing.skin.XYZ_CG";
             "aircraft.tail.horizontal.S";
             "aircraft.tail.vertical.S";
-            "aircraft.loaded.MOI"];
+            "aircraft.loaded.MOI";
+            "aircraft.tail.vertical.c"];
     case 3 % mission 3... use parameters for unloaded aircraft
         structNames = ["aircraft.tail.horizontal.skin.XYZ_CG";
             "aircraft.wing.skin.XYZ_CG";
             "aircraft.tail.horizontal.S";
             "aircraft.tail.vertical.S";
-            "aircraft.unloaded.MOI"];
+            "aircraft.unloaded.MOI";
+            "aircraft.tail.vertical.c"];
 end
-desiredUnits = ["m"; "m"; "m^2"; "m^2"; "kg*m^2"];
+desiredUnits = ["m"; "m"; "m^2"; "m^2"; "kg*m^2"; "m"];
 [aircraft, ~] = conv_aircraft_units(aircraft, 0, structNames, desiredUnits);
 
 % z-location of the tail
 %z_tail  = 0.5;
-if strcmp(tail_config, "C") && strcmp(string(aircraft.tail.horizontal.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.wing.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.tail.horizontal.c.units), "m")
-    z_tail = aircraft.tail.horizontal.skin.XYZ_CG.value(3) - aircraft.wing.skin.XYZ_CG.value(3); % z distance between wing and horizontal tail
+
+z_tail = aircraft.tail.horizontal.skin.XYZ_CG.value(3) - aircraft.wing.skin.XYZ_CG.value(3); % z distance between wing and horizontal tail
+if (strcmp(tail_config, "C") || strcmp(tail_config, "U")) && strcmp(string(aircraft.tail.horizontal.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.wing.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.tail.horizontal.c.units), "m")
     C_r_fuselage = aircraft.tail.horizontal.c.value; % for conventional tail, the root chord of the part of the tail connected to the fuselage is the root chord of the horizontal tail
-else
-    error('Dynamic stability function must be rewritten to use tail types other than conventional.')
+elseif strcmp(tail_config, "T") && strcmp(string(aircraft.tail.horizontal.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.wing.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.tail.vertical.c.units), "m")
+    C_r_fuselage = aircraft.tail.vertical.c.value; % for T tail, the root chord of the part of the tail connected to the fuselage is the root chord of the vertical tail
 end
 
 % C_r_fuselage = 0.75;

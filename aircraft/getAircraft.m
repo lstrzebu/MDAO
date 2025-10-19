@@ -167,7 +167,7 @@ aircraft.tail.vertical.weight.units = 'N';
 aircraft.tail.vertical.weight.type = "force";
 aircraft.tail.vertical.weight.description = "weight of vertical tail only";
 
-aircraft.tail.config.value = 'Conventional'; % Conventional, U-Shaped (Dual Fin), or T-Shaped (High Tail)
+aircraft.tail.config.value = 'T-Shaped'; % Conventional, U-Shaped (Dual Fin), or T-Shaped (High Tail)
 aircraft.tail.config.units = '';
 aircraft.tail.config.type = "non";
 aircraft.tail.config.description = "Whether the current design's tail is Conventional, U-Shaped (Dual Fin), or T-Shaped (High Tail)";
