@@ -129,9 +129,9 @@ assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
 
 % step = 2; 
-minP = 1; stepP = 1; maxP = 30; 
-minC = 1; stepC = 1; maxC = 4;
-minL = 1; stepL = 1; maxL = 8; 
+minP = 3; stepP = 5; maxP = 30; 
+minC = 1; stepC = 3; maxC = 4;
+minL = 1; stepL = 7; maxL = 8; 
 minBL = 10; stepBL = 5; maxBL = 15;
 TPBCscal = aircraft.propulsion.battery.capacity.value; % scalar for total propulsion battery capacity: units of Wh
 %minTPBC = 25; stepTPBC = 25; maxTPBC = 100;
@@ -171,10 +171,10 @@ ducks_pucks_mask = missions(:,1) >= 3.*missions(:,2);
 missions = missions(ducks_pucks_mask, :);
 
 % For testing only (DELETE afterwards):
-missions = missions(1,:);
+% missions = missions(1,:);
 
 % Now paramMatrix has n rows, where n = prod([numel(pVec), numel(cVec), numel(lVec), numel(blVec), numel(TPBCvec)])
-expectedRuns = size(missions, 1);
+numMissionConfigs = size(missions, 1);
 
 % example of how to evaluate these missions
 % total_score = evalScore(missionVars, aircraft, assumptions);
@@ -298,6 +298,10 @@ aircraft.missions(missionIteration).mission(2).weather.air_density = aircraft.mi
 aircraft.missions(missionIteration).mission(3).weather.air_density = aircraft.missions(missionIteration).mission(1).weather.air_density;
 
 aircraft.payload.cargo.XYZ_CG = aircraft.unloaded.XYZ_CG;
+aircraft.payload.cargo.XYZ_CG.value = zeros([numMissionConfigs, 3]);
+for j = 1:numMissionConfigs
+aircraft.payload.cargo.XYZ_CG.value(j, :) = aircraft.unloaded.XYZ_CG.value;
+end
 aircraft.payload.cargo.XYZ_CG.description = "vector of X, Y, Z coordinates for CG of pucks";
 
 % duck dimensions
@@ -366,19 +370,21 @@ assumptions(end+1).rationale = "Get something working for MDAO; replace with one
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
 if strcmp(string(aircraft.fuselage.protrusion.units), "in") && strcmp(string(aircraft.fuselage.length.units), "in") && strcmp(string(aircraft.payload.passengers.individual.length.units), "in") && strcmp(string(aircraft.payload.passengers.individual.width.units), "in") && strcmp(string(aircraft.fuselage.diameter.units), "in") && strcmp(string(aircraft.fuselage.hull.thickness.units), "in") && strcmp(aircraft.payload.passengers.individual.max_height.units, "in")
-    for i = 1:aircraft.payload.passengers.number.value
+    for k = 1:numMissionConfigs
+    for i = 1:aircraft.payload.passengers.number.value(k)
         rowNum = ceil(i/2); 
 
         % if i is odd, place duck on right hand side of aircraft
         % if i is even, place duck on left hand side of aircraft
         if rem(i, 2) ~= 0
-            aircraft.payload.passengers.individual.XYZ_CG.value(i, :) = [-aircraft.fuselage.protrusion.value + aircraft.fuselage.length.value + (rowNum-1).*aircraft.payload.passengers.individual.length.value + aircraft.payload.passengers.individual.length.value/2, aircraft.payload.passengers.individual.width.value, aircraft.fuselage.diameter.value - aircraft.fuselage.hull.thickness.value - aircraft.payload.passengers.individual.max_height.value]; 
+            aircraft.payload.passengers.individual.XYZ_CG.value(i, :, k) = [-aircraft.fuselage.protrusion.value + aircraft.fuselage.length.value + (rowNum-1).*aircraft.payload.passengers.individual.length.value + aircraft.payload.passengers.individual.length.value/2, aircraft.payload.passengers.individual.width.value, aircraft.fuselage.diameter.value - aircraft.fuselage.hull.thickness.value - aircraft.payload.passengers.individual.max_height.value]; 
         else
-            aircraft.payload.passengers.individual.XYZ_CG.value(i, :) = [-aircraft.fuselage.protrusion.value + aircraft.fuselage.length.value + (rowNum-1).*aircraft.payload.passengers.individual.length.value + aircraft.payload.passengers.individual.length.value/2, -aircraft.payload.passengers.individual.width.value, aircraft.fuselage.diameter.value - aircraft.fuselage.hull.thickness.value - aircraft.payload.passengers.individual.max_height.value]; 
+            aircraft.payload.passengers.individual.XYZ_CG.value(i, :, k) = [-aircraft.fuselage.protrusion.value + aircraft.fuselage.length.value + (rowNum-1).*aircraft.payload.passengers.individual.length.value + aircraft.payload.passengers.individual.length.value/2, -aircraft.payload.passengers.individual.width.value, aircraft.fuselage.diameter.value - aircraft.fuselage.hull.thickness.value - aircraft.payload.passengers.individual.max_height.value]; 
         end
         aircraft.payload.passengers.individual.XYZ_CG.units = 'in';
         aircraft.payload.passengers.individual.XYZ_CG.type = "length";
         aircraft.payload.passengers.individual.XYZ_CG.description = "array where each row is the X, Y, Z coordinates of a rubber duck CG";
+    end
     end
 else
     error('Unit mismatch: computation of rubber duck CGs is not possible.')
@@ -391,20 +397,25 @@ else
     error('Unit mismatch: computation of rubber duck CGs is not possible.')
 end
 
-if strcmp(string(constants.g.units), "m/s^2")
-duck_weights = zeros([aircraft.payload.passengers.number.value, 1]);
-duck_weights(:) = aircraft.payload.passengers.individual.mass.average.value.*constants.g.value; % kg * m/s^2 = N
-else
-    error('Unit mismatch: computation of rubber duck CGs is not possible.');
+for k = 1:numMissionConfigs
+
+    if strcmp(string(constants.g.units), "m/s^2")
+        duck_weights = zeros([max(aircraft.payload.passengers.number.value), 1]);
+        duck_weights(1:aircraft.payload.passengers.number.value(k)) = aircraft.payload.passengers.individual.mass.average.value.*constants.g.value; % kg * m/s^2 = N
+    else
+        error('Unit mismatch: computation of rubber duck CGs is not possible.');
+    end
+
+    % duck_cgs = zeros([aircraft.payload.passengers.number.value(k), 3]);
+    duck_cgs = aircraft.payload.passengers.individual.XYZ_CG.value(:, :, k); % units should be inches
+
+    % calculate net duck CG
+    aircraft.payload.passengers.XYZ_CG.value(k,:) = composite_cg(duck_weights, duck_cgs); % output units match input units
+    aircraft.payload.passengers.XYZ_CG.units = aircraft.payload.passengers.individual.XYZ_CG.units;
+    aircraft.payload.passengers.XYZ_CG.type = "length";
+    aircraft.payload.passengers.XYZ_CG.description = "net CG of all ducks onboard aircraft";
+
 end
-
-duck_cgs = aircraft.payload.passengers.individual.XYZ_CG.value; % units should be inches 
-
-% calculate net duck CG
-aircraft.payload.passengers.XYZ_CG.value = composite_cg(duck_weights, duck_cgs); % output units match input units
-aircraft.payload.passengers.XYZ_CG.units = aircraft.payload.passengers.individual.XYZ_CG.units;
-aircraft.payload.passengers.XYZ_CG.type = "length";
-aircraft.payload.passengers.XYZ_CG.description = "net CG of all ducks onboard aircraft";
 
 % ensure units match up prior to loaded weight calculation
 structNames = ["aircraft.unloaded.weight";
@@ -425,31 +436,34 @@ desiredUnits = ["in";
 aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits);
 
 % prepare for loaded weight and loaded CG calculations
+for k = 1:numMissionConfigs
 weights = [aircraft.unloaded.weight.value; 
-    aircraft.payload.passengers.weight.value;
-    aircraft.payload.cargo.weight.value];
+    aircraft.payload.passengers.weight.value(k, :);
+    aircraft.payload.cargo.weight.value(k, :)];
 cgs = [aircraft.unloaded.XYZ_CG.value; 
-    aircraft.payload.passengers.XYZ_CG.value;
-    aircraft.payload.cargo.XYZ_CG.value];
+    aircraft.payload.passengers.XYZ_CG.value(k, :);
+    aircraft.payload.cargo.XYZ_CG.value(k, :)];
 
 % loaded weight calculation
-aircraft.loaded.weight.value = sum(weights);
+aircraft.loaded.weight.value(k) = sum(weights);
 aircraft.loaded.weight.units = 'N';
 aircraft.loaded.weight.type = "force";
 aircraft.loaded.weight.description = "total weight of aircraft + payload, where payload is all ducks and all pucks for Mission 2";
 
 % loaded CG calculation
-aircraft.loaded.XYZ_CG.value = composite_cg(weights, cgs);
+aircraft.loaded.XYZ_CG.value(k, :) = composite_cg(weights, cgs);
 aircraft.loaded.XYZ_CG.units = 'in';
 aircraft.loaded.XYZ_CG.type = "length";
 aircraft.loaded.XYZ_CG.description = "vector of X, Y, Z coordinates for loaded aircraft CG (loaded aircraft includes payload of ducks, pucks)";
+
+end
 
 assumptions(end+1).name = "Neglect Rubber Duck Moment of Inertia";
 assumptions(end+1).description = "Assume that moment of inertia of each individual duck (and therefore of the ducks collectively) are approximately zero";
 assumptions(end+1).rationale = "Rubber ducks are light and small";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
-aircraft.payload.passengers.MOI.value = zeros(3);
+aircraft.payload.passengers.MOI.value = zeros([3, 3, numMissionConfigs]);
 aircraft.payload.passengers.MOI.units = '';
 aircraft.payload.passengers.MOI.type = "MOI";
 aircraft.payload.passengers.MOI.description = "moment of inertia of all ducks about the origin of the coordinate system";
@@ -476,14 +490,14 @@ I_perp = (1/12).*m.*(h.^2 + 3.*r.^2); % perpendicular moment of inertia of cylin
 I_xx = I_par;
 I_yy = I_perp;
 I_zz = I_perp;
-I = zeros(3);
-I(1,1) = I_xx;
-I(2,2) = I_yy;
-I(3,3) = I_zz;
+I = zeros([3, 3, numMissionConfigs]);
+I(1,1,:) = I_xx;
+I(2,2,:) = I_yy;
+I(3,3,:) = I_zz;
 aircraft.payload.cargo.MOI.value = I;
 aircraft.payload.cargo.MOI.units = 'kg*in^2';
 aircraft.payload.cargo.MOI.type = "MOI";
-aircraft.payload.cargo.MOI.description = "moment of inertia matrix for all pucks about the CG of the net stacked cylinder of pucks";
+aircraft.payload.cargo.MOI.description = "moment of inertia matrix for all pucks about the CG of the net stacked cylinder of pucks. The third dimension corresponds to the mission in question. The first and second dimensions corresponds to the number of rows and columns in the matrix.";
 
 % % Wing MOI 
 % if strcmp(string(aircraft.wing.skin.XYZ_CG.units), "in")
@@ -493,6 +507,8 @@ aircraft.payload.cargo.MOI.description = "moment of inertia matrix for all pucks
 % end
 
 if strcmp(string(aircraft.wing.skin.mass.units), "kg") && strcmp(string(aircraft.wing.b.units), "in") && strcmp(string(aircraft.wing.c.units), "in")
+    I_wing = zeros([3, 3, numMissionConfigs]); % preallocate
+    
     mass_wing = aircraft.wing.skin.mass.value; % [kg]
     b_wing = aircraft.wing.b.value;
     c_wing = aircraft.wing.c.value;
@@ -508,9 +524,11 @@ if strcmp(string(aircraft.wing.skin.mass.units), "kg") && strcmp(string(aircraft
     I_yz_wing = 0;
     I_xz_wing = 0;
 
-    I_wing  = [I_xx_wing, I_xy_wing, I_xz_wing; ...
+    for i = 1:numMissionConfigs
+    I_wing(:, :, i)  = [I_xx_wing, I_xy_wing, I_xz_wing; ...
         I_xy_wing, I_yy_wing, I_yz_wing; ...
         I_xz_wing, I_yz_wing, I_zz_wing];
+    end
 
 else
     error('Unit mismatch: computation of wing skin MOI not possible.')
@@ -519,7 +537,7 @@ end
 aircraft.wing.skin.MOI.value = I_wing;
 aircraft.wing.skin.MOI.units = 'kg*in^2';
 aircraft.wing.skin.MOI.type = "MOI";
-aircraft.wing.skin.MOI.description = "moment of inertia matrix for wings about their own center of mass";
+aircraft.wing.skin.MOI.description = "moment of inertia matrix for wings about their own center of mass. Third dimension corresponds to the mission in question. First and second dimensions correspond to rows and columns in the I matrices.";
 
 % HT MOI 
 if strcmp(string(aircraft.tail.horizontal.skin.XYZ_CG.units), "in")
@@ -529,6 +547,7 @@ else
 end
 
 if strcmp(string(aircraft.tail.horizontal.skin.mass.units), "kg") && strcmp(string(aircraft.tail.horizontal.b.units), "in") && strcmp(string(aircraft.tail.horizontal.c.units), "in")
+    I_HT = zeros([3, 3, numMissionConfigs]);
     mass_HT = aircraft.tail.horizontal.skin.mass.value; % [kg]
     b_HT = aircraft.tail.horizontal.b.value;
     c_HT = aircraft.tail.horizontal.c.value;
@@ -544,10 +563,11 @@ if strcmp(string(aircraft.tail.horizontal.skin.mass.units), "kg") && strcmp(stri
     I_yz_HT = 0;
     I_xz_HT = 0;
 
-    I_HT  = [I_xx_HT, I_xy_HT, I_xz_HT; ...
+    for i = 1:numMissionConfigs
+    I_HT(:,:,i)  = [I_xx_HT, I_xy_HT, I_xz_HT; ...
         I_xy_HT, I_yy_HT, I_yz_HT; ...
         I_xz_HT, I_yz_HT, I_zz_HT];
-
+    end
 else
     error('Unit mismatch: computation of horizontal tail skin MOI not possible.')
 end
@@ -565,6 +585,7 @@ else
 end
 
 if strcmp(string(aircraft.tail.vertical.skin.mass.units), "kg") && strcmp(string(aircraft.tail.vertical.b.units), "in") && strcmp(string(aircraft.tail.vertical.c.units), "in")
+    I_VT = zeros([3, 3, numMissionConfigs]);
     mass_VT = aircraft.tail.vertical.skin.mass.value; % [kg]
     b_VT = aircraft.tail.vertical.b.value;
     c_VT = aircraft.tail.vertical.c.value;
@@ -580,10 +601,11 @@ if strcmp(string(aircraft.tail.vertical.skin.mass.units), "kg") && strcmp(string
     I_yz_VT = 0;
     I_xz_VT = 0;
 
-    I_VT  = [I_xx_VT, I_xy_VT, I_xz_VT; ...
+    for i = 1:numMissionConfigs
+    I_VT(:, :, i)  = [I_xx_VT, I_xy_VT, I_xz_VT; ...
         I_xy_VT, I_yy_VT, I_yz_VT; ...
         I_xz_VT, I_yz_VT, I_zz_VT];
-
+    end
 else
     error('Unit mismatch: computation of vertical tail skin MOI not possible.')
 end
@@ -612,16 +634,16 @@ I_perp = (1/12).*m.*(h.^2 + 3.*r.^2); % perpendicular moment of inertia of cylin
 I_xx = I_par;
 I_yy = I_perp;
 I_zz = I_perp;
-I = zeros(3);
-I(1,1) = I_xx;
-I(2,2) = I_yy;
-I(3,3) = I_zz;
+I = zeros([3, 3, numMissionConfigs]);
+I(1,1,:) = I_xx;
+I(2,2,:) = I_yy;
+I(3,3,:) = I_zz;
 aircraft.propulsion.motor.MOI.value = I;
 aircraft.propulsion.motor.MOI.units = 'kg*in^2';
 aircraft.propulsion.motor.MOI.type = "MOI";
 aircraft.propulsion.motor.MOI.description = "moment of inertia matrix for motor";
 
-aircraft.propulsion.ESC.MOI.value = zeros(3);
+aircraft.propulsion.ESC.MOI.value = zeros([3, 3, numMissionConfigs]);
 aircraft.propulsion.ESC.MOI.units = 'kg*in^2';
 aircraft.propulsion.ESC.MOI.type = "MOI";
 aircraft.propulsion.ESC.MOI.description = "moment of inertia matrix for electronic speed controller (ESC)";
@@ -647,10 +669,10 @@ r = aircraft.propulsion.propeller.diameter.value/2; % radius (in)
 I_xx = 0.5*m*r^2;
 I_yy = 0.25*m*r^2;
 I_zz = I_yy;
-I = zeros(3);
-I(1,1) = I_xx;
-I(2,2) = I_yy;
-I(3,3) = I_zz;
+I = zeros([3, 3, numMissionConfigs]);
+I(1,1,:) = I_xx;
+I(2,2,:) = I_yy;
+I(3,3,:) = I_zz;
 aircraft.propulsion.propeller.MOI.value = I;
 aircraft.propulsion.propeller.MOI.units = 'kg*in^2';
 aircraft.propulsion.propeller.MOI.type = "MOI";
@@ -686,17 +708,17 @@ assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 % h along y therefore their h = my l
 % d along z therefore their d = my h
 
-I_xx = (1/12)*m*(l^2 + h^2);
-I_yy = (1/12)*m*(h^2 + w^2);
-I_zz = (1/12)*m*(l^2 + w^2);
-I = zeros(3);
-I(1,1) = I_xx;
-I(2,2) = I_yy;
-I(3,3) = I_zz;
+I_xx = (1/12).*m.*(l.^2 + h.^2);
+I_yy = (1/12).*m.*(h.^2 + w.^2);
+I_zz = (1/12).*m.*(l.^2 + w.^2);
+I = zeros([3, 3, numMissionConfigs]);
+I(1,1,:) = I_xx;
+I(2,2,:) = I_yy;
+I(3,3,:) = I_zz;
 aircraft.propulsion.battery.MOI.value = I;
 aircraft.propulsion.battery.MOI.units = 'kg*in^2';
 aircraft.propulsion.battery.MOI.type = "MOI";
-aircraft.propulsion.battery.MOI.description = "moment of inertia matrix for battery";
+aircraft.propulsion.battery.MOI.description = "moment of inertia matrix for battery. Third dimension corresponds to which mission it is. First and second dimensions correspond to the rows and columns in the matrix.";
 
 % Calculate net MOI for unloaded aircraft
 
@@ -710,14 +732,40 @@ aircraft.propulsion.propeller.XYZ_CG.units;
 aircraft.propulsion.battery.XYZ_CG.units];
 unitsAgree = strcmp(units, "in");
 if all(unitsAgree)
-cg_locations = {aircraft.fuselage.hull.XYZ_CG.value', ...
-    aircraft.wing.skin.XYZ_CG.value', ...
-aircraft.tail.horizontal.skin.XYZ_CG.value', ...
-aircraft.tail.vertical.skin.XYZ_CG.value', ...
-aircraft.propulsion.motor.XYZ_CG.value', ...
-aircraft.propulsion.ESC.XYZ_CG.value', ...
-aircraft.propulsion.propeller.XYZ_CG.value', ...
-aircraft.propulsion.battery.XYZ_CG.value'};
+
+% Initialize the cell array to store CG locations for each component
+cg_locations = cell(numMissionConfigs, 8);
+
+% Populate the cell array with numMissionConfigs x 3 matrices
+% arg1 = zeros([numMissionConfigs, 3]);
+% arg2 = arg1;
+% arg3 = arg1;
+% arg4 = arg1;
+% arg5 = arg1; 
+% arg6 = arg1;
+% arg7 = arg1;
+% arg8 = arg1;
+% for k = 1:numMissionConfigs
+    cg_locations(:, 1) = {aircraft.fuselage.hull.XYZ_CG.value};         % Fuselage hull CG
+    cg_locations(:, 2) = {aircraft.wing.skin.XYZ_CG.value};             % Wing skin CG
+    cg_locations(:, 3) = {aircraft.tail.horizontal.skin.XYZ_CG.value};  % Horizontal tail skin CG
+    cg_locations(:, 4) = {aircraft.tail.vertical.skin.XYZ_CG.value};    % Vertical tail skin CG
+    cg_locations(:, 5) = {aircraft.propulsion.motor.XYZ_CG.value};      % Motor CG
+    cg_locations(:, 6) = {aircraft.propulsion.ESC.XYZ_CG.value};        % ESC CG
+    cg_locations(:, 7) = {aircraft.propulsion.propeller.XYZ_CG.value};  % Propeller CG
+    cg_locations(:, 8) = {aircraft.propulsion.battery.XYZ_CG.value};    % Battery CG
+% end
+% for i = 1:8
+%     eval(sprintf('cg_locations{%d} = arg%d;', i, i));
+% end
+% cg_locations = {aircraft.fuselage.hull.XYZ_CG.value', ...
+%     aircraft.wing.skin.XYZ_CG.value', ...
+% aircraft.tail.horizontal.skin.XYZ_CG.value', ...
+% aircraft.tail.vertical.skin.XYZ_CG.value', ...
+% aircraft.propulsion.motor.XYZ_CG.value', ...
+% aircraft.propulsion.ESC.XYZ_CG.value', ...
+% aircraft.propulsion.propeller.XYZ_CG.value', ...
+% aircraft.propulsion.battery.XYZ_CG.value'};
 else
     error('Unit mismatch: calculation of unloaded aircraft MOI not possible.')
 end
@@ -732,19 +780,41 @@ aircraft.propulsion.propeller.mass.units;
 aircraft.propulsion.battery.mass.units];
 unitsAgree = strcmp(units, "kg");
 if all(unitsAgree)
-masses = {aircraft.fuselage.hull.mass.value, ...
-    aircraft.wing.skin.mass.value, ...
-aircraft.tail.horizontal.skin.mass.value, ...
-aircraft.tail.vertical.skin.mass.value, ...
-aircraft.propulsion.motor.mass.value, ...
-aircraft.propulsion.ESC.mass.value, ...
-aircraft.propulsion.propeller.mass.value, ...
-aircraft.propulsion.battery.mass.value};
+ masses = cell(numMissionConfigs, 8);
+
+% Populate the cell array with numMissionConfigs x 3 matrices
+% arg1 = zeros([numMissionConfigs, 3]);
+% arg2 = arg1;
+% arg3 = arg1;
+% arg4 = arg1;
+% arg5 = arg1; 
+% arg6 = arg1;
+% arg7 = arg1;
+% arg8 = arg1;
+% for k = 1:numMissionConfigs
+    masses(:, 1) = {aircraft.fuselage.hull.mass.value};         % Fuselage hull CG
+    masses(:, 2) = {aircraft.wing.skin.mass.value};             % Wing skin CG
+    masses(:, 3) = {aircraft.tail.horizontal.skin.mass.value};  % Horizontal tail skin CG
+    masses(:, 4) = {aircraft.tail.vertical.skin.mass.value};    % Vertical tail skin CG
+    masses(:, 5) = {aircraft.propulsion.motor.mass.value};      % Motor CG
+    masses(:, 6) = {aircraft.propulsion.ESC.mass.value};        % ESC CG
+    masses(:, 7) = {aircraft.propulsion.propeller.mass.value};  % Propeller CG
+    masses(:, 8) = {aircraft.propulsion.battery.mass.value};    % Battery CG
+% end
+% for i = 1:8
+% masses = {aircraft.fuselage.hull.mass.value, ...
+%     aircraft.wing.skin.mass.value, ...
+% aircraft.tail.horizontal.skin.mass.value, ...
+% aircraft.tail.vertical.skin.mass.value, ...
+% aircraft.propulsion.motor.mass.value, ...
+% aircraft.propulsion.ESC.mass.value, ...
+% aircraft.propulsion.propeller.mass.value, ...
+% aircraft.propulsion.battery.mass.value};
 else
     error('Unit mismatch: calculation of unloaded aircraft MOI not possible.')
 end
 
-aircraft.fuselage.hull.MOI.value = zeros(3);
+aircraft.fuselage.hull.MOI.value = zeros([3, 3, numMissionConfigs]);
 aircraft.fuselage.hull.MOI.units = 'kg*in^2';
 aircraft.fuselage.hull.MOI.type = "MOI";
 aircraft.fuselage.hull.MOI.description = "moment of inertia of fuselage hull (not including structural bulkheads)";
@@ -764,14 +834,35 @@ aircraft.propulsion.propeller.MOI.units;
 aircraft.propulsion.battery.MOI.units];
 unitsAgree = strcmp(units, "kg*in^2");
 if all(unitsAgree)
-I_matrices = {aircraft.fuselage.hull.MOI.value, ...
-    aircraft.wing.skin.MOI.value, ...
-aircraft.tail.horizontal.skin.MOI.value, ...
-aircraft.tail.vertical.skin.MOI.value, ...
-aircraft.propulsion.motor.MOI.value, ...
-aircraft.propulsion.ESC.MOI.value, ...
-aircraft.propulsion.propeller.MOI.value, ...
-aircraft.propulsion.battery.MOI.value};
+     I_matrices = cell(numMissionConfigs, 8);
+
+% Populate the cell array with numMissionConfigs x 3 matrices
+% arg1 = zeros([numMissionConfigs, 3]);
+% arg2 = arg1;
+% arg3 = arg1;
+% arg4 = arg1;
+% arg5 = arg1; 
+% arg6 = arg1;
+% arg7 = arg1;
+% arg8 = arg1;
+for k = 1:numMissionConfigs
+    I_matrices(k, 1) = {aircraft.fuselage.hull.MOI.value(:,:,k)};         % Fuselage hull CG
+    I_matrices(k, 2) = {aircraft.wing.skin.MOI.value(:,:,k)};             % Wing skin CG
+    I_matrices(k, 3) = {aircraft.tail.horizontal.skin.MOI.value(:,:,k)};  % Horizontal tail skin CG
+    I_matrices(k, 4) = {aircraft.tail.vertical.skin.MOI.value(:,:,k)};    % Vertical tail skin CG
+    I_matrices(k, 5) = {aircraft.propulsion.motor.MOI.value(:,:,k)};      % Motor CG
+    I_matrices(k, 6) = {aircraft.propulsion.ESC.MOI.value(:,:,k)};        % ESC CG
+    I_matrices(k, 7) = {aircraft.propulsion.propeller.MOI.value(:,:,k)};  % Propeller CG
+    I_matrices(k, 8) = {aircraft.propulsion.battery.MOI.value(:,:,k)};
+end
+% I_matrices = {aircraft.fuselage.hull.MOI.value, ...
+%     aircraft.wing.skin.MOI.value, ...
+% aircraft.tail.horizontal.skin.MOI.value, ...
+% aircraft.tail.vertical.skin.MOI.value, ...
+% aircraft.propulsion.motor.MOI.value, ...
+% aircraft.propulsion.ESC.MOI.value, ...
+% aircraft.propulsion.propeller.MOI.value, ...
+% aircraft.propulsion.battery.MOI.value};
 else
     error('Unit mismatch: calculation of unloaded aircraft MOI not possible.')
 end
@@ -787,23 +878,25 @@ aircraft.unloaded.mass.description = "mass of unloaded aircraft";
 aircraft.unloaded.XYZ_CG_2.units = 'in';
 aircraft.unloaded.XYZ_CG_2.type = "length";
 aircraft.unloaded.XYZ_CG_2.description = "vector of X, Y, Z coordinates of CG location for unloaded aircraft";
-[aircraft.unloaded.MOI.value,aircraft.unloaded.mass.value,aircraft.unloaded.XYZ_CG_2.value] = InertiaCalc(cg_locations,masses,I_matrices);
 
+for k = 1:numMissionConfigs
+[aircraft.unloaded.MOI.value(:,:,k),aircraft.unloaded.mass.value(k, 1),~] = InertiaCalc(cg_locations(k,:),masses(k,:),I_matrices(k,:));
+end
 I_tot = aircraft.unloaded.MOI.value;
 % Flipping product moment of inertia signs
 % (AVL Defines the I_ab values with a flipped sign)
-I_xy = -1.*I_tot(1,2);
-I_yz = -1.*I_tot(2,3);
-I_xz = -1.*I_tot(1,3);
+I_xy = -1.*I_tot(1,2,:);
+I_yz = -1.*I_tot(2,3,:);
+I_xz = -1.*I_tot(1,3,:);
 
-I_tot(1,2) = I_xy;
-I_tot(2,1) = I_xy;
+I_tot(1,2,:) = I_xy;
+I_tot(2,1,:) = I_xy;
 
-I_tot(2,3) = I_yz;
-I_tot(3,2) = I_yz;
+I_tot(2,3,:) = I_yz;
+I_tot(3,2,:) = I_yz;
 
-I_tot(1,3) = I_xz;
-I_tot(3,1) = I_xz;
+I_tot(1,3,:) = I_xz;
+I_tot(3,1,:) = I_xz;
 
 aircraft.unloaded.MOI.value = I_tot;
 
@@ -820,16 +913,29 @@ aircraft.propulsion.propeller.XYZ_CG.units;
 aircraft.propulsion.battery.XYZ_CG.units];
 unitsAgree = strcmp(units, "in");
 if all(unitsAgree)
-cg_locations = {aircraft.payload.passengers.XYZ_CG.value', ...
-    aircraft.payload.cargo.XYZ_CG.value', ...
-    aircraft.fuselage.hull.XYZ_CG.value', ...
-    aircraft.wing.skin.XYZ_CG.value', ...
-aircraft.tail.horizontal.skin.XYZ_CG.value', ...
-aircraft.tail.vertical.skin.XYZ_CG.value', ...
-aircraft.propulsion.motor.XYZ_CG.value', ...
-aircraft.propulsion.ESC.XYZ_CG.value', ...
-aircraft.propulsion.propeller.XYZ_CG.value', ...
-aircraft.propulsion.battery.XYZ_CG.value'};
+    cg_locations = cell(numMissionConfigs, 10);
+    for k = 1:numMissionConfigs
+        cg_locations(k, 1) = {aircraft.payload.passengers.XYZ_CG.value(k)};
+        cg_locations(k, 2) = {aircraft.payload.cargo.XYZ_CG.value(k)};
+        cg_locations(k, 3) = {aircraft.fuselage.hull.XYZ_CG.value};
+        cg_locations(k, 4) = {aircraft.wing.skin.XYZ_CG.value};
+        cg_locations(k, 5) = {aircraft.tail.horizontal.skin.XYZ_CG.value};
+        cg_locations(k, 6) = {aircraft.tail.vertical.skin.XYZ_CG.value};
+        cg_locations(k, 7) = {aircraft.propulsion.motor.XYZ_CG.value};
+        cg_locations(k, 8) = {aircraft.propulsion.ESC.XYZ_CG.value};
+        cg_locations(k, 9) = {aircraft.propulsion.propeller.XYZ_CG.value};
+        cg_locations(k, 10) = {aircraft.propulsion.battery.XYZ_CG.value};
+    end
+% cg_locations = {aircraft.payload.passengers.XYZ_CG.value', ...
+%     aircraft.payload.cargo.XYZ_CG.value', ...
+%     aircraft.fuselage.hull.XYZ_CG.value', ...
+%     aircraft.wing.skin.XYZ_CG.value', ...
+% aircraft.tail.horizontal.skin.XYZ_CG.value', ...
+% aircraft.tail.vertical.skin.XYZ_CG.value', ...
+% aircraft.propulsion.motor.XYZ_CG.value', ...
+% aircraft.propulsion.ESC.XYZ_CG.value', ...
+% aircraft.propulsion.propeller.XYZ_CG.value', ...
+% aircraft.propulsion.battery.XYZ_CG.value'};
 else
     error('Unit mismatch: calculation of loaded aircraft MOI not possible.')
 end
@@ -846,16 +952,29 @@ aircraft.propulsion.propeller.mass.units;
 aircraft.propulsion.battery.mass.units];
 unitsAgree = strcmp(units, "kg");
 if all(unitsAgree)
-masses = {aircraft.payload.passengers.mass.value, ...
-    aircraft.payload.cargo.mass.value, ...
-    aircraft.fuselage.hull.mass.value, ...
-    aircraft.wing.skin.mass.value, ...
-aircraft.tail.horizontal.skin.mass.value, ...
-aircraft.tail.vertical.skin.mass.value, ...
-aircraft.propulsion.motor.mass.value, ...
-aircraft.propulsion.ESC.mass.value, ...
-aircraft.propulsion.propeller.mass.value, ...
-aircraft.propulsion.battery.mass.value};
+    masses = cell(numMissionConfigs, 10);
+    for k = 1:numMissionConfigs
+        masses(k, 1) = {aircraft.payload.passengers.mass.value(k)};
+        masses(k, 2) = {aircraft.payload.cargo.mass.value(k)};
+        masses(k, 3) = {aircraft.fuselage.hull.mass.value};
+        masses(k, 4) = {aircraft.wing.skin.mass.value};
+        masses(k, 5) = {aircraft.tail.horizontal.skin.mass.value};
+        masses(k, 6) = {aircraft.tail.vertical.skin.mass.value};
+        masses(k, 7) = {aircraft.propulsion.motor.mass.value};
+        masses(k, 8) = {aircraft.propulsion.ESC.mass.value};
+        masses(k, 9) = {aircraft.propulsion.propeller.mass.value};
+        masses(k, 10) = {aircraft.propulsion.battery.mass.value};
+    end
+% masses = {aircraft.payload.passengers.mass.value, ...
+%     aircraft.payload.cargo.mass.value, ...
+%     aircraft.fuselage.hull.mass.value, ...
+%     aircraft.wing.skin.mass.value, ...
+% aircraft.tail.horizontal.skin.mass.value, ...
+% aircraft.tail.vertical.skin.mass.value, ...
+% aircraft.propulsion.motor.mass.value, ...
+% aircraft.propulsion.ESC.mass.value, ...
+% aircraft.propulsion.propeller.mass.value, ...
+% aircraft.propulsion.battery.mass.value};
 else
     error('Unit mismatch: calculation of loaded aircraft MOI not possible.')
 end
@@ -872,16 +991,39 @@ aircraft.propulsion.propeller.MOI.units;
 aircraft.propulsion.battery.MOI.units];
 unitsAgree = strcmp(units, "kg*in^2");
 if all(unitsAgree)
-I_matrices = {aircraft.payload.passengers.MOI.value, ...
-    aircraft.payload.cargo.MOI.value, ...
-    aircraft.fuselage.hull.MOI.value, ...
-    aircraft.wing.skin.MOI.value, ...
-aircraft.tail.horizontal.skin.MOI.value, ...
-aircraft.tail.vertical.skin.MOI.value, ...
-aircraft.propulsion.motor.MOI.value, ...
-aircraft.propulsion.ESC.MOI.value, ...
-aircraft.propulsion.propeller.MOI.value, ...
-aircraft.propulsion.battery.MOI.value};
+% I_matrices = {aircraft.payload.passengers.MOI.value, ...
+%     aircraft.payload.cargo.MOI.value, ...
+%     aircraft.fuselage.hull.MOI.value, ...
+%     aircraft.wing.skin.MOI.value, ...
+% aircraft.tail.horizontal.skin.MOI.value, ...
+% aircraft.tail.vertical.skin.MOI.value, ...
+% aircraft.propulsion.motor.MOI.value, ...
+% aircraft.propulsion.ESC.MOI.value, ...
+% aircraft.propulsion.propeller.MOI.value, ...
+% aircraft.propulsion.battery.MOI.value};
+  I_matrices = cell(numMissionConfigs, 8);
+
+% Populate the cell array with numMissionConfigs x 3 matrices
+% arg1 = zeros([numMissionConfigs, 3]);
+% arg2 = arg1;
+% arg3 = arg1;
+% arg4 = arg1;
+% arg5 = arg1; 
+% arg6 = arg1;
+% arg7 = arg1;
+% arg8 = arg1;
+for k = 1:numMissionConfigs
+    I_matrices(k, 1) = {aircraft.payload.passengers.MOI.value(:,:,k)};         % Fuselage hull CG
+    I_matrices(k, 2) = {aircraft.payload.cargo.MOI.value(:,:,k)}; 
+    I_matrices(k, 3) = {aircraft.fuselage.hull.MOI.value(:,:,k)};         % Fuselage hull CG
+    I_matrices(k, 4) = {aircraft.wing.skin.MOI.value(:,:,k)};             % Wing skin CG
+    I_matrices(k, 5) = {aircraft.tail.horizontal.skin.MOI.value(:,:,k)};  % Horizontal tail skin CG
+    I_matrices(k, 6) = {aircraft.tail.vertical.skin.MOI.value(:,:,k)};    % Vertical tail skin CG
+    I_matrices(k, 7) = {aircraft.propulsion.motor.MOI.value(:,:,k)};      % Motor CG
+    I_matrices(k, 8) = {aircraft.propulsion.ESC.MOI.value(:,:,k)};        % ESC CG
+    I_matrices(k, 9) = {aircraft.propulsion.propeller.MOI.value(:,:,k)};  % Propeller CG
+    I_matrices(k, 10) = {aircraft.propulsion.battery.MOI.value(:,:,k)};
+end
 else
     error('Unit mismatch: calculation of loaded aircraft MOI not possible.')
 end
@@ -897,23 +1039,25 @@ aircraft.loaded.mass.description = "mass of loaded aircraft";
 aircraft.loaded.XYZ_CG_2.units = 'in';
 aircraft.loaded.XYZ_CG_2.type = "length";
 aircraft.loaded.XYZ_CG_2.description = "vector of X, Y, Z coordinates of CG location for loaded aircraft";
-[aircraft.loaded.MOI.value,aircraft.loaded.mass.value,aircraft.loaded.XYZ_CG_2.value] = InertiaCalc(cg_locations,masses,I_matrices);
+for k = 1:numMissionConfigs
+    [aircraft.loaded.MOI.value(:,:,k),aircraft.loaded.mass.value(k,1),~] = InertiaCalc(cg_locations(k,:),masses(k,:),I_matrices(k,:));
+end
 
 I_tot = aircraft.loaded.MOI.value;
 % Flipping product moment of inertia signs
 % (AVL Defines the I_ab values with a flipped sign)
-I_xy = -1.*I_tot(1,2);
-I_yz = -1.*I_tot(2,3);
-I_xz = -1.*I_tot(1,3);
+I_xy = -1.*I_tot(1,2,:);
+I_yz = -1.*I_tot(2,3,:);
+I_xz = -1.*I_tot(1,3,:);
 
-I_tot(1,2) = I_xy;
-I_tot(2,1) = I_xy;
+I_tot(1,2,:) = I_xy;
+I_tot(2,1,:) = I_xy;
 
-I_tot(2,3) = I_yz;
-I_tot(3,2) = I_yz;
+I_tot(2,3,:) = I_yz;
+I_tot(3,2,:) = I_yz;
 
-I_tot(1,3) = I_xz;
-I_tot(3,1) = I_xz;
+I_tot(1,3,:) = I_xz;
+I_tot(3,1,:) = I_xz;
 
 aircraft.loaded.MOI.value = I_tot;
 
