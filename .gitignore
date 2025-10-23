@@ -36,3 +36,6 @@ codegen/
 *.dat
 *.inp
 *.out
+
+# Data Files
+*.csv

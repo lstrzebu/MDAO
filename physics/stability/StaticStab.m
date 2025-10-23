@@ -1,4 +1,4 @@
-function [X_NP,C_L_trim,V_trim,alpha_FRL_trim,failure, failure_message] = StaticStab(X_CG,W,S,b,d_tail,i_t,C_r_ht,C_t_ht,b_ht,a_wb,a_tail,alpha_0L_wb,C_M0_wb,air_density)
+function [X_NP,C_L_trim,V_trim,alpha_FRL_trim, acceptedIndex, rejectedIndex_CG, rejectedIndex_trim] = StaticStab(X_CG,W,S,b,d_tail,i_t,C_r_ht,C_t_ht,b_ht,a_wb,a_tail,alpha_0L_wb,C_M0_wb,air_density)
 %STATICSTAB evaluates the static stability properties of the aircraft.
 %           Dimensions can be metric or imperial, but the have to be
 %           consistent.
@@ -40,6 +40,15 @@ function [X_NP,C_L_trim,V_trim,alpha_FRL_trim,failure, failure_message] = Static
 % alpha_FRL_trim    -   The trim angle of attack of the FRL. Measured from
 %                       the airfoil camber line of the wing. can be used to
 %                       find the α_trim of the wing and tail
+
+% acceptedIndex - logical array indicating which mission configurations to
+% keep
+
+% rejectedIndex_CG - logical array indicating which mission configurations to
+% throw away due to CG location
+
+% rejectedIndex_trim - logical array indicating which mission
+% configurations to throw away due to negative trim
 %% Calculating the i_t for calculations
 
 epsilon_0 = 0;
@@ -127,21 +136,24 @@ V_trim = sqrt((W)./((1/2).*air_density.*C_L_trim.*S)); % [m./s]
 Cm_failure_key = 1;
 Cl_failure_key = 2;
 % If the CG is further aft of NP
-if X_CG > X_NP
-
-    failure = Cm_failure_key;
-
-    failure_message = "Static Stability Failed! The CG is behind the NP";
-elseif C_L_trim < 0 
-
-    failure = Cl_failure_key;
-
-    failure_message = "Static Stability Failed! The aircraft is statically stable but trims at a negative lift";
-else
-    failure = 0;
-
-    failure_message = "Static Stability Succeeded.";
-end
+rejectedIndex_CG = X_CG > X_NP;
+rejectedIndex_trim = C_L_trim < 0;
+acceptedIndex = X_CG < X_NP & C_L_trim > 0;
+% % if X_CG > X_NP
+% % 
+% %     failure = Cm_failure_key;
+% % 
+% %     failure_message = "Static Stability Failed! The CG is behind the NP";
+% % elseif C_L_trim < 0 
+% % 
+% %     failure = Cl_failure_key;
+% % 
+% %     failure_message = "Static Stability Failed! The aircraft is statically stable but trims at a negative lift";
+% % else
+% %     failure = 0;
+% % 
+% %     failure_message = "Static Stability Succeeded.";
+% % end
 
 end % End of function
 

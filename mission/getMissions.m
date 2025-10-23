@@ -445,7 +445,7 @@ cgs = [aircraft.unloaded.XYZ_CG.value;
     aircraft.payload.cargo.XYZ_CG.value(k, :)];
 
 % loaded weight calculation
-aircraft.loaded.weight.value(k) = sum(weights);
+aircraft.loaded.weight.value(k,1) = sum(weights);
 aircraft.loaded.weight.units = 'N';
 aircraft.loaded.weight.type = "force";
 aircraft.loaded.weight.description = "total weight of aircraft + payload, where payload is all ducks and all pucks for Mission 2";

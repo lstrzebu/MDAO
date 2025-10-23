@@ -64,10 +64,10 @@ aircraft.fuselage.protrusion.units = 'ft';
 aircraft.fuselage.protrusion.type = "length";
 aircraft.fuselage.protrusion.description = "Distance from nose to LE of wing root chord";
 
-aircraft.wing.weight.value = 4;
-aircraft.wing.weight.units = 'N';
-aircraft.wing.weight.type = "force";
-aircraft.wing.weight.description = "weight of wings only";
+% aircraft.wing.weight.value = 4;
+% aircraft.wing.weight.units = 'N';
+% aircraft.wing.weight.type = "force";
+% aircraft.wing.weight.description = "weight of wings only";
 
 aircraft.wing.resting_angle.value = 0;
 aircraft.wing.resting_angle.units = 'deg';

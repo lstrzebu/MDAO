@@ -107,8 +107,9 @@ if continue_mission_analysis.value
             aircraft.missions.mission(2).physics.CL_trim(1).value,...
             aircraft.missions.mission(2).physics.v_trim.value,...
             aircraft.missions.mission(2).physics.alpha_trim.value,...
-            aircraft.missions.mission(2).physics.stability.static.failure.value,...
-            failure_message] = StaticStab(aircraft.loaded.XYZ_CG.value(:,1),... % m
+            acceptedIndex, ...
+            rejectedIndex_CG, ...
+            rejectedIndex_trim] = StaticStab(aircraft.loaded.XYZ_CG.value(:,1),... % m
             aircraft.loaded.weight.value,... % N
             aircraft.wing.S.value,... % m^2
             aircraft.wing.b.value,... % m
@@ -125,6 +126,27 @@ if continue_mission_analysis.value
     else
         error('Unit mismatch: static stability analysis not possible. For convention, ensure static stability analysis functions are called with SI units (except for angles, which should use degrees rather than radians).')
     end
+
+    structNames = ["aircraft.loaded.XYZ_CG",... % m
+            "aircraft.loaded.weight",... % N
+            "aircraft.wing.S",... % m^2
+            "aircraft.wing.b",... % m
+            "aircraft.tail.d_tail",... % m
+            "aircraft.tail.horizontal.i_tail",... % deg
+            "aircraft.tail.horizontal.c",... % m
+            "aircraft.tail.horizontal.b",... % m
+            "aircraft.wing.a_wb",... % /deg
+            "aircraft.tail.horizontal.a",... % /deg
+            "aircraft.wing.alpha_0L_wb",... % deg
+            "aircraft.wing.Cm0",...
+            "aircraft.missions.mission(2).weather.air_density",...
+            "aircraft.missions.mission(2).physics.X_NP",...
+            "aircraft.missions.mission(2).physics.CL_trim(1)",...
+            "aircraft.missions.mission(2).physics.v_trim",...
+            "aircraft.missions.mission(2).physics.alpha_trim"];
+
+    rejectedIndex_CG(1) = 1; % FOR TESTING ONLY
+    [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, missions, numMissionConfigs, rejectedIndex_CG, "Static Stability Failed! The CG is behind the NP", structNames);
 
     fprintf('Completed Mission 2 static stability analysis for %s.\n', iterName)
 
