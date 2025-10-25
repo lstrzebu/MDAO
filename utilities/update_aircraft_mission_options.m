@@ -1,4 +1,4 @@
-function [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex, failure_messages, structNames, batteryIndex)
+function [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex, failure_messages, structNames, batteryIndex, missionNumber)
 % At the time this function is called, certain parameters in the "aircraft"
 % structure common to the MDAO framework will be nx1 vectors, where n is
 % the number of heretofore valid missions being considered. This function
@@ -30,7 +30,7 @@ if ~isempty(rejectedMissions)
     fid = fopen('output\rejected_missions.csv', 'a');
     [r, ~] = size(rejectedMissions);
     for i = 1:r
-        fprintf(fid, "\n%d, %s, %s, %s, %s, %s, %s", aircraftIteration, rejected_print_missions(:, i), failure_messages(i));
+        fprintf(fid, "\n%d, %s, %s, %s, %s, %s, %s", aircraftIteration, rejected_print_missions(:, i), sprintf('M%d: %s', missionNumber, failure_messages(i)));
     end
     fclose(fid);
 end

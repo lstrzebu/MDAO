@@ -1,4 +1,4 @@
-function [pUtilization, maxFlightTime, TW, RPM, FactorOfSafety, safetyCheck, RPM_exists] = PropulsionCalc(weight, drag, batteryCapacity, vTrim, maxVoltage, kV, resistance, currentNoLoad, maxCurrent, maxPower, propData)
+function [pUtilizationVals, maxFlightTimeVals, TW, RPMvals, FactorOfSafetyVals, rejectedIndex, failure_messages] = PropulsionCalc(weight, drag, batteryCapacity, vTrim, maxVoltage, kV, resistance, currentNoLoad, maxCurrent, maxPower, propData, numMissionConfigs)
 %   PropulsionCalc is a function that takes in an aircraft's configuration
 %   and previously computed performance characteristics and outputs six
 %   key things: 1. Power Utilization (in Watts During Cruise), 2. Max
@@ -25,22 +25,32 @@ function [pUtilization, maxFlightTime, TW, RPM, FactorOfSafety, safetyCheck, RPM
 %           - PWR (W)
 %           - Q (N-m)
 
-RPM_exists = true; % assume until proven otherwise that an RPM exists that matches the trim speed within the tolerance
-
 % Defining Thrust Needed
 thrust = drag; % N
 
 % Defining Thrust/Weight Ratio
-TW = thrust/weight;
+TW = thrust./weight;
 
 % Initiating k and i
 i = 1;
 k = 0;
 
+failure_messages = strings([numMissionConfigs, 1]);
+pUtilizationVals = zeros([numMissionConfigs, 1]);
+maxFlightTimeVals = pUtilizationVals;
+RPMvals = pUtilizationVals;
+FactorOfSafetyVals = zeros([numMissionConfigs, 3]);
+
+% RPMvals = zeros([numMissionConfigs, 1]);
+% pRotationalVals = zeros([numMissionConfigs, 1]);
+
+for j = 1:numMissionConfigs
+    %vTrim = vTrim(j);
+
 % Determine the Prop Efficiency and Power for Possible Config
 try
     while k == 0
-        if abs( (propData(i,1) * 0.44704) - vTrim)  <= (3*0.447) % Checks whether a certain RPM has the desired velocity within a 3 mph Tolerance
+        if abs( (propData(i,1) * 0.44704) - vTrim(j))  <= (3*0.447) % Checks whether a certain RPM has the desired velocity within a 3 mph Tolerance
             i = i + 1;   % Go to the next row next time
             if propData(i,11) >= thrust % Checks if at that velocity enough thrust is produced
                 pRotational = propData(i,9); % Grabbing Power Value
@@ -52,10 +62,11 @@ try
         end
     end
 catch % if no RPM can be found that matches the velocity within the tolerance
-    RPM_exists = false;
+    failure_messages(j) = "no RPM exists";
+    % RPM_exists = false;
 end
 
-if RPM_exists == true
+if ~strcmp(failure_messages(j), "no RPM exists")
     % Determining Voltage
     voltage = RPM / kV;
 
@@ -90,23 +101,21 @@ if RPM_exists == true
     currentFS = maxCurrent / current;
     powerFS = maxPower / pUtilization;
 
-    FactorOfSafety = [voltageFS, currentFS, powerFS];
+    FactorOfSafetyVals(j,:) = [voltageFS, currentFS, powerFS];
 
     % Set Safety Boolean Based on Factors of Safety
-    if currentFS >= (1/0.85) && voltageFS >= 1 && powerFS >= (1/0.85)
-        safetyCheck = true;
-    else
-        safetyCheck = false;
+    if ~(currentFS >= (1/0.85) && voltageFS >= 1 && powerFS >= (1/0.85))
+        failure_messages(j) = "insufficient electrical factors of safety";
     end
 
-else % no RPM could be found, therefore the mission cannot be flown with the present motor configuration
-    pUtilization = NaN;
-    maxFlightTime = NaN;
-    TW = NaN;
-    RPM = NaN;
-    FactorOfSafety = NaN;
-    safetyCheck = true; % cannot set safetyCheck to NaN, it will cause an error in the logical comparison later 
+    pUtilizationVals(j) = pUtilization;
+    maxFlightTimeVals(j) = maxFlightTime;
+    RPMvals(j) = RPM;
 end
+
+end
+
+rejectedIndex = failure_messages ~= "";
 
 end
 

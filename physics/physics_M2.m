@@ -1,12 +1,12 @@
 % Analyze Mission 2 physics
 % Created 18 October 2025 by Liam Trzebunia
 
-fprintf('Verifying Mission 2 feasibility for %s... \n', iterName)
+fprintf('Analyzing Mission %d feasibility for %s... \n', missionNumber, aircraftName)
 %% 1. Static Stability (M2)
 
 if continue_mission_analysis.value
 
-    fprintf('Analyzing Mission 2 static stability for %s... \n', iterName)
+    fprintf('Analyzing Mission %d static stability for %s... \n', missionNumber, aircraftName)
 
     % use SI units when calling static stability analysis function (however angles are in degrees)
     aircraft.missions.mission(2).physics.X_NP.units = 'm';
@@ -145,17 +145,14 @@ if continue_mission_analysis.value
             "aircraft.missions.mission(2).physics.v_trim",...
             "aircraft.missions.mission(2).physics.alpha_trim"];
 
-    % [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex);
-    % % % % % % % % % % %rejectedIndex_CG(1) = 1; % FOR TESTING ONLY
-    % % % % % % % % % % %[aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex_CG, "Static Stability Failed! The CG is behind the NP", structNames_mission, batteryIndex);
-    % % % % % % % % % % %[aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex_trim, "Static Stability Failed! The aircraft is statically stable but trims at a negative lift", structNames_mission, batteryIndex);
+    % [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
 
     % if all missions have failed
     if numMissionConfigs == 0
         continue_mission_analysis.value = false;
     end
 
-    fprintf('Completed Mission 2 static stability analysis for %s.\n', iterName)
+    fprintf('Completed Mission %d static stability analysis for %s. \n', missionNumber, aircraftName)
 
     % % move on to another design if needed (and explain why)
     % if aircraft.missions.mission(2).physics.stability.static.failure.value ~= 0
@@ -171,11 +168,11 @@ end
 
 % for TESTING ONLY, DELETE later: run other analyses even if the design
 % failed
-continue_mission_analysis.value = true;
+continue_mission_analysis.value = false;
 
 %% 2. Dynamic Stability (M2)
 if continue_mission_analysis.value
-    fprintf('Analyzing Mission 2 dynamic stability for %s...\n', iterName);
+    fprintf('Analyzing Mission %d dynamic stability for %s... \n', missionNumber, aircraftName)
     USETORUN_RunDymanicStab % run dynamic stability analysis
 
     continue_mission_analysis.value = true; % FOR TESTING ONLY
@@ -190,10 +187,10 @@ if continue_mission_analysis.value
     % "aircraft.tail.horizontal.taper_ratio",...
     % "aircraft.tail.vertical.taper_ratio",...
     % "aircraft.tail.vertical.S"]; % append additional vectorized aircraft parameters to be updated
-    %     [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex, failure_messages, structNames_mission, batteryIndex);
+    %     [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex, failure_messages, structNames_mission, batteryIndex, missionNumber);
     % end
 
-    fprintf('Completed Mission 2 dynamic stability analysis for %s.\n', iterName)
+    fprintf('Completed Mission %d dynamic stability analysis for %s. \n', missionNumber, aircraftName)
 
     % % interpret dynamic stability results
     % if Static_failure ~= 0 || Trim_failure ~= 0 || dynamic_failure_mode ~= 0
@@ -224,7 +221,7 @@ end
 
 %% 3. Structures (M2)
 if continue_mission_analysis.value
-    fprintf('Analyzing Mission 2 structural integrity for %s...\n', iterName)
+    fprintf('Analyzing Mission %d structural integrity for %s... \n', missionNumber, aircraftName)
 
     structNames = ["aircraft.missions.mission(2).physics.alpha_trim";
         "aircraft.wing.alpha_0L_wb";
@@ -284,49 +281,14 @@ if continue_mission_analysis.value
         error('Unit mismatch: structural integrity analysis not possible.')
     end
 
-    fprintf('Completed Mission 2 structural integrity analysis for %s.\n', iterName)
+    fprintf('Completed Mission %d structural analysis for %s. \n', missionNumber, aircraftName)
     
     structNames_mission = [structNames_mission,...
             "aircraft.missions.mission(2).physics.G.max", ...
             "aircraft.missions.mission(2).structures.num_fasteners.minimum", ...
             "aircraft.missions.mission(2).physics.turn_radius.minimum"]; % append additional vectorized aircraft parameters to be updated
-   % [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex);
-    
-    % 
-    % % UNCOMMENT after testing
-    % % weed out missions rejected due to turn radius
-    % rejectedIndx_turn = aircraft.missions.mission(2).physics.turn_radius.minimum.value <= 0;
-    % failure_message = "Negative turn radius. Design likely failed static stability but should not have reached the structural analysis. Discrepancy present.";
-    % [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx_turn, failure_message, structNames_mission, batteryIndex);
-    % 
-    % if numMissionConfigs == 0
-    %     continue_mission_analysis.value = false;
-    % end
-    % 
-    % if continue_mission_analysis.value
-    % % weed out missions rejected due to number of fasteners
-    % rejectedIndx_fastener = aircraft.missions.mission(2).structures.num_fasteners.minimum.value > constants.wing.max_num_fasteners.value;
-    % failure_message = sprintf("Design would notionally require at least %d fasteners, more than the allotted maximum of %d.", aircraft.missions.mission(2).structures.num_fasteners.minimum.value, constants.wing.max_num_fasteners.value);
-    % [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx_fastener, failure_message, structNames_mission, batteryIndex);
-    % 
-    % if numMissionConfigs == 0
-    %     continue_mission_analysis.value = false;
-    % end
-    % end
-
-    % % turn radius sometimes turns out to be less than zero for negative lift coefficients. In
-    % % reality, this structures function should always be called after
-    % % stability anlysis has weeded out designs with negative lift.
-    % if aircraft.missions.mission(2).physics.turn_radius.minimum.value < 0 || aircraft.missions.mission(2).structures.num_fasteners.minimum.value > constants.wing.max_num_fasteners.value || aircraft.missions.mission(2).physics.bank_angle.value > 90
-    %     continue_mission_analysis.value = false;
-    %     if aircraft.missions.mission(2).structures.num_fasteners.minimum.value > constants.wing.max_num_fasteners.value
-    %         failure_message = sprintf("Design would notionally require at least %d fasteners, more than the allotted maximum of %d.", aircraft.missions.mission(2).structures.num_fasteners.minimum.value, constants.wing.max_num_fasteners.value);
-    %         % UNCOMMENT THE FOLLOWING 2 LINES AFTER TESTING
-    %         % else
-    %         %     error('A design has failed, but no failure message is defined. The structural analysis function was likely invoked to analyze a design that trims at a negative lift coefficient. Consider analyzing stability upstream of the structural analysis. Alternatively, define a failure message for the structural failure mode in question.')
-    %     end
-    %     fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d.\n', failure_message, aircraftIteration, missionIteration);
-    % end
+   % [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
+   
 
 end
 
@@ -334,7 +296,7 @@ continue_mission_analysis.value = true; % for testing only
 
 %% 4. Aerodynamics (M2)
 if continue_mission_analysis.value
-    fprintf('Analyzing Mission 2 aerodynamics for %s...\n', iterName)
+    fprintf('Analyzing Mission %d aerodynamics for %s... \n', missionNumber, aircraftName)
 
     structNames = ["aircraft.wing.c";
         "aircraft.fuselage.length";
@@ -432,7 +394,7 @@ if continue_mission_analysis.value
         error('Unit mismatch: aerodynamic analysis not possible.')
     end
 
-    fprintf('Completed Mission 2 aerodynamics analysis for %s.\n', iterName)
+    fprintf('Completed Mission %d aerodynamics analysis for %s... \n', missionNumber, aircraftName)
 
 
     structNames_mission = [structNames_mission, ...
@@ -448,11 +410,7 @@ if continue_mission_analysis.value
     % end
     
     
-    % [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex);
-
-
-        
-
+   % [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
 
 end
 
@@ -463,7 +421,7 @@ continue_mission_analysis.value = true;
 %% 5. Propulsion (M2)
 
 if continue_mission_analysis.value
-    fprintf('Analyzing Mission 2 propulsion system for %s...\n', iterName)
+    fprintf('Analyzing Mission %d propulsion system for %s... \n', missionNumber, aircraftName)
 
     structNames = ["aircraft.wing.c";
         "aircraft.fuselage.length";
@@ -492,9 +450,6 @@ if continue_mission_analysis.value
     % (aircraft.propulsion.propeller.data), they were checked manually against
     % the spreadsheet
 
-    % W_loaded
-    % W_ref, b_w, c_w, b_t, c_t, l_fuse, t_ref, d_fuse, A_banner, AR_banner
-
     if all(unitsAgree)
 
         [aircraft.physics.P_trim.value, ...
@@ -502,8 +457,8 @@ if continue_mission_analysis.value
             aircraft.missions.mission(2).physics.TW_ratio.value, ...
             aircraft.missions.mission(2).physics.RPM.value, ...
             aircraft.missions.mission(2).physics.propulsion.FOS.value, ...
-            safetyCheck, ...
-            RPM_exists] = PropulsionCalc(aircraft.loaded.weight.value, ...
+            rejectedIndx, ...
+            failure_messages] = PropulsionCalc(aircraft.loaded.weight.value, ...
             aircraft.missions.mission(2).physics.D.value, ...
             aircraft.propulsion.battery.capacity.value, ...
             aircraft.missions.mission(2).physics.v_trim.value, ...
@@ -513,7 +468,8 @@ if continue_mission_analysis.value
             aircraft.propulsion.motor.current.no_load.value, ...
             aircraft.propulsion.motor.current.max.value, ...
             aircraft.propulsion.motor.power.max.value, ...
-            aircraft.propulsion.propeller.data.value);
+            aircraft.propulsion.propeller.data.value, ...
+            numMissionConfigs);
 
         aircraft.physics.P_trim.units = 'W';
         aircraft.physics.P_trim.type = "pow";
@@ -534,17 +490,20 @@ if continue_mission_analysis.value
         error('Unit mismatch: propulsion analysis not possible.')
     end
 
-    fprintf('Completed Mission 2 propulsion system analysis for %s.\n', iterName)
+    structNames_mission = [structNames_mission, ...
+        "aircraft.physics.P_trim", ...
+        "aircraft.physics.max_flight_time", ...
+        "aircraft.missions.mission(2).physics.TW_ratio", ...
+        "aircraft.missions.mission(2).physics.RPM", ...
+        "aircraft.missions.mission(2).physics.propulsion.FOS"];
 
-    if ~safetyCheck || ~RPM_exists
+    [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
+
+    if numMissionConfigs == 0
         continue_mission_analysis.value = false;
-        if ~RPM_exists
-            failure_message = "No motor RPM was found matching the required trim speed.";
-        else
-            failure_message = "Propulsion system has insufficient electrical factors of safety.";
-        end
-        fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d.\n', failure_message, aircraftIteration, missionIteration);
     end
+
+    fprintf('Completed Mission %d propulsion analysis for %s... \n', missionNumber, aircraftName)
 
 end
 
@@ -552,4 +511,4 @@ end
 % failed
 continue_mission_analysis.value = true;
 
-fprintf('Completed verification of Mission 2 feasibility.\n')
+fprintf('Completed Mission %d feasibility analysis for %s. \n', missionNumber, aircraftName)
