@@ -3,7 +3,6 @@
 
 fprintf('Analyzing Mission %d feasibility for %s... \n', missionNumber, aircraftName)
 %% 1. Static Stability (M3)
-
 if continue_mission_analysis.value
 
     fprintf('Analyzing Mission %d static stability for %s... \n', missionNumber, aircraftName)
@@ -126,36 +125,25 @@ if continue_mission_analysis.value
             "aircraft.missions.mission(3).physics.v_trim",...
             "aircraft.missions.mission(3).physics.alpha_trim"]; % append additional variables to be updated as missions are eliminated
 
-    % [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
-
+    [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
     % if all missions have failed
     if numMissionConfigs == 0
         continue_mission_analysis.value = false;
     end
-
     fprintf('Completed Mission %d static stability analysis for %s. \n', missionNumber, aircraftName)
 end
-
-% for TESTING ONLY, DELETE later: run other analyses even if the design
-% failed
-continue_mission_analysis.value = false;
 
 %% 2. Dynamic Stability (M3)
 if continue_mission_analysis.value
     fprintf('Analyzing Mission %d dynamic stability for %s... \n', missionNumber, aircraftName)
     USETORUN_RunDymanicStab % run dynamic stability analysis
-
-    % continue_mission_analysis.value = true; % FOR TESTING ONLY
-
     rejectedIndex = failure_messages ~= "";
-    %[aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex, failure_messages, structNames_mission, batteryIndex, missionNumber);
+    [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex, failure_messages, structNames_mission, batteryIndex, missionNumber);
     if numMissionConfigs == 0
         continue_mission_analysis.value = false;
     end
     fprintf('Completed Mission %d dynamic stability analysis for %s. \n', missionNumber, aircraftName)
 end
-
-continue_mission_analysis.value = false;
 
 %% 3. Structures (M3)
 if continue_mission_analysis.value
@@ -179,8 +167,6 @@ if continue_mission_analysis.value
         strcmp(string(aircraft.missions.mission(3).physics.v_trim.units), "m/s");
         strcmp(string(aircraft.unloaded.weight.units), "N");
         strcmp(string(aircraft.unloaded.weight.units), "N")];
-    % W_loaded
-    % W_ref, b_w, c_w, b_t, c_t, l_fuse, t_ref, d_fuse, A_banner, AR_banner
 
     if all(unitsAgree)
 
@@ -226,11 +212,7 @@ if continue_mission_analysis.value
             "aircraft.missions.mission(3).structures.num_fasteners.minimum", ...
             "aircraft.missions.mission(3).physics.turn_radius.minimum"]; % append additional vectorized aircraft parameters to be updated
    [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
-   
-
 end
-
-continue_mission_analysis.value = true; % for testing only
 
 %% 4. Aerodynamics (M3)
 if continue_mission_analysis.value
@@ -270,9 +252,6 @@ if continue_mission_analysis.value
         strcmp(string(aircraft.tail.horizontal.resting_angle.units), "deg");
         strcmp(string(aircraft.tail.horizontal.a.units), "/deg");
         strcmp(string(aircraft.tail.horizontal.alpha_0L_t.units), "deg")];
-
-    % W_loaded
-    % W_ref, b_w, c_w, b_t, c_t, l_fuse, t_ref, d_fuse, A_banner, AR_banner
 
     if all(unitsAgree)
 
@@ -333,7 +312,6 @@ if continue_mission_analysis.value
 
     fprintf('Completed Mission %d aerodynamics analysis for %s... \n', missionNumber, aircraftName)
 
-
     structNames_mission = [structNames_mission, ...
         "aircraft.missions.mission(3).physics.L(1)", ...
             "aircraft.missions.mission(3).physics.L(2)", ...
@@ -341,22 +319,10 @@ if continue_mission_analysis.value
             "aircraft.missions.mission(3).physics.CD_trim", ...
             "aircraft.missions.mission(3).physics.CL_trim(2)", ...
             "aircraft.missions.mission(3).physics.v_stall"];
-    % counts = zeros([length(structNames_mission), 1]);
-    % for i = 1:length(structNames_mission)
-    %     counts(i) = sum(count(structNames_mission, structNames_mission(i)));
-    % end
-    
-    
-   % [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
-
+   [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
 end
 
-% for TESTING ONLY, DELETE later: run other analyses even if the design
-% failed
-continue_mission_analysis.value = true;
-
 %% 5. Propulsion (M3)
-
 if continue_mission_analysis.value
     fprintf('Analyzing Mission %d propulsion system for %s... \n', missionNumber, aircraftName)
 
@@ -434,18 +400,10 @@ if continue_mission_analysis.value
         "aircraft.missions.mission(3).physics.RPM", ...
         "aircraft.missions.mission(3).physics.propulsion.FOS"];
 
-    %[aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
-
+    [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
     if numMissionConfigs == 0
         continue_mission_analysis.value = false;
     end
-
     fprintf('Completed Mission %d propulsion analysis for %s... \n', missionNumber, aircraftName)
-
 end
-
-% for TESTING ONLY, DELETE later: run other analyses even if the design
-% failed
-continue_mission_analysis.value = true;
-
 fprintf('Completed Mission %d feasibility analysis for %s. \n', missionNumber, aircraftName)
