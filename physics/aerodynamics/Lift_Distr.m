@@ -31,6 +31,8 @@ function [y_span, L_prime, L_total, CL] = Lift_Distr(b, c, alpha, a0, alpha_L0, 
     A_matrix = zeros(N,N);
     RHS = alpha - alpha_L0;
 
+    b = mean(b); % handle the vectorized case
+    c = mean(c);
     for i = 1:N
         for j = 1:N
             n = j;

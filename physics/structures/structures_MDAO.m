@@ -1,4 +1,4 @@
-function [maxG,y_span,L_prime,minNumFasteners, minTurnRadius, maxBankAngle, CL] = structures_MDAO(b, c, alpha, a0, alpha_L0, v_inf, emptyWeight, loadedWeight)
+function [maxG,wholeNum, minTurnRadius, maxBankAngle] = structures_MDAO(b, c, alpha, a0, alpha_L0, v_inf, emptyWeight, loadedWeight, numMissionConfigs)
 %structures_MDAO -  calculates max wing loading (G's) ALL SI UNITS
 
 %   Idealizes wing spar as a cantilevered beam and applies a given
@@ -24,16 +24,20 @@ function [maxG,y_span,L_prime,minNumFasteners, minTurnRadius, maxBankAngle, CL] 
 % minTurnRadius = based on maxG's
 % maxBankAngle = based on minTurnRadius
 % CL = output from Lift_Distr function
+% wholeNum = minimum number of fasteners estimated conservatively
 
 % -------------------compute lift distribution---------------------------
-[y_span, L_prime, L_total, CL] = Lift_Distr(b, c, alpha, a0, alpha_L0, v_inf); 
+L_total = zeros([numMissionConfigs, 1]);
+for i = 1:numMissionConfigs
+[~, ~, L_total(i), ~] = Lift_Distr(b(i), c(i), alpha(i), a0(i), alpha_L0(i), v_inf(i)); 
+end
 
 %----------------Max G's-------------------------------------------------
 
 maxG_ref = 4.4;
 weight_ref = emptyWeight; %empty weight
 
-maxG = maxG_ref * (weight_ref/loadedWeight);
+maxG = maxG_ref.*(weight_ref./loadedWeight);
 
 % ------------------Fastener Pullout Stress -------------------------------
 
@@ -46,23 +50,23 @@ PulloutForce_allow = tau_allow * (pi*d) * t_skin/(3*FoS_fastener); % https://ntr
 % factor of 3 in the denominator is empirical and accounts for imperfect
 % mating between threads and material
 
-numFasteners = (L_total * maxG) / PulloutForce_allow;
+numFasteners = (L_total.*maxG)/PulloutForce_allow;
 
 wholeNum = ceil(numFasteners);
-
-if rem(wholeNum,2) ~= 0 
-    minNumFasteners = wholeNum + 1;
-else
-    minNumFasteners = wholeNum;
-end
+wholeNum(rem(wholeNum, 2) ~= 0) = wholeNum(rem(wholeNum, 2) ~= 0) + 1; % round up to even number
+% if rem(wholeNum,2) ~= 0 
+%     minNumFasteners = wholeNum + 1;
+% else
+%     minNumFasteners = wholeNum;
+% end
 
 
 %-----------------Turn Radius---------------------------------------------
 
 g = 9.81;
-numerator = v_inf^2;
-denominator = g*sqrt(maxG^2 - 1);
-minTurnRadius = numerator/denominator;
-maxBankAngle = acosd(1/maxG);
+numerator = v_inf.^2;
+denominator = g*sqrt(maxG.^2 - 1);
+minTurnRadius = numerator./denominator;
+maxBankAngle = acosd(1./maxG);
 
 end

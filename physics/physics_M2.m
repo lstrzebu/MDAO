@@ -233,6 +233,7 @@ if continue_mission_analysis.value
         "m"];
 
     aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits);
+    aircraft = vectorize_aircraft_params(aircraft, numMissionConfigs, ["aircraft.wing.c", "aircraft.wing.a0"]);
 
     unitsAgree = [strcmp(string(aircraft.wing.b.units), "m");
         strcmp(string(aircraft.wing.c.units), "m");
@@ -248,19 +249,17 @@ if continue_mission_analysis.value
     if all(unitsAgree)
 
         [aircraft.missions.mission(2).physics.G.max.value, ...
-            ~, ...
-            ~, ...
             aircraft.missions.mission(2).structures.num_fasteners.minimum.value, ...
             aircraft.missions.mission(2).physics.turn_radius.minimum.value, ...
-            aircraft.missions.mission(2).physics.bank_angle.maximum.value, ...
-            aircraft.missions.mission(2).physics.CL_trim(3).value] = structures_MDAO(aircraft.wing.b.value, ...
+            aircraft.missions.mission(2).physics.bank_angle.maximum.value] = structures_MDAO(aircraft.wing.b.value, ...
             aircraft.wing.c.value, ...
             aircraft.missions.mission(2).physics.alpha_trim.value, ...
             aircraft.wing.a0.value, ...
             aircraft.wing.alpha_0L_wb.value, ...
             aircraft.missions.mission(2).physics.v_trim.value, ...
             aircraft.unloaded.weight.value, ...
-            aircraft.loaded.weight.value);
+            aircraft.loaded.weight.value, ...
+            numMissionConfigs);
 
         aircraft.missions.mission(2).physics.G.max.units = 'G''s';
         aircraft.missions.mission(2).physics.G.max.type = "acc";
@@ -283,19 +282,39 @@ if continue_mission_analysis.value
 
     fprintf('Completed Mission 2 structural integrity analysis for %s.\n', iterName)
 
-    % turn radius sometimes turns out to be less than zero for negative lift coefficients. In
-    % reality, this structures function should always be called after
-    % stability anlysis has weeded out designs with negative lift.
-    if aircraft.missions.mission(2).physics.turn_radius.minimum.value < 0 || aircraft.missions.mission(2).structures.num_fasteners.minimum.value > constants.wing.max_num_fasteners.value || aircraft.missions.mission(2).physics.bank_angle.value > 90
+    % weed out missions rejected due to turn radius
+    rejectedIndx_turn = aircraft.missions.mission(2).physics.turn_radius.minimum.value <= 0;
+    failure_message = "Negative turn radius. Design likely failed static stability but should not have reached the structural analysis. Discrepancy present.";
+    [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx_turn, failure_message, structNames_mission, batteryIndex);
+
+    if numMissionConfigs == 0
         continue_mission_analysis.value = false;
-        if aircraft.missions.mission(2).structures.num_fasteners.minimum.value > constants.wing.max_num_fasteners.value
-            failure_message = sprintf("Design would notionally require at least %d fasteners, more than the allotted maximum of %d.", aircraft.missions.mission(2).structures.num_fasteners.minimum.value, constants.wing.max_num_fasteners.value);
-            % UNCOMMENT THE FOLLOWING 2 LINES AFTER TESTING
-            % else
-            %     error('A design has failed, but no failure message is defined. The structural analysis function was likely invoked to analyze a design that trims at a negative lift coefficient. Consider analyzing stability upstream of the structural analysis. Alternatively, define a failure message for the structural failure mode in question.')
-        end
-        fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d.\n', failure_message, aircraftIteration, missionIteration);
     end
+
+    if continue_mission_analysis.value
+    % weed out missions rejected due to number of fasteners
+    rejectedIndx_fastener = aircraft.missions.mission(2).structures.num_fasteners.minimum.value > constants.wing.max_num_fasteners.value;
+    failure_message = sprintf("Design would notionally require at least %d fasteners, more than the allotted maximum of %d.", aircraft.missions.mission(2).structures.num_fasteners.minimum.value, constants.wing.max_num_fasteners.value);
+    [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx_fastener, failure_message, structNames_mission, batteryIndex);
+
+    if numMissionConfigs == 0
+        continue_mission_analysis.value = false;
+    end
+    end
+
+    % % turn radius sometimes turns out to be less than zero for negative lift coefficients. In
+    % % reality, this structures function should always be called after
+    % % stability anlysis has weeded out designs with negative lift.
+    % if aircraft.missions.mission(2).physics.turn_radius.minimum.value < 0 || aircraft.missions.mission(2).structures.num_fasteners.minimum.value > constants.wing.max_num_fasteners.value || aircraft.missions.mission(2).physics.bank_angle.value > 90
+    %     continue_mission_analysis.value = false;
+    %     if aircraft.missions.mission(2).structures.num_fasteners.minimum.value > constants.wing.max_num_fasteners.value
+    %         failure_message = sprintf("Design would notionally require at least %d fasteners, more than the allotted maximum of %d.", aircraft.missions.mission(2).structures.num_fasteners.minimum.value, constants.wing.max_num_fasteners.value);
+    %         % UNCOMMENT THE FOLLOWING 2 LINES AFTER TESTING
+    %         % else
+    %         %     error('A design has failed, but no failure message is defined. The structural analysis function was likely invoked to analyze a design that trims at a negative lift coefficient. Consider analyzing stability upstream of the structural analysis. Alternatively, define a failure message for the structural failure mode in question.')
+    %     end
+    %     fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d.\n', failure_message, aircraftIteration, missionIteration);
+    % end
 
 end
 
