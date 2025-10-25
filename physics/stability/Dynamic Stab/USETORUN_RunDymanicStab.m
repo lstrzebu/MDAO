@@ -1,8 +1,8 @@
 cd 'physics\stability\Dynamic Stab' % enter flight stability directory (for AVL call)
 
-design_title               = sprintf("%s", iterName);
+design_title               = sprintf("Aircraft %d", aircraftIteration);
 
-file_name           = "QuackPack";
+file_name           = "The_Quacken";
 
 airfoil_file        = sprintf("%s.dat", aircraft.wing.airfoil_name);
 % airfoil_file        = "clarky.dat";
@@ -15,6 +15,18 @@ Vtail_airfoil_file = sprintf("%s.dat", aircraft.tail.vertical.airfoil_name);
 tail_config = string(aircraft.tail.config.value(1));
 
 delete_files = true;
+
+%% Vectorize Mission Parameters
+structNames = ["aircraft.wing.dihedral",...
+    "aircraft.tail.horizontal.skin.XYZ_CG",...
+    "aircraft.wing.skin.XYZ_CG",...
+    "aircraft.tail.vertical.c",...
+    "aircraft.tail.horizontal.S",...
+    "aircraft.tail.horizontal.taper_ratio",...
+    "aircraft.tail.vertical.taper_ratio",...
+    "aircraft.tail.vertical.S"];
+
+aircraft = vectorize_aircraft_params(aircraft, numMissionConfigs, structNames);
 
 %% Wing Geometry
 
@@ -90,7 +102,7 @@ aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredU
 % z-location of the tail
 %z_tail  = 0.5;
 
-z_tail = aircraft.tail.horizontal.skin.XYZ_CG.value(3) - aircraft.wing.skin.XYZ_CG.value(3); % z distance between wing and horizontal tail
+z_tail = aircraft.tail.horizontal.skin.XYZ_CG.value(:,3) - aircraft.wing.skin.XYZ_CG.value(:,3); % z distance between wing and horizontal tail
 if (strcmp(tail_config, "C") || strcmp(tail_config, "U")) && strcmp(string(aircraft.tail.horizontal.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.wing.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.tail.horizontal.c.units), "m")
     C_r_fuselage = aircraft.tail.horizontal.c.value; % for conventional tail, the root chord of the part of the tail connected to the fuselage is the root chord of the horizontal tail
 elseif strcmp(tail_config, "T") && strcmp(string(aircraft.tail.horizontal.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.wing.skin.XYZ_CG.units), "m") && strcmp(string(aircraft.tail.vertical.c.units), "m")
@@ -131,9 +143,9 @@ end
 switch missionNumber
     case 2
         if strcmp(string(aircraft.loaded.XYZ_CG.units), "m")
-            x_cm = aircraft.loaded.XYZ_CG.value(1);
-            y_cm = aircraft.loaded.XYZ_CG.value(2);
-            z_cm = aircraft.loaded.XYZ_CG.value(3);
+            x_cm = aircraft.loaded.XYZ_CG.value(:,1);
+            y_cm = aircraft.loaded.XYZ_CG.value(:,2);
+            z_cm = aircraft.loaded.XYZ_CG.value(:,3);
         else
             error('Unit mismatch: dynamic stability analysis not possible.')
         end
@@ -168,115 +180,143 @@ switch missionNumber
 
 end
 
-dynamic_failure_mode = 0; % assume no failure until proven otherwise
+% dynamic_failure_mode = 0;
+failure_message = "";  % assume no failure until proven otherwise. If the string remains empty, there is no failure.
 
-DynamicStab(design_title,file_name,airfoil_file,Htail_airfoil_file,Vtail_airfoil_file,tail_config,x_cm,y_cm,z_cm,mass,I_matrix,b,S,dihedral_angle,d_tail,z_tail,i_t,S_ht,S_vt,C_r_fuselage,lambda_ht,lambda_vt)
+failure_messages = strings([numMissionConfigs 1]);
+for i = 1:numMissionConfigs
+    DynamicStab(design_title,file_name,airfoil_file,Htail_airfoil_file,Vtail_airfoil_file,tail_config,x_cm(i),y_cm(i),z_cm(i),mass(i),I_matrix(:,:,i),b(i),S(i),dihedral_angle(i),d_tail(i),z_tail(i),i_t(i),S_ht(i),S_vt(i),C_r_fuselage(i),lambda_ht(i),lambda_vt(i))
 
-[X_NP,C_L0,C_D0,alpha_trim_FRL,C_Zw,C_Yw,C_lw,C_mw,C_nw,C_Zv,C_Yv,C_lv,C_mv,C_nv,C_Zp,C_Yp,C_lp,C_mp,C_np,C_Zq,C_Yq,C_lq,C_mq,C_nq,C_Zr,C_Yr,C_lr,C_mr,C_nr,efficiency_factor] = Read_Out(file_name);
+    [X_NP,~,~,alpha_trim_FRL,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~] = Read_Out(file_name);
 
-%% Detecting the failure of the static stability
+    %% Detecting the failure of the static stability
 
-% Static stability failure if the CG is farther right than the NP
-Static_failure = x_cm > X_NP;
-
-% If the airplane trims at negative angle of attack, then plane doesn't
-% trim properly
-Trim_failure   = alpha_trim_FRL < 0;
-
-[Phugoid,Dutch_roll,SPO,Spiral,Roll,failure_eigen] = Read_Eigen(file_name);
-
-%% Deleting the files
-
-% If the user decides to delete the files
-if delete_files
-    delete(sprintf("%s.avl",file_name))
-    delete(sprintf("%s.run",file_name))
-    delete(sprintf("%s.out",file_name))
-    delete(sprintf("%s.mass",file_name))
-    delete(sprintf("%s.eig",file_name))
-    delete(sprintf("%s.bat",file_name))
-end
-
-%% Assessing the dynamic stability of the Aircraft
-
-eigen_key = 1;
-% If the configuration outputs more than the 5 expected modes, halt
-% analysis and throw an error.
-if failure_eigen
-    dynamic_failure_mode = eigen_key;
-    % fprintf("Dynamic Stability Failed! Eigenvalue output does not show the expected 5 Dynamic modes. Double-check that your mass and inertia values make sense\n")
-    % fprintf("Possible Fix - Increase your I_yy and/or I_zz values and ensure they are reflecting the wing/tail placements\n\n")
-
-
-    % if the eigenvalues do make sense
-else
-
-    % -------------------------------------------------------------------------
-    % Phugoid Failure
-    % -------------------------------------------------------------------------
-
-    % If phugoid is not damped, the stability of the plane is not sufficient
-    Phugoid_failure = (Phugoid(1)>=0);
-    phugoid_key = 2;
-
-    if Phugoid_failure
-        dynamic_failure_mode = phugoid_key;
-        % fprintf("Dynamic Stability Failed! Phugoid mode is undamped\n")
-        % fprintf("Possible Fix - Move your NP closer to your CG. An overly statically stable aircraft is often dynamically unstable\n\n")
+    % Static stability failure if the CG is farther right than the NP
+    Static_failure = x_cm > X_NP;
+    if Static_failure
+        failure_message = "Static Stability Failed! The CG is behind the NP. Dynamic stability AVL call (not static stability derivatives) yielded this result.";
     end
 
-    % -------------------------------------------------------------------------
-    % Dutch_roll_failure
-    % -------------------------------------------------------------------------
-
-    Dutch_roll_failure = (Dutch_roll(1)>=0);
-    dutch_roll_key = 3;
-
-    if Dutch_roll_failure
-        dynamic_failure_mode = dutch_roll_key;
-        %     fprintf("Dynamic Stability Failed! Dutch Roll mode is undamped\n")
-        %     fprintf("Possible Fix - Decrease Wing Sweep and/or dihedral\n\n")
+    % If the airplane trims at negative angle of attack, then plane doesn't
+    % trim properly
+    Trim_failure   = alpha_trim_FRL < 0;
+    if Trim_failure
+        failure_message = "Static Stability Failed! The aircraft is statically stable but trims at a negative lift. Dynamic stability AVL call (not static stability derivatives) yielded this result.";
     end
 
-    % -------------------------------------------------------------------------
-    % SPO Failure
-    % -------------------------------------------------------------------------
+    [Phugoid,Dutch_roll,SPO,Spiral,Roll,failure_eigen] = Read_Eigen(file_name);
 
-    SPO_failure = (SPO(1)>=-0.5);
-    SPO_key = 4;
+    %% Deleting the files
 
-    if SPO_failure
-        dynamic_failure_mode = SPO_key;
-        %     fprintf("Dynamic Stability Failed! SPO mode is underdamped\n")
-        %     fprintf("Possible Fix - Move lifting surfaces farther from CG\n\n")
+    % If the user decides to delete the files
+    if delete_files
+        delete(sprintf("%s.avl",file_name))
+        delete(sprintf("%s.run",file_name))
+        delete(sprintf("%s.out",file_name))
+        delete(sprintf("%s.mass",file_name))
+        delete(sprintf("%s.eig",file_name))
+        delete(sprintf("%s.bat",file_name))
     end
 
+    %% Assessing the dynamic stability of the Aircraft
 
-    % -------------------------------------------------------------------------
-    % Spiral Failure
-    % -------------------------------------------------------------------------
+    % eigen_key = 1;
+    % If the configuration outputs more than the 5 expected modes, halt
+    % analysis and throw an error.
+    if failure_eigen
+        % dynamic_failure_mode = eigen_key;
+        failure_message = "Dynamic Stability Failed! Eigenvalue output does not show the expected 5 Dynamic modes. Double-check that your mass and inertia values make sense. Possible Fix - Increase your I_yy and/or I_zz values and ensure they reflect the wing/tail placements.";
+        % fprintf("Possible Fix - Increase your I_yy and/or I_zz values and ensure they are reflecting the wing/tail placements\n
+        % fprintf("Dynamic Stability Failed! Eigenvalue output does not show the expected 5 Dynamic modes. Double-check that your mass and inertia values make sense\n")
+        % fprintf("Possible Fix - Increase your I_yy and/or I_zz values and ensure they are reflecting the wing/tail placements\n\n")
 
-    Spiral_failure = (Spiral>=0);
-    spiral_key = 5;
 
-    if Spiral_failure
-        dynamic_failure_mode = spiral_key;
-        % fprintf("Dynamic Stability Failed! Spiral mode is undamped\n")
-        % fprintf("Possible Fix - Decrease Tail Fin Size and/or Increase Dihedral. Spiral is caused by strong directional stability and weak lateral stability\n\n")
+        % if the eigenvalues do make sense
+    else
+
+        % -------------------------------------------------------------------------
+        % Phugoid Failure
+        % -------------------------------------------------------------------------
+
+        % If phugoid is not damped, the stability of the plane is not sufficient
+        Phugoid_failure = (Phugoid(1)>=0);
+        %phugoid_key = 2;
+
+        if Phugoid_failure
+            failure_message = "Dynamic Stability Failed! Phugoid mode is undamped. Possible Fix - Move your NP closer to your CG. An overly statically stable aircraft is often dynamically unstable.";
+
+            % dynamic_failure_mode = phugoid_key;
+
+            % fprintf("Dynamic Stability Failed! Phugoid mode is undamped\n")
+            % fprintf("Possible Fix - Move your NP closer to your CG. An overly statically stable aircraft is often dynamically unstable\n\n")
+        end
+
+        % -------------------------------------------------------------------------
+        % Dutch_roll_failure
+        % -------------------------------------------------------------------------
+
+        Dutch_roll_failure = (Dutch_roll(1)>=0);
+        %dutch_roll_key = 3;
+
+        if Dutch_roll_failure
+            failure_message = "Dynamic Stability Failed! Dutch Roll mode is undamped. Possible Fix - Decrease Wing Sweep and/or dihedral.";
+            %dynamic_failure_mode = dutch_roll_key;
+            %     fprintf("Dynamic Stability Failed! Dutch Roll mode is undamped\n")
+            %     fprintf("Possible Fix - Decrease Wing Sweep and/or dihedral\n\n")
+        end
+
+        % -------------------------------------------------------------------------
+        % SPO Failure
+        % -------------------------------------------------------------------------
+
+        SPO_failure = (SPO(1)>=-0.5);
+        %SPO_key = 4;
+
+        if SPO_failure
+            failure_message = "Dynamic Stability Failed! SPO mode is underdamped. Possible Fix - Move lifting surfaces farther from CG.";
+            % dynamic_failure_mode = SPO_key;
+            %     fprintf("Dynamic Stability Failed! SPO mode is underdamped\n")
+            %     fprintf("Possible Fix - Move lifting surfaces farther from CG\n\n")
+        end
+
+
+        % -------------------------------------------------------------------------
+        % Spiral Failure
+        % -------------------------------------------------------------------------
+
+        Spiral_failure = (Spiral>=0);
+        %spiral_key = 5;
+
+        if Spiral_failure
+            failure_message = "Dynamic Stability Failed! Spiral mode is undamped. Possible Fix - Decrease Tail Fin Size and/or Increase Dihedral. Spiral is caused by strong directional stability and weak lateral stability.";
+            %dynamic_failure_mode = spiral_key;
+            % fprintf("Dynamic Stability Failed! Spiral mode is undamped\n")
+            % fprintf("Possible Fix - Decrease Tail Fin Size and/or Increase Dihedral. Spiral is caused by strong directional stability and weak lateral stability\n\n")
+        end
+
+
+        % -------------------------------------------------------------------------
+        % Roll Failure
+        % -------------------------------------------------------------------------
+
+        Roll_failure = (Roll>=-0.5);
+        %roll_key = 6;
+
+        if Roll_failure
+            failure_message = "Dynamic Stability Failed! Rolling mode is underdamped. Possible Fix - Increase Wing Dihedral.";
+            %dynamic_failure_mode = roll_key; % roll failure mode
+            % fprintf("Dynamic Stability Failed! Rolling mode is underdamped\n")
+            % fprintf("Possible Fix - Increase Wing Dihedral\n\n")
+        end
+
     end
 
+    failure_messages(i) = failure_message;
 
-    % -------------------------------------------------------------------------
-    % Roll Failure
-    % -------------------------------------------------------------------------
-
-    Roll_failure = (Roll>=-0.5);
-    roll_key = 6;
-
-    if Roll_failure
-        dynamic_failure_mode = roll_key; % roll failure mode
-        % fprintf("Dynamic Stability Failed! Rolling mode is underdamped\n")
-        % fprintf("Possible Fix - Increase Wing Dihedral\n\n")
+    % if the design has the same failure method 5 times in a row, move on
+    if all(strcmp(failure_messages(1:i), failure_messages(1))) && i >= 5
+        continue_mission_analysis.value = false;
+        break
     end
 
 end

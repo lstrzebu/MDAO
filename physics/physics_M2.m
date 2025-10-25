@@ -127,7 +127,7 @@ if continue_mission_analysis.value
         error('Unit mismatch: static stability analysis not possible. For convention, ensure static stability analysis functions are called with SI units (except for angles, which should use degrees rather than radians).')
     end
 
-    structNames = ["aircraft.loaded.XYZ_CG",... % m
+    structNames_mission = ["aircraft.loaded.XYZ_CG",... % m
             "aircraft.loaded.weight",... % N
             "aircraft.wing.S",... % m^2
             "aircraft.wing.b",... % m
@@ -145,20 +145,26 @@ if continue_mission_analysis.value
             "aircraft.missions.mission(2).physics.v_trim",...
             "aircraft.missions.mission(2).physics.alpha_trim"];
 
-    rejectedIndex_CG(1) = 1; % FOR TESTING ONLY
-    [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, missions, numMissionConfigs, rejectedIndex_CG, "Static Stability Failed! The CG is behind the NP", structNames);
+    %rejectedIndex_CG(1) = 1; % FOR TESTING ONLY
+    %[aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex_CG, "Static Stability Failed! The CG is behind the NP", structNames_mission, batteryIndex);
+    %[aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex_trim, "Static Stability Failed! The aircraft is statically stable but trims at a negative lift", structNames_mission, batteryIndex);
+
+    % if all missions have failed
+    if numMissionConfigs == 0
+        continue_mission_analysis.value = false;
+    end
 
     fprintf('Completed Mission 2 static stability analysis for %s.\n', iterName)
 
-    % move on to another design if needed (and explain why)
-    if aircraft.missions.mission(2).physics.stability.static.failure.value ~= 0
-        continue_mission_analysis.value = false;
-        % failure message already assigned by static stability function, just
-        % need to print it out
-        fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d.\n', failure_message, aircraftIteration, missionIteration)
-    else
-        clear failure_message
-    end
+    % % move on to another design if needed (and explain why)
+    % if aircraft.missions.mission(2).physics.stability.static.failure.value ~= 0
+    %     continue_mission_analysis.value = false;
+    %     % failure message already assigned by static stability function, just
+    %     % need to print it out
+    %     fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d.\n', failure_message, aircraftIteration, missionIteration)
+    % else
+    %     clear failure_message
+    % end
 
 end
 
@@ -171,33 +177,48 @@ if continue_mission_analysis.value
     fprintf('Analyzing Mission 2 dynamic stability for %s...\n', iterName);
     USETORUN_RunDymanicStab % run dynamic stability analysis
 
+    continue_mission_analysis.value = true; % FOR TESTING ONLY
+    if continue_mission_analysis.value
+        rejectedIndex = failure_messages ~= "";
+        structNames_mission = [structNames_mission,...
+            "aircraft.wing.dihedral",...
+    "aircraft.tail.horizontal.skin.XYZ_CG",...
+    "aircraft.wing.skin.XYZ_CG",...
+    "aircraft.tail.vertical.c",...
+    "aircraft.tail.horizontal.S",...
+    "aircraft.tail.horizontal.taper_ratio",...
+    "aircraft.tail.vertical.taper_ratio",...
+    "aircraft.tail.vertical.S"]; % append additional vectorized aircraft parameters to be updated
+        [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex, failure_messages, structNames_mission, batteryIndex);
+    end
+
     fprintf('Completed Mission 2 dynamic stability analysis for %s.\n', iterName)
 
-    % interpret dynamic stability results
-    if Static_failure ~= 0 || Trim_failure ~= 0 || dynamic_failure_mode ~= 0
-        continue_mission_analysis.value = false;
-        if Static_failure ~=0
-            failure_message = "Static Stability Failed! The CG is behind the NP";
-        elseif Trim_failure ~= 0
-            failure_message = "Static Stability Failed! The aircraft is statically stable but trims at a negative lift";
-        elseif dynamic_failure_mode ~= 0
-            switch dynamic_failure_mode
-                case eigen_key
-                    failure_message = "Dynamic Stability Failed! AVL eigenvalue output does not show the expected 5 Dynamic modes. Double-check that your mass and inertia values make sense. Possible Fix - Increase your I_yy and/or I_zz values and ensure they are reflecting the wing/tail placements\.";
-                case phugoid_key
-                    failure_message = "Dynamic Stability Failed! Phugoid mode is undamped. Possible Fix - Move your NP closer to your CG. An overly statically stable aircraft is often dynamically unstable.";
-                case dutch_roll_key
-                    failure_message = "Dynamic Stability Failed! Dutch Roll mode is undamped. Possible Fix - Decrease Wing Sweep and/or dihedral.";
-                case SPO_key
-                    failure_message = "Dynamic Stability Failed! SPO mode is underdamped. Possible Fix - Move lifting surfaces farther from CG.";
-                case spiral_key
-                    failure_message = "Dynamic Stability Failed! Spiral mode is undamped. Possible Fix - Decrease Tail Fin Size and/or Increase Dihedral. Spiral is caused by strong directional stability and weak lateral stability.";
-                case roll_key
-                    failure_message = "Dynamic Stability Failed! Rolling mode is underdamped\n. Possible Fix - Increase Wing Dihedral.";
-            end
-        end
-        fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d.\n', failure_message, aircraftIteration, missionIteration);
-    end
+    % % interpret dynamic stability results
+    % if Static_failure ~= 0 || Trim_failure ~= 0 || dynamic_failure_mode ~= 0
+    %     continue_mission_analysis.value = false;
+    %     if Static_failure ~=0
+    %         failure_message = "Static Stability Failed! The CG is behind the NP";
+    %     elseif Trim_failure ~= 0
+    %         failure_message = "Static Stability Failed! The aircraft is statically stable but trims at a negative lift";
+    %     elseif dynamic_failure_mode ~= 0
+    %         switch dynamic_failure_mode
+    %             case eigen_key
+    %                 failure_message = "Dynamic Stability Failed! AVL eigenvalue output does not show the expected 5 Dynamic modes. Double-check that your mass and inertia values make sense. Possible Fix - Increase your I_yy and/or I_zz values and ensure they are reflecting the wing/tail placements\.";
+    %             case phugoid_key
+    %                 failure_message = "Dynamic Stability Failed! Phugoid mode is undamped. Possible Fix - Move your NP closer to your CG. An overly statically stable aircraft is often dynamically unstable.";
+    %             case dutch_roll_key
+    %                 failure_message = "Dynamic Stability Failed! Dutch Roll mode is undamped. Possible Fix - Decrease Wing Sweep and/or dihedral.";
+    %             case SPO_key
+    %                 failure_message = "Dynamic Stability Failed! SPO mode is underdamped. Possible Fix - Move lifting surfaces farther from CG.";
+    %             case spiral_key
+    %                 failure_message = "Dynamic Stability Failed! Spiral mode is undamped. Possible Fix - Decrease Tail Fin Size and/or Increase Dihedral. Spiral is caused by strong directional stability and weak lateral stability.";
+    %             case roll_key
+    %                 failure_message = "Dynamic Stability Failed! Rolling mode is underdamped\n. Possible Fix - Increase Wing Dihedral.";
+    %         end
+    %     end
+    %     fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d.\n', failure_message, aircraftIteration, missionIteration);
+    % end
 end
 
 %% 3. Structures (M2)
@@ -205,9 +226,11 @@ if continue_mission_analysis.value
     fprintf('Analyzing Mission 2 structural integrity for %s...\n', iterName)
 
     structNames = ["aircraft.missions.mission(2).physics.alpha_trim";
-        "aircraft.wing.alpha_0L_wb"];
+        "aircraft.wing.alpha_0L_wb";
+        "aircraft.wing.c"];
     desiredUnits = ["rad";
-        "rad"];
+        "rad";
+        "m"];
 
     aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits);
 

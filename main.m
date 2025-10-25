@@ -27,6 +27,7 @@ setup
 
 aircraftIteration = 1;
 missionIteration = 1;
+displayToggle = false;
 
 getAircraft % primary output: a bunch of (global?) sizing variables
 

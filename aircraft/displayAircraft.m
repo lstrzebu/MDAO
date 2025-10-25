@@ -39,6 +39,8 @@ center_x = fuselage_length/2 - aircraft.fuselage.protrusion.value;
 center_y = 0;
 center_z = 0;
 
+if displayToggle
+
 min_x = center_x - fuselage_length/2;
 max_x = center_x + fuselage_length/2;
 
@@ -54,12 +56,14 @@ figure;
 hold on;
 isosurface(X, Y, Z, cylinder_matrix, 0.5);
 axis equal;
-title(sprintf('%s', aircraft.title.value));
+%title(sprintf('%s', aircraft.title.value));
 xlabel('X (in)');
 ylabel('Y (in)');
 zlabel('Z (in)');
 grid on;
 view(3);
+
+end
 
 %% Wing
 chord = aircraft.wing.c.value;
@@ -74,6 +78,7 @@ assumptions(end+1).description = "Assume the bottom z coordinate of wing attachm
 assumptions(end+1).rationale = "hand calcs based on SolidWorks fuselage model 'Fuselage with structure.SLDASM' located in folder Airframe-20251013T130855Z-1-001. Model was downloaded at 1215 EST 13 October 2025, at which point it had been last modified October 8. Hand calcs may be found in 'Hand Calcs for Wing Attachment Z Coordinate Assumption.txt.'";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
+if displayToggle
 V = [
     0, -width, vertical_wing_center-thickness_wing/2;
     chord, -width, vertical_wing_center-thickness_wing/2;
@@ -93,6 +98,7 @@ F = [
     1, 4, 8, 5
 ];
 patch('Vertices', V, 'Faces', F, 'FaceColor', [0.7, 0.7, 0.7]);
+end
 
 %% Tail
 d_tail = aircraft.tail.d_tail.value;
@@ -132,6 +138,8 @@ if strcmp(tailType(1), 'C')
     thickness_VT = thicknessMultiplier_VT*chord_VT;
     vertical_tail_y_center = 0;
     vertical_tail_z_bottom = radius_outer;
+
+    if displayToggle
     V_VT = [
         d_tail, vertical_tail_y_center-thickness_VT/2, vertical_tail_z_bottom;
         d_tail+chord_VT, vertical_tail_y_center-thickness_VT/2, vertical_tail_z_bottom;
@@ -143,6 +151,7 @@ if strcmp(tailType(1), 'C')
         d_tail, vertical_tail_y_center+thickness_VT/2, vertical_tail_z_bottom+width_VT
     ];
     patch('Vertices', V_VT, 'Faces', F, 'FaceColor', [0.7, 0.7, 0.7]);
+end
     
     aircraft.tail.horizontal.skin.XYZ_CG.value = [d_tail + chord_HT/2, 0, radius_outer+thickness_HT/2];
     aircraft.tail.vertical.skin.XYZ_CG.value = [d_tail + chord_VT/2, 0, radius_outer+width_VT/2];
@@ -156,6 +165,9 @@ elseif strcmp(tailType(1), 'T')
     thickness_VT = thicknessMultiplier_VT*chord_VT;
     vertical_tail_y_center = 0;
     vertical_tail_z_bottom = radius_outer;
+    horizontal_tail_z_center = vertical_tail_z_bottom + width_VT;
+
+    if displayToggle
     V_VT = [
         d_tail, vertical_tail_y_center-thickness_VT/2, vertical_tail_z_bottom;
         d_tail+chord_VT, vertical_tail_y_center-thickness_VT/2, vertical_tail_z_bottom;
@@ -168,7 +180,6 @@ elseif strcmp(tailType(1), 'T')
     ];
     patch('Vertices', V_VT, 'Faces', F, 'FaceColor', [0.7, 0.7, 0.7]);
 
-    horizontal_tail_z_center = vertical_tail_z_bottom + width_VT;
     V_HT = [
         d_tail, -width_HT, horizontal_tail_z_center-thickness_HT/2;
         d_tail+chord_HT, -width_HT, horizontal_tail_z_center-thickness_HT/2;
@@ -180,7 +191,8 @@ elseif strcmp(tailType(1), 'T')
         d_tail, width_HT, horizontal_tail_z_center+thickness_HT/2
     ];
     patch('Vertices', V_HT, 'Faces', F, 'FaceColor', [0.7, 0.7, 0.7]);
-    
+    end
+
     aircraft.tail.horizontal.skin.XYZ_CG.value = [d_tail + chord_HT/2, 0, horizontal_tail_z_center+thickness_HT/2];
     aircraft.tail.vertical.skin.XYZ_CG.value = [d_tail + chord_VT/2, 0, vertical_tail_z_bottom+width_VT/2];
 
@@ -205,6 +217,8 @@ elseif strcmp(tailType(1), 'U')
     eval(sprintf('thicknessMultiplier_VT = 0.%s;', aircraft.tail.vertical.airfoil_name(8:9)))
     thickness_VT = thicknessMultiplier_VT*chord_VT;
     
+    if displayToggle
+
     % Left vertical tail (at y = -width_HT)
     vertical_tail_y_center = -width_HT;
     vertical_tail_z_bottom = radius_outer;
@@ -232,7 +246,10 @@ elseif strcmp(tailType(1), 'U')
         d_tail+chord_VT, vertical_tail_y_center+thickness_VT/2, vertical_tail_z_bottom+width_VT;
         d_tail, vertical_tail_y_center+thickness_VT/2, vertical_tail_z_bottom+width_VT
     ];
+    
     patch('Vertices', V_VT2, 'Faces', F, 'FaceColor', [0.7, 0.7, 0.7]);
+
+    end
     
     % For CG, assume vertical tail mass is split equally between two vertical tails
     aircraft.tail.vertical.skin.XYZ_CG.value = [d_tail + chord_VT/2, 0, radius_outer+width_VT/2];
@@ -241,11 +258,13 @@ else
     error('Invalid tailType: must be Conventional, T, or U.');
 end
 
-%% Fuselage Sanity Checks
+if displayToggle
+% Fuselage Sanity Checks
 if max_x < d_tail - chord_HT
     error('Floating tail: fuselage too far forward.')
 elseif aircraft.fuselage.protrusion.value < 0
     error('Floating wing: fuselage too far backward.')
+end
 end
 
 %% CG Calculation
@@ -703,6 +722,8 @@ aircraft.unloaded.XYZ_CG.units = 'in';
 aircraft.unloaded.XYZ_CG.type = "length";
 aircraft.unloaded.XYZ_CG.description = "vector of X, Y, Z coordinates for empty aircraft CG. That is, the CG of the system including the: fuselage skin, wing spar, horizontal tail skin, vertical tail skin, motor, ESC, propeller, and battery.";
 
+if displayToggle
 alpha(gca, 0.5);
 plot3(aircraft.unloaded.XYZ_CG.value(1), aircraft.unloaded.XYZ_CG.value(2), aircraft.unloaded.XYZ_CG.value(3), 'ro', 'MarkerSize', 15, 'LineWidth', 2, ...
       'MarkerEdgeColor', 'r', 'DisplayName', 'CG');
+end

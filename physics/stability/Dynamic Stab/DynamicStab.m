@@ -198,7 +198,7 @@ M                   = 0;            % [UNITLESS]
 
 S_ref               = S;            % [m^2]
 
-C_ref               = S/b;          % [m]
+C_ref               = S./b;          % [m]
 
 section_chord       = [C_ref, C_ref];       % [m]
 
