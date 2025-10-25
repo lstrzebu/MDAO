@@ -7,25 +7,25 @@
 % length (bl), and carrying a particular total propulsion battery capacity
 % (TPBC). 
 
-fprintf('Calculating mission scores for %s... \n', iterName)
+fprintf('Calculating mission scores for %s... \n', aircraftName)
 
 % aircraft configuration parameters change depending on when the function is called. 
 % These configuration parameters (design variables) are accessed as global
 % variables.
 % global b 
 % global probabilities 
-p       = missions(1);
-c       = missions(2);
-l       = missions(3);
-bl      = missions(4);
-TPBC    = missions(5);
+p       = missions(:,1);
+c       = missions(:,2);
+l       = missions(:,3);
+bl      = missions(:,4);
+TPBC    = missions(:,5);
 
 readM2pars
 
 aircraft = conv_aircraft_units(aircraft, missionIteration, "aircraft.wing.b", "ft");
 
 if strcmp(string(aircraft.wing.b.units), "ft")
-RAC = 0.05*aircraft.wing.b.value + 0.75;
+RAC = 0.05.*aircraft.wing.b.value + 0.75;
 else
     error('RAC wingspan not possible because aircraft wingspan does not have correct units.\nExpected units: ft\nActual units: %s', aircraft.wing.b.units);
 end
@@ -65,7 +65,7 @@ total_score = TMS.*TRS + P;
 
 % recip = 1./total_score;
 
-fprintf('Completed mission score calculation for %s.\n', iterName);
+fprintf('Completed mission score calculation for %s.\n', aircraftName);
 
 % end
 

@@ -162,9 +162,9 @@ switch missionNumber
     case 3
         aircraft = conv_aircraft_units(aircraft, missionIteration, "aircraft.unloaded.XYZ_CG", "m");
         if strcmp(string(aircraft.unloaded.XYZ_CG.units), "m")
-            x_cm = aircraft.unloaded.XYZ_CG.value(1);
-            y_cm = aircraft.unloaded.XYZ_CG.value(2);
-            z_cm = aircraft.unloaded.XYZ_CG.value(3);
+            x_cm = aircraft.unloaded.XYZ_CG.value(:,1);
+            y_cm = aircraft.unloaded.XYZ_CG.value(:,2);
+            z_cm = aircraft.unloaded.XYZ_CG.value(:,3);
         else
             error('Unit mismatch: dynamic stability analysis not possible.')
         end
@@ -313,7 +313,7 @@ for i = 1:numMissionConfigs
 
     failure_messages(i) = failure_message;
 
-    % if the design has the same failure method 5 times in a row, move on
+    % if the design has the same failure mode 5 times in a row, move on
     if all(strcmp(failure_messages(1:i), failure_messages(1))) && i >= 5
         continue_mission_analysis.value = false;
         break
