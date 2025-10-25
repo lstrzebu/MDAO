@@ -1,4 +1,4 @@
-function [L, L_2, D, C_D_Total, CL_trim_tot,V_stall, speed_boolean, alpha_boolean] = AeroCode_2(W, V, C_L_Total, b_w, c_w, b_t, c_t, l_fuse, d_fuse, A_banner, AR_banner, alpha_trim, stall_w, CLa_w, W_ref, alphaL0_w, Cla_t, t_ref, alphaL0_t)
+function [L, L_2, D, C_D_Total, CL_trim_tot,V_stall, rejectedIndex, failure_messages] = AeroCode_2(W, V, C_L_Total, b_w, c_w, b_t, c_t, l_fuse, d_fuse, A_banner, AR_banner, alpha_trim, stall_w, CLa_w, W_ref, alphaL0_w, Cla_t, t_ref, alphaL0_t, numMissionConfigs)
 % Aero_Forces calculates total lift and drag for an aircraft
 %
 % Inputs:
@@ -35,41 +35,41 @@ function [L, L_2, D, C_D_Total, CL_trim_tot,V_stall, speed_boolean, alpha_boolea
 
 
 %% Constants
-rho = 1.225;       % Air density (kg/m^3)
-mu = 1.81e-5;      % Dynamic viscosity (kg/(m·s))
+rho = 1.225;       % Air density (kg./m.^3)
+mu = 1.81e-5;      % Dynamic viscosity (kg./(m·s))
 
 %% Wing & Tail areas
-S_w = b_w * c_w;
-S_t = b_t * c_t;
+S_w = b_w.*c_w;
+S_t = b_t.*c_t;
 
 %% Aspect ratio
-AR = b_w^2 / S_w;
+AR = b_w.^2 ./ S_w;
 
 %% Total lift coefficient
 
 % Method 2
-CL_trim_tot = CLa_w*(W_ref+alpha_trim-alphaL0_w) + (S_t/S_w)*Cla_t*(t_ref+alpha_trim-alphaL0_t);
+CL_trim_tot = CLa_w.*(W_ref+alpha_trim-alphaL0_w) + (S_t./S_w).*Cla_t.*(t_ref+alpha_trim-alphaL0_t);
 
 %% Total lift
-L = 0.5 * rho * V^2 * S_w * C_L_Total;
-L_2 = 0.5 * rho * V^2 * S_w * CL_trim_tot;
+L = 0.5 .* rho .* V.^2 .* S_w .* C_L_Total;
+L_2 = 0.5 .* rho .* V.^2 .* S_w .* CL_trim_tot;
 
 %% Zero-lift drag components
 
 % Fuselage Reynolds number
-R_fuse = rho * V * l_fuse / mu;
+R_fuse = rho .* V .* l_fuse ./ mu;
 
 % Fuselage skin friction coefficient (Eqn 12.27, M ~ 0)
-C_f_fuse = 0.455 / (log10(R_fuse)^2.58);
+C_f_fuse = 0.455 ./ (log10(R_fuse).^2.58);
 
 % Fuselage form factor (Eqn 12.31 & 12.33)
-f_fuse = l_fuse / d_fuse;
-FF_fuse = 0.9 + 5/(f_fuse^1.5) + f_fuse/400;
+f_fuse = l_fuse ./ d_fuse;
+FF_fuse = 0.9 + 5./(f_fuse.^1.5) + f_fuse./400;
 
 Q_fuse = 1; % Interference factor
-S_wet_fuse = 2*pi*(d_fuse/2)^2 + pi*d_fuse*l_fuse;
+S_wet_fuse = 2.*pi.*(d_fuse./2).^2 + pi.*d_fuse.*l_fuse;
 
-CD_o_fuse = C_f_fuse * FF_fuse * Q_fuse * S_wet_fuse / S_w;
+CD_o_fuse = C_f_fuse .* FF_fuse .* Q_fuse .* S_wet_fuse ./ S_w;
 
 % Other drag contributions
 CD_o_gear = 0.02;
@@ -80,42 +80,61 @@ CD_o_FP   = 0.02;
 CD_o = CD_o_fuse + CD_o_gear + CD_o_pro + CD_o_FP;
 
 %% Induced drag (Eqns 12.48 & 12.49)
-e_oswa = 1.78*(1 - 0.045*AR^0.68) - 0.64;  % Oswald efficiency
-K = 1/(pi*AR*e_oswa);
-CD_i = K * C_L_Total^2;
+e_oswa = 1.78.*(1 - 0.045.*AR.^0.68) - 0.64;  % Oswald efficiency
+K = 1./(pi.*AR.*e_oswa);
+CD_i = K .* C_L_Total.^2;
 
 %% Banner info
 
-% Cap option: use coefficients at A = 0.075 m^2
+% Cap option: use coefficients at A = 0.075 m.^2
 C_cap = 0.405;
 n_cap = -0.494;
 
-C_D_banner = C_cap * (AR_banner^n_cap);       % dimensionless
-D_banner   = 0.5 * rho * V^2 * A_banner * C_D_banner;  % [N]
+C_D_banner = C_cap .* (AR_banner.^n_cap);       % dimensionless
+D_banner   = 0.5 .* rho .* V.^2 .* A_banner .* C_D_banner;  % [N]
 
 % Convert banner drag to an equivalent CD normalized by wing area
-CD_banner_equiv = D_banner / (0.5 * rho * V^2 * S_w);
+CD_banner_equiv = D_banner ./ (0.5 .* rho .* V.^2 .* S_w);
 
 %% Total drag coefficient and drag
 C_D_Total = CD_o + CD_i + CD_banner_equiv;
-D = 0.5 * rho * V^2 * S_w * C_D_Total;
+D = 0.5 .* rho .* V.^2 .* S_w .* C_D_Total;
 
 %% Boolean
 
 %approximation for 3d wing stall compared to 2d airfoil stall
 alpha_w_trim = W_ref + alpha_trim - alphaL0_w;
-td_stall = 0.8*stall_w; % 3d stall approx
-if alpha_w_trim<td_stall
-    alpha_boolean = true; 
+td_stall = 0.8.*stall_w; % 3d stall approx
+
+% if alpha_w_trim<td_stall
+%     alpha_boolean = true; 
+% else
+%     alpha_boolean = false; 
+% end
+
+CL_max = CLa_w.*(W_ref+td_stall-alphaL0_w) + (S_t./S_w).*Cla_t.*(t_ref+td_stall-alphaL0_t);
+V_stall = sqrt(2.*W./(rho.*S_w.*CL_max));
+
+
+% % if V>V_stall
+% %     speed_boolean = true;
+% % else
+% %     speed_boolean = false; 
+% % end
+
+
+failure_messages = strings([numMissionConfigs, 1]);
+rejectedIndx_speed = V<=V_stall & alpha_w_trim < td_stall; % failure due to speed only
+rejectedIndx_angle = alpha_w_trim > td_stall & V > V_stall; % failure due to angle only
+rejectedIndx_both = V<=V_stall & alpha_w_trim > td_stall; % failure due to both speed and angle
+
+if all(sum([rejectedIndx_speed, rejectedIndx_angle, rejectedIndx_both], 2) <= 1) % make sure no row is being set to true for multiple arrays
+    failure_messages(rejectedIndx_speed) = "Trimmed airspeed is less than stall speed, meaning the aircraft will stall during flight.";
+    failure_messages(rejectedIndx_angle) = "Trimmed angle of attack is greater than stall angle, meaning the aircraft will stall during flight.";
+    failure_messages(rejectedIndx_both) = "Trimmed airspeed is less than stall speed, meaning the aircraft will stall during flight. Also, trimmed angle of attack is greater than stall angle, which is another reason for stall.";
+    rejectedIndex = any([rejectedIndx_both, rejectedIndx_speed, rejectedIndx_angle], 2);
 else
-    alpha_boolean = false; 
+    error('An error in conditional logic has been made. Check the failure logic for static stability. Multiple mutually exclusive failure modes are being triggered simultaneously.')
 end
 
-CL_max = CLa_w*(W_ref+td_stall-alphaL0_w) + (S_t/S_w)*Cla_t*(t_ref+td_stall-alphaL0_t);
-V_stall = sqrt(2*W/(rho*S_w*CL_max));
-if V>V_stall
-    speed_boolean = true;
-else
-    speed_boolean = false; 
-end
 end

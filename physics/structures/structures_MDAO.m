@@ -1,4 +1,4 @@
-function [maxG,wholeNum, minTurnRadius, maxBankAngle] = structures_MDAO(b, c, alpha, a0, alpha_L0, v_inf, emptyWeight, loadedWeight, numMissionConfigs)
+function [maxG,wholeNum, minTurnRadius, maxBankAngle, rejectedIndx, failure_messages] = structures_MDAO(b, c, alpha, a0, alpha_L0, v_inf, emptyWeight, loadedWeight, numMissionConfigs, maxFasteners)
 %structures_MDAO -  calculates max wing loading (G's) ALL SI UNITS
 
 %   Idealizes wing spar as a cantilevered beam and applies a given
@@ -25,6 +25,7 @@ function [maxG,wholeNum, minTurnRadius, maxBankAngle] = structures_MDAO(b, c, al
 % maxBankAngle = based on minTurnRadius
 % CL = output from Lift_Distr function
 % wholeNum = minimum number of fasteners estimated conservatively
+% maxFasteners = max allowable fasteners for the design to be aceptable
 
 % -------------------compute lift distribution---------------------------
 L_total = zeros([numMissionConfigs, 1]);
@@ -68,5 +69,12 @@ numerator = v_inf.^2;
 denominator = g*sqrt(maxG.^2 - 1);
 minTurnRadius = numerator./denominator;
 maxBankAngle = acosd(1./maxG);
+
+failure_messages = strings([numMissionConfigs, 1]);
+rejectedIndx_turn = minTurnRadius <= 0;
+failure_messages(rejectedIndx_turn) = "Negative turn radius. Design likely failed static stability but should not have reached the structural analysis. Discrepancy present.";
+rejectedIndx_fastener = wholeNum > maxFasteners & minTurnRadius > 0;
+failure_messages(rejectedIndx_fastener) = sprintf("Design would notionally require at least %d fasteners, more than the allotted maximum of %d.", wholeNum, maxFasteners);
+rejectedIndx = any([rejectedIndx_turn, rejectedIndx_fastener], 2);
 
 end

@@ -1,31 +1,31 @@
-function [X_NP,C_L_trim,V_trim,alpha_FRL_trim, acceptedIndex, rejectedIndex_CG, rejectedIndex_trim] = StaticStab(X_CG,W,S,b,d_tail,i_t,C_r_ht,C_t_ht,b_ht,a_wb,a_tail,alpha_0L_wb,C_M0_wb,air_density)
+function [X_NP,C_L_trim,V_trim,alpha_FRL_trim, rejectedIndex, failure_messages] = StaticStab(X_CG,W,S,b,d_tail,i_t,C_r_ht,C_t_ht,b_ht,a_wb,a_tail,alpha_0L_wb,C_M0_wb,air_density, numMissionConfigs)
 %STATICSTAB evaluates the static stability properties of the aircraft.
 %           Dimensions can be metric or imperial, but the have to be
 %           consistent.
 %INPUTS
 % X_CG    = 0.2;  % The location of the CG from the leading edge of the wing.
 %                 % Positive X_CG points toward the tail
-% 
+%
 % W       = 13;   % weight of the aircraft (N)
-% 
+%
 % % Wing Properties
 % S       = 17.5; % Directly used for lift equation
 % b       = 5;    % Between 3 in and 5 in
-% 
-% 
+%
+%
 % % Tail Position Properties
 % d_tail  = 5; % Distance from LE of wing to LE of tail
 % i_t     = 0; % [deg]
-% 
+%
 % % Horizontal Tail Properties
 % C_r_ht  = 1;
 % C_t_ht  = 1;
 % b_ht    = 4;
-% 
+%
 % % Lift curve slopes
-% a_wb    = 0.1;  % [1./deg] -   
-% a_tail  = 0.07; % [1./deg] -   
-% 
+% a_wb    = 0.1;  % [1./deg] -
+% a_tail  = 0.07; % [1./deg] -
+%
 % downwash_derivative   -   derivative of epsilon_0 with respect to α
 % epsilon_0             -   Angle of downwash at the tail at α_wb = 0
 
@@ -133,25 +133,36 @@ V_trim = sqrt((W)./((1/2).*air_density.*C_L_trim.*S)); % [m./s]
 
 %% Determining if failure occurs
 
-Cm_failure_key = 1;
-Cl_failure_key = 2;
+failure_messages = strings([numMissionConfigs, 1]);
+% Cm_failure_key = 1;
+% Cl_failure_key = 2;
 % If the CG is further aft of NP
-rejectedIndex_CG = X_CG > X_NP;
-rejectedIndex_trim = C_L_trim < 0;
-acceptedIndex = X_CG < X_NP & C_L_trim > 0;
+rejectedIndex_CG = X_CG > X_NP & C_L_trim >= 0; % failure due to CG location only
+rejectedIndex_trim = C_L_trim < 0 & X_CG <= X_NP; % failure due to trimmed lift coeff only
+rejectedIndex_both = X_CG > X_NP & C_L_trim < 0;
+
+if all(sum([rejectedIndex_CG, rejectedIndex_trim, rejectedIndex_both], 2) <= 1) % make sure no row is being set to true for multiple arrays
+    failure_messages(rejectedIndex_CG) = "Static Stability Failed! The CG is behind the NP";
+    failure_messages(rejectedIndex_trim) = "Static Stability Failed! The aircraft is statically stable but trims at a negative lift";
+    failure_messages(rejectedIndex_both) = "Static Stability Failed! The CG is behind the NP and the aircraft trims at a negative lift";
+    rejectedIndex = any([rejectedIndex_CG, rejectedIndex_trim, rejectedIndex_both], 2);
+else
+    error('An error in conditional logic has been made. Check the failure logic for static stability. Multiple mutually exclusive failure modes are being triggered simultaneously.')
+end
+%acceptedIndex = X_CG < X_NP & C_L_trim > 0;
 % % if X_CG > X_NP
-% % 
+% %
 % %     failure = Cm_failure_key;
-% % 
+% %
 % %     failure_message = "Static Stability Failed! The CG is behind the NP";
-% % elseif C_L_trim < 0 
-% % 
+% % elseif C_L_trim < 0
+% %
 % %     failure = Cl_failure_key;
-% % 
+% %
 % %     failure_message = "Static Stability Failed! The aircraft is statically stable but trims at a negative lift";
 % % else
 % %     failure = 0;
-% % 
+% %
 % %     failure_message = "Static Stability Succeeded.";
 % % end
 

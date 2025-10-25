@@ -107,9 +107,8 @@ if continue_mission_analysis.value
             aircraft.missions.mission(2).physics.CL_trim(1).value,...
             aircraft.missions.mission(2).physics.v_trim.value,...
             aircraft.missions.mission(2).physics.alpha_trim.value,...
-            acceptedIndex, ...
-            rejectedIndex_CG, ...
-            rejectedIndex_trim] = StaticStab(aircraft.loaded.XYZ_CG.value(:,1),... % m
+            rejectedIndx, ...
+            failure_messages] = StaticStab(aircraft.loaded.XYZ_CG.value(:,1),... % m
             aircraft.loaded.weight.value,... % N
             aircraft.wing.S.value,... % m^2
             aircraft.wing.b.value,... % m
@@ -122,7 +121,8 @@ if continue_mission_analysis.value
             aircraft.tail.horizontal.a.value,... % /deg
             aircraft.wing.alpha_0L_wb.value,... % deg
             aircraft.wing.Cm0.value,... % non
-            aircraft.missions.mission(2).weather.air_density.value); % kg/m^3
+            aircraft.missions.mission(2).weather.air_density.value,... % kg/m^3
+            numMissionConfigs); 
     else
         error('Unit mismatch: static stability analysis not possible. For convention, ensure static stability analysis functions are called with SI units (except for angles, which should use degrees rather than radians).')
     end
@@ -145,9 +145,10 @@ if continue_mission_analysis.value
             "aircraft.missions.mission(2).physics.v_trim",...
             "aircraft.missions.mission(2).physics.alpha_trim"];
 
-    %rejectedIndex_CG(1) = 1; % FOR TESTING ONLY
-    %[aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex_CG, "Static Stability Failed! The CG is behind the NP", structNames_mission, batteryIndex);
-    %[aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex_trim, "Static Stability Failed! The aircraft is statically stable but trims at a negative lift", structNames_mission, batteryIndex);
+    % [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex);
+    % % % % % % % % % % %rejectedIndex_CG(1) = 1; % FOR TESTING ONLY
+    % % % % % % % % % % %[aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex_CG, "Static Stability Failed! The CG is behind the NP", structNames_mission, batteryIndex);
+    % % % % % % % % % % %[aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex_trim, "Static Stability Failed! The aircraft is statically stable but trims at a negative lift", structNames_mission, batteryIndex);
 
     % if all missions have failed
     if numMissionConfigs == 0
@@ -178,19 +179,19 @@ if continue_mission_analysis.value
     USETORUN_RunDymanicStab % run dynamic stability analysis
 
     continue_mission_analysis.value = true; % FOR TESTING ONLY
-    if continue_mission_analysis.value
-        rejectedIndex = failure_messages ~= "";
-        structNames_mission = [structNames_mission,...
-            "aircraft.wing.dihedral",...
-    "aircraft.tail.horizontal.skin.XYZ_CG",...
-    "aircraft.wing.skin.XYZ_CG",...
-    "aircraft.tail.vertical.c",...
-    "aircraft.tail.horizontal.S",...
-    "aircraft.tail.horizontal.taper_ratio",...
-    "aircraft.tail.vertical.taper_ratio",...
-    "aircraft.tail.vertical.S"]; % append additional vectorized aircraft parameters to be updated
-        [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex, failure_messages, structNames_mission, batteryIndex);
-    end
+    % if continue_mission_analysis.value
+    %     rejectedIndex = failure_messages ~= "";
+    %     structNames_mission = [structNames_mission,...
+    %         "aircraft.wing.dihedral",...
+    % "aircraft.tail.horizontal.skin.XYZ_CG",...
+    % "aircraft.wing.skin.XYZ_CG",...
+    % "aircraft.tail.vertical.c",...
+    % "aircraft.tail.horizontal.S",...
+    % "aircraft.tail.horizontal.taper_ratio",...
+    % "aircraft.tail.vertical.taper_ratio",...
+    % "aircraft.tail.vertical.S"]; % append additional vectorized aircraft parameters to be updated
+    %     [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex, failure_messages, structNames_mission, batteryIndex);
+    % end
 
     fprintf('Completed Mission 2 dynamic stability analysis for %s.\n', iterName)
 
@@ -251,7 +252,9 @@ if continue_mission_analysis.value
         [aircraft.missions.mission(2).physics.G.max.value, ...
             aircraft.missions.mission(2).structures.num_fasteners.minimum.value, ...
             aircraft.missions.mission(2).physics.turn_radius.minimum.value, ...
-            aircraft.missions.mission(2).physics.bank_angle.maximum.value] = structures_MDAO(aircraft.wing.b.value, ...
+            ~, ...
+            rejectedIndx, ...
+            failure_messages] = structures_MDAO(aircraft.wing.b.value, ...
             aircraft.wing.c.value, ...
             aircraft.missions.mission(2).physics.alpha_trim.value, ...
             aircraft.wing.a0.value, ...
@@ -259,7 +262,8 @@ if continue_mission_analysis.value
             aircraft.missions.mission(2).physics.v_trim.value, ...
             aircraft.unloaded.weight.value, ...
             aircraft.loaded.weight.value, ...
-            numMissionConfigs);
+            numMissionConfigs, ...
+            constants.wing.max_num_fasteners.value);
 
         aircraft.missions.mission(2).physics.G.max.units = 'G''s';
         aircraft.missions.mission(2).physics.G.max.type = "acc";
@@ -281,26 +285,34 @@ if continue_mission_analysis.value
     end
 
     fprintf('Completed Mission 2 structural integrity analysis for %s.\n', iterName)
-
-    % weed out missions rejected due to turn radius
-    rejectedIndx_turn = aircraft.missions.mission(2).physics.turn_radius.minimum.value <= 0;
-    failure_message = "Negative turn radius. Design likely failed static stability but should not have reached the structural analysis. Discrepancy present.";
-    [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx_turn, failure_message, structNames_mission, batteryIndex);
-
-    if numMissionConfigs == 0
-        continue_mission_analysis.value = false;
-    end
-
-    if continue_mission_analysis.value
-    % weed out missions rejected due to number of fasteners
-    rejectedIndx_fastener = aircraft.missions.mission(2).structures.num_fasteners.minimum.value > constants.wing.max_num_fasteners.value;
-    failure_message = sprintf("Design would notionally require at least %d fasteners, more than the allotted maximum of %d.", aircraft.missions.mission(2).structures.num_fasteners.minimum.value, constants.wing.max_num_fasteners.value);
-    [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx_fastener, failure_message, structNames_mission, batteryIndex);
-
-    if numMissionConfigs == 0
-        continue_mission_analysis.value = false;
-    end
-    end
+    
+    structNames_mission = [structNames_mission,...
+            "aircraft.missions.mission(2).physics.G.max", ...
+            "aircraft.missions.mission(2).structures.num_fasteners.minimum", ...
+            "aircraft.missions.mission(2).physics.turn_radius.minimum"]; % append additional vectorized aircraft parameters to be updated
+   % [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex);
+    
+    % 
+    % % UNCOMMENT after testing
+    % % weed out missions rejected due to turn radius
+    % rejectedIndx_turn = aircraft.missions.mission(2).physics.turn_radius.minimum.value <= 0;
+    % failure_message = "Negative turn radius. Design likely failed static stability but should not have reached the structural analysis. Discrepancy present.";
+    % [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx_turn, failure_message, structNames_mission, batteryIndex);
+    % 
+    % if numMissionConfigs == 0
+    %     continue_mission_analysis.value = false;
+    % end
+    % 
+    % if continue_mission_analysis.value
+    % % weed out missions rejected due to number of fasteners
+    % rejectedIndx_fastener = aircraft.missions.mission(2).structures.num_fasteners.minimum.value > constants.wing.max_num_fasteners.value;
+    % failure_message = sprintf("Design would notionally require at least %d fasteners, more than the allotted maximum of %d.", aircraft.missions.mission(2).structures.num_fasteners.minimum.value, constants.wing.max_num_fasteners.value);
+    % [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx_fastener, failure_message, structNames_mission, batteryIndex);
+    % 
+    % if numMissionConfigs == 0
+    %     continue_mission_analysis.value = false;
+    % end
+    % end
 
     % % turn radius sometimes turns out to be less than zero for negative lift coefficients. In
     % % reality, this structures function should always be called after
@@ -328,18 +340,22 @@ if continue_mission_analysis.value
         "aircraft.fuselage.length";
         "aircraft.fuselage.diameter";
         "aircraft.wing.alpha_stall";
-        "aircraft.tail.horizontal.alpha_0L_t"];
+        "aircraft.tail.horizontal.alpha_0L_t";
+        "aircraft.missions.mission(2).physics.alpha_trim";
+        "aircraft.wing.alpha_0L_wb"];
     desiredUnits = ["m";
         "m";
         "m";
         "deg";
+        "deg";
+        "deg";
         "deg"];
 
     aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits);
+    aircraft = vectorize_aircraft_params(aircraft, numMissionConfigs, "aircraft.wing.alpha_stall");
 
     unitsAgree = [strcmp(string(aircraft.loaded.weight.units), "N");
         strcmp(string(aircraft.missions.mission(2).physics.v_trim.units), "m/s");
-        strcmp(string(aircraft.missions.mission(2).physics.CL_trim.units), "");
         strcmp(string(aircraft.wing.b.units), "m");
         strcmp(string(aircraft.wing.c.units), "m");
         strcmp(string(aircraft.tail.horizontal.b.units), "m");
@@ -347,7 +363,6 @@ if continue_mission_analysis.value
         strcmp(string(aircraft.fuselage.length.units), "m");
         strcmp(string(aircraft.fuselage.diameter.units), "m");
         strcmp(string(aircraft.banner.area.units), "m^2");
-        strcmp(string(aircraft.banner.AR.units), "");
         strcmp(string(aircraft.missions.mission(2).physics.alpha_trim.units), "deg");
         strcmp(string(aircraft.wing.alpha_stall.units), "deg");
         strcmp(string(aircraft.wing.a_wb.units), "/deg");
@@ -368,8 +383,8 @@ if continue_mission_analysis.value
             aircraft.missions.mission(2).physics.CD_trim.value, ...
             aircraft.missions.mission(2).physics.CL_trim(2).value, ...
             aircraft.missions.mission(2).physics.v_stall.value, ...
-            speed_boolean, ...
-            alpha_boolean] = AeroCode_2(aircraft.loaded.weight.value, ...
+            rejectedIndx, ...
+            failure_messages] = AeroCode_2(aircraft.loaded.weight.value, ...
             aircraft.missions.mission(2).physics.v_trim.value, ...
             aircraft.missions.mission(2).physics.CL_trim(1).value, ...
             aircraft.wing.b.value, ...
@@ -387,7 +402,8 @@ if continue_mission_analysis.value
             aircraft.wing.alpha_0L_wb.value, ...
             aircraft.tail.horizontal.a.value, ...
             aircraft.tail.horizontal.resting_angle.value, ...
-            aircraft.tail.horizontal.alpha_0L_t.value);
+            aircraft.tail.horizontal.alpha_0L_t.value, ...
+            numMissionConfigs);
 
         aircraft.missions.mission(2).physics.L(1).units = 'N';
         aircraft.missions.mission(2).physics.L(1).type = "force";
@@ -418,17 +434,25 @@ if continue_mission_analysis.value
 
     fprintf('Completed Mission 2 aerodynamics analysis for %s.\n', iterName)
 
-    if ~speed_boolean || ~alpha_boolean
-        continue_mission_analysis.value = false;
-        if ~speed_boolean && alpha_boolean
-            failure_message = "Trimmed airspeed is less than stall speed, meaning the aircraft will stall during flight.";
-        elseif ~alpha_boolean && speed_boolean
-            failure_message = "Trimmed angle of attack is greater than stall angle, meaning the aircraft will stall during flight.";
-        elseif ~alpha_boolean && ~speed_boolean
-            failure_message = "Trimmed airspeed is less than stall speed, meaning the aircraft will stall during flight. Also, trimmed angle of attack is greater than stall angle, which is another reason for stall.";
-        end
-        fprintf('%s\nRejecting Aircraft-Mission Combination %d.%d.\n', failure_message, aircraftIteration, missionIteration);
-    end
+
+    structNames_mission = [structNames_mission, ...
+        "aircraft.missions.mission(2).physics.L(1)", ...
+            "aircraft.missions.mission(2).physics.L(2)", ...
+            "aircraft.missions.mission(2).physics.D", ...
+            "aircraft.missions.mission(2).physics.CD_trim", ...
+            "aircraft.missions.mission(2).physics.CL_trim(2)", ...
+            "aircraft.missions.mission(2).physics.v_stall"];
+    % counts = zeros([length(structNames_mission), 1]);
+    % for i = 1:length(structNames_mission)
+    %     counts(i) = sum(count(structNames_mission, structNames_mission(i)));
+    % end
+    
+    
+    % [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex);
+
+
+        
+
 
 end
 

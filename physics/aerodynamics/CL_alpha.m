@@ -14,6 +14,7 @@ function [Cla,Cm0,alpha_L0,a0,alpha_stall] = CL_alpha(b, c, d_fuse, sweep_deg, a
 %   Cm0      = Pitching moment at aerodynamic center
 %   alpha_L0  - zero-lift angle of attack [rad]
 %   a0        - 2D lift slope [1/rad]
+% alpha_stall is in degrees
     
     %%
     % Reference and exposed areas

@@ -404,7 +404,7 @@ assumptions(ii).description = "Assume that zero-lift angle of the wing approxima
 assumptions(ii).rationale = "Lift effects of fuselage seem laborious to model although it would be feasible to do so";
 assumptions(ii).responsible_engineer = "Liam Trzebunia";
 
-aircraft.wing.alpha_stall.units = 'rad';
+aircraft.wing.alpha_stall.units = 'deg';
 aircraft.wing.alpha_stall.type = "ang";
 [aircraft.wing.a_wb.value,...
     aircraft.wing.Cm0.value,...
