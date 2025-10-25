@@ -37,7 +37,8 @@ getAircraft % primary output: a bunch of (global?) sizing variables
 getMissions % primary output: missions
 
 % remove physically infeasible missions
-pruneMissions % primary output: feasibleMissions
+% pruneMissions % primary output: feasibleMissions
+physics
 
 % select the best mission for this particular aircraft
 optimizeMission % primary output: bestMission

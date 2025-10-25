@@ -29,7 +29,7 @@ if continue_mission_analysis.value
     evalScore
 end
 
-%% Save Results
+%% Save Feasible Missions
 data = readcell("6S Battery Data Condensed.xlsx"); % project file takes care of the pathing
 data = data(2:end, :); % discard header
 batteryName = data{batteryIndex, 1};
