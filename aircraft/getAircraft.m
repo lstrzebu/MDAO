@@ -44,7 +44,7 @@ assumptions(end+1).description = "Assume rectangular wing shape";
 assumptions(end+1).rationale = "Ease of manufacturing, lack of sweep benefits";
 assumptions(end+1).responsible_engineer = "Eric Stout";
 
-aircraft.wing.S.value = aircraft.wing.c.value.*aircraft.wing.b.value; 
+aircraft.wing.S.value = aircraft.wing.c.value.*aircraft.wing.b.value;
 aircraft.wing.S.units = 'ft^2';
 aircraft.wing.S.type = "area";
 aircraft.wing.S.description = "Planform area";
@@ -132,7 +132,7 @@ assumptions(end+1).description = "Assume rectangular horizontal tail";
 assumptions(end+1).rationale = "Ease of manufacturing, fewer design parameters (no need to variate sweep angle)";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
-aircraft.tail.horizontal.S.value = aircraft.tail.horizontal.c.value.*aircraft.tail.horizontal.b.value; 
+aircraft.tail.horizontal.S.value = aircraft.tail.horizontal.c.value.*aircraft.tail.horizontal.b.value;
 aircraft.tail.horizontal.S.units = 'ft^2';
 aircraft.tail.horizontal.S.type = "area";
 aircraft.tail.horizontal.S.description = "Planform area";
@@ -157,7 +157,7 @@ assumptions(end+1).description = "Assume rectangular vertical tail shape";
 assumptions(end+1).rationale = "Temporary. This may model a triangular or trapezoidal vertical tail fairly well as far as lift is concerned. Of course we will have a smoother finish on the manufactured VT but that is not considered here. Replace this with a trapezoidal VT.";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
-aircraft.tail.vertical.S.value = aircraft.tail.vertical.c.value.*aircraft.tail.vertical.b.value; 
+aircraft.tail.vertical.S.value = aircraft.tail.vertical.c.value.*aircraft.tail.vertical.b.value;
 aircraft.tail.vertical.S.units = 'ft^2';
 aircraft.tail.vertical.S.type = "area";
 aircraft.tail.vertical.S.description = "Planform area";
@@ -182,32 +182,94 @@ assumptions(end+1).description = "Model fuselage as a perfect cylinder having a 
 assumptions(end+1).rationale = "It is not worth the effort to exactly model the fuselage for aerodynamic calculations. Using a diameter equal to the true fuselage's height (rather than width) results in a more conservative estimate as the true fuselage will have less drag this way.";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
-aircraft.fuselage.diameter.value = 1.5;
-aircraft.fuselage.diameter.units = 'ft';
+fuselageType = "large";
+material = "Hexcel AS4C (3000 filaments)";
+nPlies = 2;
+
+switch fuselageType
+    case "small"
+        aircraft.fuselage.diameter.value = mean([6, 6.5]); % horizontal, vertical diameter
+    case "large"
+        aircraft.fuselage.diameter.value = mean([7.5, 7.5]);
+        aircraft.fuselage.length.value = 60.9;
+
+        switch material
+            case "Hexcel AS4C (3000 filaments)"
+
+                switch nPlies
+                    case 2
+                        aircraft.fuselage.mass.value = 1.617;
+                        aircraft.fuselage.XYZ_CG.value = [28.347, 0, 0.334];
+                        I_xx = 20.417;
+                        I_yy = 426.0;
+                        I_zz = 427.497;
+                    case 3
+                        aircraft.fuselage.mass.value = 2.414;
+                        aircraft.fuselage.XYZ_CG.value = [28.371, 0, 0.334];
+                        I_xx = 30.402;
+                        I_yy = 636.383;
+                        I_zz = 638.569;
+                end
+            % case "E-glass fiber"
+            %     switch nPlies
+            %         case 2
+            %             aircraft.fuselage.weight.value = 2.516;
+            %             aircraft.fuselage.XYZ_CG.value = []
+            %         case 3
+            %             aircraft.fuselage.weight.value = 3.757;
+            %     end
+        end
+
+    otherwise
+        error('Material not recognized.')
+end
+
+aircraft.fuselage.diameter.units = 'in';
 aircraft.fuselage.diameter.type = "length";
 aircraft.fuselage.diameter.description = "Diameter of fuselage";
 
-aircraft.fuselage.weight.value = 4;
-aircraft.fuselage.weight.units = 'N';
-aircraft.fuselage.weight.type = "force";
-aircraft.fuselage.weight.description = "weight of fuselage only";
+aircraft.fuselage.mass.units = 'lbm';
+aircraft.fuselage.mass.type = "mass";
+aircraft.fuselage.mass.description = "mass of fuselage only";
 
-aircraft.fuselage.length.value = 7;
-aircraft.fuselage.length.units = 'ft';
+aircraft = conv_aircraft_units(aircraft, 0, "aircraft.fuselage.mass", "kg");
+
+if strcmp(string(aircraft.fuselage.mass.units), "kg") && strcmp(string(constants.g.units), "m/s^2")
+    aircraft.fuselage.weight.value = aircraft.fuselage.mass.value.*constants.g.value;
+    aircraft.fuselage.weight.units = 'N';
+    aircraft.fuselage.weight.type = "force";
+else
+    error('Unit mismatch: fuselage weight calculation not possible.')
+end
+
+aircraft.fuselage.length.units = 'in';
 aircraft.fuselage.length.type = "length";
 aircraft.fuselage.length.description = "Length of fuselage";
 
-aircraft.fuselage.hull.thickness.value = 0.25;
-aircraft.fuselage.hull.thickness.units = 'in';
-aircraft.fuselage.hull.thickness.type = "length";
-aircraft.fuselage.hull.thickness.description = "difference between inner and outer radius of fuselage hull";
+aircraft.fuselage.XYZ_CG.units = 'in';
+aircraft.fuselage.XYZ_CG.type = "length";
+aircraft.fuselage.XYZ_CG.description = "vector of X, Y, Z coordinates of fuselage CG";
 
-aircraft.landing_gear.weight.value = 4;
+aircraft.fuselage.MOI.value = zeros(3);
+aircraft.fuselage.MOI.value(1,1) = I_xx;
+aircraft.fuselage.MOI.value(2,2) = I_yy;
+aircraft.fuselage.MOI.value(3,3) = I_zz;
+aircraft.fuselage.MOI.units = 'lbm*in^2';
+aircraft.fuselage.MOI.type = "MOI";
+aircraft.fuselage.MOI.description = "moment of inertia of fuselage hull (not including structural bulkheads)";
+
+aircraft.fuselage.thickness.value = (0.25*nPlies)*10^-3; % convert from mm to m
+aircraft.fuselage.thickness.units = 'm';
+aircraft.fuselage.thickness.type = "length";
+aircraft.fuselage.thickness.description = "difference between inner and outer radius of fuselage hull";
+
+
+aircraft.landing_gear.weight.value = 0;
 aircraft.landing_gear.weight.units = 'N';
 aircraft.landing_gear.weight.type = "force";
 aircraft.landing_gear.weight.description = "weight of landing gear";
 
-% banner 
+% banner
 aircraft.banner.area.value = 0;
 aircraft.banner.area.units = 'm^2';
 aircraft.banner.area.type = "area";
@@ -251,7 +313,7 @@ aircraft.propulsion.battery.weight.description = "Weight of the battery utilized
 aircraft.propulsion.battery.capacity.value = batteryTable(batteryIndex, 7); % in Wh
 aircraft.propulsion.battery.capacity.units = 'Wh';
 aircraft.propulsion.battery.capacity.description = "Total propulsion battery capacity";
-aircraft.propulsion.battery.length.value = batteryTable(batteryIndex, 10); 
+aircraft.propulsion.battery.length.value = batteryTable(batteryIndex, 10);
 aircraft.propulsion.battery.length.units = 'in';
 aircraft.propulsion.battery.length.type = "length";
 aircraft.propulsion.battery.length.description = "length of battery";
@@ -303,7 +365,7 @@ aircraft.propulsion.propeller.weight.type = "force";
 aircraft.propulsion.propeller.weight.description = "weight of propeller";
 aircraft.propulsion.propeller.name = propTable{propIndex, 1};
 
-aircraft.propulsion.propeller.diameter.value = str2double(propTable{propIndex, 3}{1}); 
+aircraft.propulsion.propeller.diameter.value = str2double(propTable{propIndex, 3}{1});
 aircraft.propulsion.propeller.diameter.units = 'in';
 aircraft.propulsion.propeller.diameter.type = "length";
 aircraft.propulsion.propeller.diameter.description = "diameter of propeller";
@@ -371,7 +433,7 @@ end
 % equalUnits = all(comparisonResults);
 
 % if equalUnits
-% aircraft.weight.empty.value = aircraft.fuselage.weight.value + aircraft.wing.weight.value + aircraft.landing_gear.weight.value + aircraft.tail.horizontal.weight.value + aircraft.tail.vertical.weight.value + aircraft.avionics.servos.weight.value + aircraft.propulsion.propeller.weight.value + aircraft.propulsion.motor.weight.value + aircraft.propulsion.ESC.weight.value + aircraft.propulsion.battery.weight.value; 
+% aircraft.weight.empty.value = aircraft.fuselage.weight.value + aircraft.wing.weight.value + aircraft.landing_gear.weight.value + aircraft.tail.horizontal.weight.value + aircraft.tail.vertical.weight.value + aircraft.avionics.servos.weight.value + aircraft.propulsion.propeller.weight.value + aircraft.propulsion.motor.weight.value + aircraft.propulsion.ESC.weight.value + aircraft.propulsion.battery.weight.value;
 % aircraft.weight.empty.units = char(unitsToCompare(1));
 % aircraft.weight.empty.description = "Weight of aircraft in flight configuration with zero payload";
 % else

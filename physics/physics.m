@@ -9,16 +9,16 @@ continue_mission_analysis.type = "non";
 continue_mission_analysis.description = "boolean used to skip suboptimal mission configurations if flaw is found";
 
 %% Mission 2 Physics Analysis
+missionNumber = 2;
 if continue_mission_analysis.value
-    missionNumber = 2;
     physics_M2
 else
     fprintf('Skipping Mission %d analysis for rejected design "%s."\n', missionNumber, aircraftName)
 end
 
 %% Mission 3 Physics Analysis
+missionNumber = 3;
 if continue_mission_analysis.value
-    missionNumber = 3;
     physics_M3
 else
     fprintf('Skipping Mission %d analysis for rejected design "%s."\n', missionNumber, aircraftName)

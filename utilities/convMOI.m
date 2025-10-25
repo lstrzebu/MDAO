@@ -6,6 +6,7 @@ function A = convMOI(V, UI, UO)
 
 % supported unit conversions:
 % kg*m^2 <-> kg*in^2
+% lbm*in^2 -> kg*in^2
 
 if strcmp(UI, UO)
     A = V;
@@ -15,6 +16,10 @@ if strcmp(UI, "kg*m^2") && strcmp(UO, "kg*in^2")
     A = V.*1550;
 elseif strcmp(UI, "kg*in^2") && strcmp(UO, "kg*m^2")
     A = V./1550;
+end
+
+if strcmp(UI, "lbm*in^2") && strcmp(UO, "kg*in^2")
+    A = V./2.205;
 end
 
 % if strcmp(UI, "m^2") && strcmp(UO, "cm^2")

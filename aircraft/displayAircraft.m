@@ -9,7 +9,7 @@ structNames = ["aircraft.fuselage.diameter";
     "aircraft.tail.vertical.b";
     "aircraft.tail.vertical.c"; 
     "aircraft.fuselage.protrusion";
-    "aircraft.fuselage.hull.thickness";
+    "aircraft.fuselage.thickness";
     "aircraft.propulsion.motor.length";
     "aircraft.propulsion.motor.diameter_outer"];
 desiredUnits = ["in";
@@ -383,11 +383,6 @@ assumptions(end+1).description = sprintf("Assume wing spar weighs %.2f %s", airc
 assumptions(end+1).rationale = "Temporary assumption, change later";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
-aircraft.fuselage.hull.XYZ_CG.value = [center_x, center_y, center_z];
-aircraft.fuselage.hull.XYZ_CG.units = 'in';
-aircraft.fuselage.hull.XYZ_CG.type = "length";
-aircraft.fuselage.hull.XYZ_CG.description = "vector of X, Y, Z coordinates of fuselage CG";
-
 assumptions(end+1).name = "Fuselage Weight";
 assumptions(end+1).description = "Neglect structural bulkheads; only consider fuselage as a cylinder with a given length, diameter, and thickness.";
 assumptions(end+1).rationale = "Simplicity of calculation. Change later";
@@ -402,57 +397,57 @@ assumptions(end+1).name = "Fuselage Material Again";
 assumptions(end+1).description = "Assume fuselage made of same composite material as wing";
 assumptions(end+1).rationale = "Simplicity of calculations for first pass";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
+% 
+% aircraft.fuselage.density.value = aircraft.wing.skin.density.value;
+% aircraft.fuselage.density.units = aircraft.wing.skin.density.units;
+% aircraft.fuselage.density.type = "density";
+% aircraft.fuselage.density.description = "density of composite material used in fuselage layup";
 
-aircraft.fuselage.hull.density.value = aircraft.wing.skin.density.value;
-aircraft.fuselage.hull.density.units = aircraft.wing.skin.density.units;
-aircraft.fuselage.hull.density.type = "density";
-aircraft.fuselage.hull.density.description = "density of composite material used in fuselage layup";
+radius_inner = radius_outer - aircraft.fuselage.thickness.value;
+aircraft.fuselage.cross_sectional_area.value = pi*(radius_outer^2 - radius_inner^2);
+aircraft.fuselage.cross_sectional_area.units = 'in^2';
+aircraft.fuselage.cross_sectional_area.type = "area";
+aircraft.fuselage.cross_sectional_area.description = "cross sectional area of cylindrical fuselage occupied by hull material";
 
-radius_inner = radius_outer - aircraft.fuselage.hull.thickness.value;
-aircraft.fuselage.hull.cross_sectional_area.value = pi*(radius_outer^2 - radius_inner^2);
-aircraft.fuselage.hull.cross_sectional_area.units = 'in^2';
-aircraft.fuselage.hull.cross_sectional_area.type = "area";
-aircraft.fuselage.hull.cross_sectional_area.description = "cross sectional area of cylindrical fuselage occupied by hull material";
+% aircraft.fuselage.solid_volume.value = aircraft.fuselage.cross_sectional_area.value*fuselage_length;
+% aircraft.fuselage.solid_volume.units = 'in^3';
+% aircraft.fuselage.solid_volume.type = "vol";
+% aircraft.fuselage.solid_volume.description = "volume of space occupied by fuselage hull material";
+% 
+% if strcmp(string(aircraft.fuselage.density.units), "g/cm^3") && strcmp(string(aircraft.fuselage.solid_volume.units), "in^3")
+%     aircraft = conv_aircraft_units(aircraft, missionIteration, "aircraft.fuselage.solid_volume", "cm^3");
+%     if strcmp(string(aircraft.fuselage.solid_volume.units), "cm^3")
+%         aircraft.fuselage.mass.value = aircraft.fuselage.density.value*aircraft.fuselage.solid_volume.value;
+%         aircraft.fuselage.mass.units = 'g';
+%         aircraft.fuselage.mass.type = "mass";
+%         aircraft.fuselage.mass.description = "mass of fuselage hull (not including structural bulkheads)";
+%     else
+%         error('Unit mismatch: computation of fuselage mass not possible.')
+%     end
+% else
+%     error('Unit mismatch: computation of fuselage mass is not possible.')
+% end
 
-aircraft.fuselage.hull.solid_volume.value = aircraft.fuselage.hull.cross_sectional_area.value*fuselage_length;
-aircraft.fuselage.hull.solid_volume.units = 'in^3';
-aircraft.fuselage.hull.solid_volume.type = "vol";
-aircraft.fuselage.hull.solid_volume.description = "volume of space occupied by fuselage hull material";
-
-if strcmp(string(aircraft.fuselage.hull.density.units), "g/cm^3") && strcmp(string(aircraft.fuselage.hull.solid_volume.units), "in^3")
-    aircraft = conv_aircraft_units(aircraft, missionIteration, "aircraft.fuselage.hull.solid_volume", "cm^3");
-    if strcmp(string(aircraft.fuselage.hull.solid_volume.units), "cm^3")
-        aircraft.fuselage.hull.mass.value = aircraft.fuselage.hull.density.value*aircraft.fuselage.hull.solid_volume.value;
-        aircraft.fuselage.hull.mass.units = 'g';
-        aircraft.fuselage.hull.mass.type = "mass";
-        aircraft.fuselage.hull.mass.description = "mass of fuselage hull (not including structural bulkheads)";
-    else
-        error('Unit mismatch: computation of fuselage mass not possible.')
-    end
-else
-    error('Unit mismatch: computation of fuselage mass is not possible.')
-end
-
-if strcmp(string(aircraft.fuselage.hull.mass.units), "g")
-    aircraft.fuselage.hull.mass.value = aircraft.fuselage.hull.mass.value * 10^(-3);
-    aircraft.fuselage.hull.mass.units = 'kg';
-else
-    error('Unit mismatch: computation of fuselage weight is not possible.')
-end
-
-if ~strcmp(string(constants.g.units), "m/s^2")
-    constants.g.value = 9.81;
-    constants.g.units = 'm/s^2';
-end
-
-if strcmp(string(aircraft.fuselage.hull.mass.units), "kg") && strcmp(string(constants.g.units), "m/s^2")
-    aircraft.fuselage.hull.weight.value = aircraft.fuselage.hull.mass.value*constants.g.value;
-    aircraft.fuselage.hull.weight.units = 'N';
-    aircraft.fuselage.hull.weight.type = "force";
-    aircraft.fuselage.hull.weight.description = "weight of fuselage hull (not including structural bulkheads)";
-else
-    error('Unit mismatch: computation of fuselage weight is not possible.')
-end
+% if strcmp(string(aircraft.fuselage.mass.units), "g")
+%     aircraft.fuselage.mass.value = aircraft.fuselage.mass.value * 10^(-3);
+%     aircraft.fuselage.mass.units = 'kg';
+% else
+%     error('Unit mismatch: computation of fuselage weight is not possible.')
+% end
+% 
+% if ~strcmp(string(constants.g.units), "m/s^2")
+%     constants.g.value = 9.81;
+%     constants.g.units = 'm/s^2';
+% end
+% 
+% if strcmp(string(aircraft.fuselage.mass.units), "kg") && strcmp(string(constants.g.units), "m/s^2")
+%     aircraft.fuselage.weight.value = aircraft.fuselage.mass.value*constants.g.value;
+%     aircraft.fuselage.weight.units = 'N';
+%     aircraft.fuselage.weight.type = "force";
+%     aircraft.fuselage.weight.description = "weight of fuselage hull (not including structural bulkheads)";
+% else
+%     error('Unit mismatch: computation of fuselage weight is not possible.')
+% end
 
 aircraft.wing.skin.total_thickness.value = aircraft.wing.skin.thickness.value*2;
 aircraft.wing.skin.total_thickness.units = aircraft.wing.skin.thickness.units;
@@ -661,7 +656,7 @@ assumptions(end+1).description = "Neglect weight and location of landing gear";
 assumptions(end+1).rationale = "Need MDAO done fast";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
-structNames = ["aircraft.fuselage.hull.weight";
+structNames = ["aircraft.fuselage.weight";
     "aircraft.wing.skin.weight";
     "aircraft.tail.horizontal.skin.weight";
     "aircraft.tail.vertical.skin.weight";
@@ -669,7 +664,7 @@ structNames = ["aircraft.fuselage.hull.weight";
     "aircraft.propulsion.ESC.weight";
     "aircraft.propulsion.propeller.weight";
     "aircraft.propulsion.battery.weight";
-    "aircraft.fuselage.hull.XYZ_CG";
+    "aircraft.fuselage.XYZ_CG";
     "aircraft.wing.skin.XYZ_CG";
     "aircraft.tail.horizontal.skin.XYZ_CG";
     "aircraft.tail.vertical.skin.XYZ_CG";
@@ -695,7 +690,7 @@ desiredUnits = ["N";
     "in"];
 aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits);
 
-part_weights = [aircraft.fuselage.hull.weight.value;
+part_weights = [aircraft.fuselage.weight.value;
     aircraft.wing.skin.weight.value;
     aircraft.tail.horizontal.skin.weight.value;
     aircraft.tail.vertical.skin.weight.value;
@@ -703,7 +698,7 @@ part_weights = [aircraft.fuselage.hull.weight.value;
     aircraft.propulsion.ESC.weight.value;
     aircraft.propulsion.propeller.weight.value;
     aircraft.propulsion.battery.weight.value];
-part_cgs = [aircraft.fuselage.hull.XYZ_CG.value;
+part_cgs = [aircraft.fuselage.XYZ_CG.value;
     aircraft.wing.skin.XYZ_CG.value;
     aircraft.tail.horizontal.skin.XYZ_CG.value;
     aircraft.tail.vertical.skin.XYZ_CG.value;
