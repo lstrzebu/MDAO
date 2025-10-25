@@ -25,4 +25,17 @@ column_titles = ["Aircraft Designator (Design Number)";
     "Propeller"];
 fprintf(fid, '%s,', column_titles);
 fclose(fid);
+
+filename = "accepted_missions.csv";
+fid = fopen(filename, 'w');
+column_titles = ["Aircraft Designator (Design Number)";
+    "Passengers (Ducks)";
+    "Cargo (Pucks)"; 
+    "Laps";
+    "Banner Length (inches)";
+    "Battery"; 
+    "Projected Overall Competition Score";
+    "Propeller"];
+fprintf(fid, '%s,', column_titles);
+fclose(fid);
 cd ..

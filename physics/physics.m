@@ -30,6 +30,14 @@ if continue_mission_analysis.value
 end
 
 %% Save Results
-for i = 1:numMissionConfigurations
-
+data = readcell("6S Battery Data Condensed.xlsx"); % project file takes care of the pathing
+data = data(2:end, :); % discard header
+batteryName = data{batteryIndex, 1};
+print_missions = missions(:, 1:4)';
+print_missions = string(print_missions);
+print_missions(5, :) = string(batteryName);
+fid = fopen('output\accepted_missions.csv', 'a');
+for i = 1:numMissionConfigs
+    fprintf(fid, "\n%d, %s, %s, %s, %s, %s, %.3f", aircraftIteration, print_missions(:, i), total_score(i));
 end
+fclose(fid);
