@@ -59,8 +59,8 @@ aircraft.wing.sweep_angle.units = 'deg';
 aircraft.wing.sweep_angle.type = "ang";
 aircraft.wing.sweep_angle.description = "Angle of sweep for wing";
 
-aircraft.fuselage.protrusion.value = 2;
-aircraft.fuselage.protrusion.units = 'ft';
+aircraft.fuselage.protrusion.value = 24;
+aircraft.fuselage.protrusion.units = 'in';
 aircraft.fuselage.protrusion.type = "length";
 aircraft.fuselage.protrusion.description = "Distance from nose to LE of wing root chord";
 
@@ -199,13 +199,13 @@ switch fuselageType
                 switch nPlies
                     case 2
                         aircraft.fuselage.mass.value = 1.617;
-                        aircraft.fuselage.XYZ_CG.value = [28.347, 0, 0.334];
+                        aircraft.fuselage.XYZ_CG.value = [28.347 - aircraft.fuselage.protrusion.value, 0, 0.334];
                         I_xx = 20.417;
                         I_yy = 426.0;
                         I_zz = 427.497;
                     case 3
                         aircraft.fuselage.mass.value = 2.414;
-                        aircraft.fuselage.XYZ_CG.value = [28.371, 0, 0.334];
+                        aircraft.fuselage.XYZ_CG.value = [28.371 - aircraft.fuselage.protrusion.value, 0, 0.334];
                         I_xx = 30.402;
                         I_yy = 636.383;
                         I_zz = 638.569;
