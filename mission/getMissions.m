@@ -376,10 +376,14 @@ if strcmp(string(aircraft.fuselage.protrusion.units), "in") && strcmp(string(air
 
         % if i is odd, place duck on right hand side of aircraft
         % if i is even, place duck on left hand side of aircraft
+        %  25.765" from nose to center of first duck for larger fuselage 
+        % y axis distance from center line to center of duck holder =  1.255"
+        % width and length of duck holder squares: foam is 2.5" x 2.5", thickness of carbon fiber divider is 0.1"
+        aircraft.payload.passengers.individual.length.value = 2.5 + 0.1; % distance in the X direction between CG of ducks
         if rem(i, 2) ~= 0
-            aircraft.payload.passengers.individual.XYZ_CG.value(i, :, k) = [-aircraft.fuselage.protrusion.value + aircraft.fuselage.length.value + (rowNum-1).*aircraft.payload.passengers.individual.length.value + aircraft.payload.passengers.individual.length.value/2, aircraft.payload.passengers.individual.width.value, aircraft.fuselage.diameter.value - aircraft.fuselage.thickness.value - aircraft.payload.passengers.individual.max_height.value]; 
+            aircraft.payload.passengers.individual.XYZ_CG.value(i, :, k) = [25.765 + (rowNum-1).*aircraft.payload.passengers.individual.length.value, 1.255, aircraft.fuselage.diameter.value - aircraft.fuselage.thickness.value - aircraft.payload.passengers.individual.max_height.value]; 
         else
-            aircraft.payload.passengers.individual.XYZ_CG.value(i, :, k) = [-aircraft.fuselage.protrusion.value + aircraft.fuselage.length.value + (rowNum-1).*aircraft.payload.passengers.individual.length.value + aircraft.payload.passengers.individual.length.value/2, -aircraft.payload.passengers.individual.width.value, aircraft.fuselage.diameter.value - aircraft.fuselage.thickness.value - aircraft.payload.passengers.individual.max_height.value]; 
+            aircraft.payload.passengers.individual.XYZ_CG.value(i, :, k) = [25.765 + (rowNum-1).*aircraft.payload.passengers.individual.length.value, -1.255, aircraft.fuselage.diameter.value - aircraft.fuselage.thickness.value - aircraft.payload.passengers.individual.max_height.value]; 
         end
         aircraft.payload.passengers.individual.XYZ_CG.units = 'in';
         aircraft.payload.passengers.individual.XYZ_CG.type = "length";
