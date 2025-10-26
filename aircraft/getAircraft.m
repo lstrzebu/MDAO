@@ -250,13 +250,17 @@ aircraft.fuselage.XYZ_CG.units = 'in';
 aircraft.fuselage.XYZ_CG.type = "length";
 aircraft.fuselage.XYZ_CG.description = "vector of X, Y, Z coordinates of fuselage CG";
 
+aircraft = conv_aircraft_units(aircraft, 0, "aircraft.fuselage.mass", "lbm");
+if strcmp(string(aircraft.fuselage.mass.units), "lbm") && strcmp(string(aircraft.fuselage.protrusion.units), "in")
 aircraft.fuselage.MOI.value = zeros(3);
 aircraft.fuselage.MOI.value(1,1) = I_xx;
-aircraft.fuselage.MOI.value(2,2) = I_yy;
-aircraft.fuselage.MOI.value(3,3) = I_zz;
+aircraft.fuselage.MOI.value(2,2) = I_yy + aircraft.fuselage.mass.value*aircraft.fuselage.protrusion.value.^2; % parallel axis theorem to convert from reference frame at nose to reference frame at aircraft CG
+aircraft.fuselage.MOI.value(3,3) = I_zz + aircraft.fuselage.mass.value*aircraft.fuselage.protrusion.value.^2; % parallel axis theorem to convert from reference frame at nose to reference frame at aircraft CG
 aircraft.fuselage.MOI.units = 'lbm*in^2';
 aircraft.fuselage.MOI.type = "MOI";
 aircraft.fuselage.MOI.description = "moment of inertia of fuselage hull (not including structural bulkheads)";
+end
+aircraft = conv_aircraft_units(aircraft, 0, "aircraft.fuselage.mass", "kg"); % convert back to kg
 
 aircraft.fuselage.thickness.value = (0.25*nPlies)*10^-3; % convert from mm to m
 aircraft.fuselage.thickness.units = 'm';
