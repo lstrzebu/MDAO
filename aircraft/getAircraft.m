@@ -74,6 +74,10 @@ aircraft.wing.airfoil_filename = sprintf('%s.dat', aircraft.wing.airfoil_name);
 aircraft.tail.horizontal.airfoil_name = 'NACA 0012';
 aircraft.tail.vertical.airfoil_name = 'NACA 0012'; % just to give a thickness
 
+aircraft.wing.plies.number = 2;
+aircraft.tail.horizontal.plies.number = 1;
+aircraft.tail.vertical.plies.number = 1;
+
 ii = length(assumptions) + 1;
 assumptions(ii).name = "Tail Arm (Leading Edge)";
 assumptions(ii).description = "Assume the leading edge (LE) of both horizontal and vertical tail share the same distance from the leading edge of the wing";
@@ -122,46 +126,46 @@ aircraft.tail.horizontal.c.units = 'in';
 aircraft.tail.horizontal.c.type = "length";
 aircraft.tail.horizontal.c.description = "mean aerodynamic chord of horizontal tail";
 
-
 assumptions(end+1).name = "Horizontal Tail Planform Shape";
 assumptions(end+1).description = "Assume rectangular horizontal tail";
 assumptions(end+1).rationale = "Ease of manufacturing, fewer design parameters (no need to variate sweep angle)";
 assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
 aircraft.tail.horizontal.S.value = aircraft.tail.horizontal.c.value.*aircraft.tail.horizontal.b.value;
-aircraft.tail.horizontal.S.units = 'ft^2';
+aircraft.tail.horizontal.S.units = 'in^2';
 aircraft.tail.horizontal.S.type = "area";
 aircraft.tail.horizontal.S.description = "Planform area";
 
-aircraft.tail.horizontal.weight.value = 4;
-aircraft.tail.horizontal.weight.units = 'N';
-aircraft.tail.horizontal.weight.type = "force";
-aircraft.tail.horizontal.weight.description = "weight of horizontal tail only";
+% aircraft.tail.horizontal.weight.value = 4;
+% aircraft.tail.horizontal.weight.units = 'N';
+% aircraft.tail.horizontal.weight.type = "force";
+% aircraft.tail.horizontal.weight.description = "weight of horizontal tail only";
 
-aircraft.tail.vertical.b.value = 2;
-aircraft.tail.vertical.b.units = 'ft';
-aircraft.tail.vertical.b.type = "length";
-aircraft.tail.vertical.b.description = "Span of vertical tail";
-
-aircraft.tail.vertical.c.value = 0.5;
-aircraft.tail.vertical.c.units = 'ft';
-aircraft.tail.vertical.c.type = "length";
-aircraft.tail.vertical.c.description = "mean aerodynamic chord of vertical tail";
-
-assumptions(end+1).name = "Temporary Vertical Tail Shape";
-assumptions(end+1).description = "Assume rectangular vertical tail shape";
-assumptions(end+1).rationale = "Temporary. This may model a triangular or trapezoidal vertical tail fairly well as far as lift is concerned. Of course we will have a smoother finish on the manufactured VT but that is not considered here. Replace this with a trapezoidal VT.";
-assumptions(end+1).responsible_engineer = "Liam Trzebunia";
-
-aircraft.tail.vertical.S.value = aircraft.tail.vertical.c.value.*aircraft.tail.vertical.b.value;
+aircraft.tail.vertical.S.value = 0.167;
 aircraft.tail.vertical.S.units = 'ft^2';
 aircraft.tail.vertical.S.type = "area";
 aircraft.tail.vertical.S.description = "Planform area";
 
-aircraft.tail.vertical.weight.value = 4;
-aircraft.tail.vertical.weight.units = 'N';
-aircraft.tail.vertical.weight.type = "force";
-aircraft.tail.vertical.weight.description = "weight of vertical tail only";
+aircraft = conv_aircraft_units(aircraft, 0, "aircraft.tail.horizontal.c", "ft");
+
+if strcmp(string(aircraft.tail.horizontal.c.units), "ft")
+aircraft.tail.vertical.c.value = aircraft.tail.horizontal.c.value;
+aircraft.tail.vertical.c.units = aircraft.tail.horizontal.c.units;
+aircraft.tail.vertical.c.type = "length";
+aircraft.tail.vertical.c.description = "mean aerodynamic chord of vertical tail";
+
+aircraft.tail.vertical.b.value = aircraft.tail.vertical.S.value./aircraft.tail.vertical.c.value;
+aircraft.tail.vertical.b.units = 'ft';
+aircraft.tail.vertical.b.type = "length";
+aircraft.tail.vertical.b.description = "Span of vertical tail";
+else
+    error('Unit mismatch: computation of vertical tail size not possible.')
+end
+
+% aircraft.tail.vertical.weight.value = 4;
+% aircraft.tail.vertical.weight.units = 'N';
+% aircraft.tail.vertical.weight.type = "force";
+% aircraft.tail.vertical.weight.description = "weight of vertical tail only";
 
 aircraft.tail.config.value = 'T-Shaped'; % Conventional, U-Shaped (Dual Fin), or T-Shaped (High Tail)
 aircraft.tail.config.units = '';
@@ -180,7 +184,7 @@ assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
 fuselageType = "large";
 material = "Hexcel AS4C (3000 filaments)";
-nPlies = 2;
+nPlies = 3;
 
 switch fuselageType
     case "small"
@@ -246,6 +250,7 @@ aircraft.fuselage.XYZ_CG.units = 'in';
 aircraft.fuselage.XYZ_CG.type = "length";
 aircraft.fuselage.XYZ_CG.description = "vector of X, Y, Z coordinates of fuselage CG";
 
+aircraft = conv_aircraft_units(aircraft, 0, "aircraft.tail.horizontal.c", "in");
 if strcmp(string(aircraft.fuselage.length.units), "in") && strcmp(string(aircraft.tail.horizontal.c.units), "in") && strcmp(string(aircraft.tail.d_tail.units), "in") && strcmp(string(aircraft.fuselage.XYZ_CG.units), "in")
 aircraft.fuselage.protrusion.value = aircraft.fuselage.length.value - aircraft.tail.horizontal.c.value - aircraft.tail.d_tail.value;
 aircraft.fuselage.protrusion.units = 'in';

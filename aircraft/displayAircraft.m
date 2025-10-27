@@ -462,13 +462,13 @@ else
     error('Unit mismatch: computation of wing mass per unit area is not possible.')
 end
 
-if strcmp(string(aircraft.wing.skin.density.units), "g/cm^3") && strcmp(string(aircraft.wing.skin.thickness.units), "cm")
-    aircraft.wing.skin.mass_per_unit_area.value = aircraft.wing.skin.density.value*aircraft.wing.skin.thickness.value;
-    aircraft.wing.skin.mass_per_unit_area.units = 'g/cm^2';
+%if strcmp(string(aircraft.wing.skin.density.units), "g/cm^3") && strcmp(string(aircraft.wing.skin.thickness.units), "cm")
+    aircraft.wing.skin.mass_per_unit_area.value = aircraft.wing.plies.number.*((1.5e-3)/6); % kg/in^2
+    aircraft.wing.skin.mass_per_unit_area.units = 'kg/in^2';
     aircraft.wing.skin.mass_per_unit_area.description = "mass per unit area of the wing skin";
-else
-    error('Unit mismatch: computation of wing mass is not possible.');
-end
+% else
+%     error('Unit mismatch: computation of wing mass is not possible.');
+% end
 
 if strcmp(string(aircraft.wing.S.units), "ft^2") || strcmp(string(aircraft.wing.S.units), "in^2")
     aircraft = conv_aircraft_units(aircraft, missionIteration, "aircraft.wing.S", "m^2");
@@ -515,16 +515,16 @@ else
     error('Unit mismatch: computation of horizontal tail mass per unit area is not possible.')
 end
 
-if strcmp(string(aircraft.tail.horizontal.skin.density.units), "g/cm^3") && strcmp(string(aircraft.tail.horizontal.skin.thickness.units), "cm")
-    aircraft.tail.horizontal.skin.mass_per_unit_area.value = aircraft.tail.horizontal.skin.density.value*aircraft.tail.horizontal.skin.thickness.value;
-    aircraft.tail.horizontal.skin.mass_per_unit_area.units = 'g/cm^2';
+%if strcmp(string(aircraft.tail.horizontal.skin.density.units), "g/cm^3") && strcmp(string(aircraft.tail.horizontal.skin.thickness.units), "cm")
+    aircraft.tail.horizontal.skin.mass_per_unit_area.value = aircraft.tail.horizontal.plies.number.*((1.5e-3)/6); % kg/in^2
+    aircraft.tail.horizontal.skin.mass_per_unit_area.units = 'kg/in^2';
     aircraft.tail.horizontal.skin.mass_per_unit_area.description = "mass per unit area of the horizontal tail skin";
-else
-    error('Unit mismatch: computation of tail.horizontal mass is not possible.');
-end
+% else
+%     error('Unit mismatch: computation of tail.horizontal mass is not possible.');
+% end
 
-if strcmp(string(aircraft.tail.horizontal.S.units), "ft^2")
-    aircraft = conv_aircraft_units(aircraft, missionIteration, "aircraft.tail.horizontal.S", "m^2");
+aircraft = conv_aircraft_units(aircraft, 0, "aircraft.tail.horizontal.S", "m^2");
+if strcmp(string(aircraft.tail.horizontal.S.units), "m^2")
     aircraft.tail.horizontal.S.value = 10000*aircraft.tail.horizontal.S.value;
     aircraft.tail.horizontal.S.units = 'cm^2';
 else
@@ -564,13 +564,13 @@ else
     error('Unit mismatch: computation of vertical tail mass per unit area is not possible.')
 end
 
-if strcmp(string(aircraft.tail.vertical.skin.density.units), "g/cm^3") && strcmp(string(aircraft.tail.vertical.skin.thickness.units), "cm")
-    aircraft.tail.vertical.skin.mass_per_unit_area.value = aircraft.tail.vertical.skin.density.value*aircraft.tail.vertical.skin.thickness.value;
-    aircraft.tail.vertical.skin.mass_per_unit_area.units = 'g/cm^2';
+% if strcmp(string(aircraft.tail.vertical.skin.density.units), "g/cm^3") && strcmp(string(aircraft.tail.vertical.skin.thickness.units), "cm")
+    aircraft.tail.vertical.skin.mass_per_unit_area.value = aircraft.tail.vertical.plies.number.*((1.5e-3)/6); % kg/in^2
+    aircraft.tail.vertical.skin.mass_per_unit_area.units = 'kg/in^2';
     aircraft.tail.vertical.skin.mass_per_unit_area.description = "mass per unit area of the vertical tail skin";
-else
-    error('Unit mismatch: computation of tail.vertical mass is not possible.');
-end
+% else
+%     error('Unit mismatch: computation of tail.vertical mass is not possible.');
+% end
 
 if strcmp(string(aircraft.tail.vertical.S.units), "ft^2")
     aircraft = conv_aircraft_units(aircraft, missionIteration, "aircraft.tail.vertical.S", "m^2");
