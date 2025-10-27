@@ -50,11 +50,11 @@ for j = 1:numMissionConfigs
 % Determine the Prop Efficiency and Power for Possible Config
 try
     while k == 0
-        if abs( (propData(i,1) * 0.44704) - vTrim(j))  <= (3*0.447) % Checks whether a certain RPM has the desired velocity within a 3 mph Tolerance
+        if abs( (propData(i,1,j) * 0.44704) - vTrim(j))  <= (3*0.447) % Checks whether a certain RPM has the desired velocity within a 3 mph Tolerance
             i = i + 1;   % Go to the next row next time
-            if propData(i,11) >= thrust % Checks if at that velocity enough thrust is produced
-                pRotational = propData(i,9); % Grabbing Power Value
-                RPM = (propData(i,9) / (propData(i,10)) * (30/pi)); % Calculating RPM from Power and Torque
+            if propData(i,11,j) >= thrust % Checks if at that velocity enough thrust is produced
+                pRotational = propData(i,9,j); % Grabbing Power Value
+                RPM = (propData(i,9,j) / (propData(i,10,j)) * (30/pi)); % Calculating RPM from Power and Torque
                 k = 1; % Breaking the loop
             end
         else

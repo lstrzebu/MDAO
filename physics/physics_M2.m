@@ -166,7 +166,7 @@ if continue_mission_analysis.value
             "aircraft.tail.horizontal.taper_ratio",...
             "aircraft.tail.vertical.taper_ratio",...
             "aircraft.tail.vertical.S"]; % append additional vectorized aircraft parameters to be updated
-    [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex, failure_messages, structNames_mission, batteryIndex, missionNumber);
+    %[aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndex, failure_messages, structNames_mission, batteryIndex, missionNumber);
     if numMissionConfigs == 0
         continue_mission_analysis.value = false;
     end
@@ -237,7 +237,7 @@ if continue_mission_analysis.value
             "aircraft.missions.mission(2).physics.G.max", ...
             "aircraft.missions.mission(2).structures.num_fasteners.minimum", ...
             "aircraft.missions.mission(2).physics.turn_radius.minimum"]; % append additional vectorized aircraft parameters to be updated
-   [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
+    [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
 end
 
 %% 4. Aerodynamics (M2)
@@ -344,7 +344,7 @@ if continue_mission_analysis.value
             "aircraft.missions.mission(2).physics.CD_trim", ...
             "aircraft.missions.mission(2).physics.CL_trim(2)", ...
             "aircraft.missions.mission(2).physics.v_stall"];
-   [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
+    [aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
 end
 
 %% 5. Propulsion (M2)

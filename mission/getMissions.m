@@ -157,14 +157,15 @@ pVec = minP:stepP:maxP;
 cVec = minC:stepC:maxC;
 lVec = minL:stepL:maxL;
 blVec = minBL:stepBL:maxBL;
+propVec = 1:6;
 %PBCvec = minTPBC:stepTPBC:maxTPBC;
 
 % Generate the multi-dimensional grids
-[P, C, L, BL] = ndgrid(pVec, cVec, lVec, blVec);
+[P, C, L, BL, TPBC, propIndx] = ndgrid(pVec, cVec, lVec, blVec, TPBCscal, propVec);
 
 % Flatten into an n x 5 matrix (each row is a combination: [pVal, cVal, lVal, blVal, TPBCval])
-missions = [P(:), C(:), L(:), BL(:)];
-missions(:, 5) = TPBCscal; % no variation of propulsion battery capacity during mission generation... only during aircraft generation 
+missions = [P(:), C(:), L(:), BL(:), TPBC(:), propIndx(:)];
+% missions(:, 5) = TPBCscal; % no variation of propulsion battery capacity during mission generation... only during aircraft generation 
 
 % logical mask for missions to ensure (number of ducks) >= 3*(number of pucks)
 ducks_pucks_mask = missions(:,1) >= 3.*missions(:,2);
@@ -179,6 +180,47 @@ numMissionConfigs = size(missions, 1);
 % example of how to evaluate these missions
 % total_score = evalScore(missionVars, aircraft, assumptions);
 % show(total_score)
+%% Read Propeller Data
+
+for j = 1:length(propVec)
+        % Read Big Prop Spreadsheet
+propTable = readtable('Prop Data.xlsx'); % Name might change
+propeller.name(j,:) = propTable{j, 1};
+
+% Reading specific prop spreadsheet
+aircraft.propulsion.propeller.filename = strcat('PER3_', propeller.name{1}, '.xlsx');
+propeller.data.value(:,:,j) = readmatrix(aircraft.propulsion.propeller.filename);
+
+ propeller.weight.value(j,:) = (propTable{j, 2} * 28.3495) * (9.81/1000); % converted to N
+
+propeller.diameter.value(j,:) = str2double(propTable{propIndex, 3}{1});
+    
+    aircraft.propulsion.propeller.index.description = "Which number (from 1 to the number of propellers being considered) is being utilized for the present design iteration";
+  aircraft.propulsion.propeller.data.type = "non"; % nondimensional as a whole; do not convert units
+aircraft.propulsion.propeller.data.description = "prop data parameters that Bruno's propulsion function takes as an input";
+aircraft.propulsion.propeller.weight.units = 'N';
+aircraft.propulsion.propeller.weight.type = "force";
+aircraft.propulsion.propeller.weight.description = "weight of propeller";
+
+aircraft.propulsion.propeller.diameter.units = 'in';
+aircraft.propulsion.propeller.diameter.type = "length";
+aircraft.propulsion.propeller.diameter.description = "diameter of propeller";
+
+end
+
+for i = 1:numMissionConfigs
+    aircraft.propulsion.propeller.index.value(i,:) = missions(i, 6);
+    propIndex = aircraft.propulsion.propeller.index.value(i, :); % shorthand
+    aircraft.propulsion.propeller.name(i,:) = propeller.name(propIndex); 
+
+aircraft.propulsion.propeller.data.value(:,:,i) = propeller.data.value(:,:,propIndex);
+
+ aircraft.propulsion.propeller.weight.value(i,:) = propeller.weight.value(propIndex);
+
+aircraft.propulsion.propeller.diameter.value(i,:) = propeller.diameter.value(propIndex);
+
+end
+
 %% Variables necessary for static stability
 
 % X_CG =
@@ -439,26 +481,31 @@ desiredUnits = ["in";
     "in"];
 aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits);
 
+% vectorize propeller CG
+aircraft = vectorize_aircraft_params(aircraft, numMissionConfigs, "aircraft.propulsion.propeller.XYZ_CG");
+
 % prepare for loaded weight and loaded CG calculations
 for k = 1:numMissionConfigs
 weights = [aircraft.unloaded.weight.value; 
     aircraft.payload.passengers.weight.value(k, :);
-    aircraft.payload.cargo.weight.value(k, :)];
+    aircraft.payload.cargo.weight.value(k, :);
+    aircraft.propulsion.propeller.weight.value(k, :)];
 cgs = [aircraft.unloaded.XYZ_CG.value; 
     aircraft.payload.passengers.XYZ_CG.value(k, :);
-    aircraft.payload.cargo.XYZ_CG.value(k, :)];
+    aircraft.payload.cargo.XYZ_CG.value(k, :);
+    aircraft.propulsion.propeller.XYZ_CG.value(k,:)];
 
 % loaded weight calculation
 aircraft.loaded.weight.value(k,1) = sum(weights);
 aircraft.loaded.weight.units = 'N';
 aircraft.loaded.weight.type = "force";
-aircraft.loaded.weight.description = "total weight of aircraft + payload, where payload is all ducks and all pucks for Mission 2";
+aircraft.loaded.weight.description = "total weight of aircraft + payload, where payload is all ducks and all pucks for Mission 2 and also the propeller";
 
 % loaded CG calculation
 aircraft.loaded.XYZ_CG.value(k, :) = composite_cg(weights, cgs);
 aircraft.loaded.XYZ_CG.units = 'in';
 aircraft.loaded.XYZ_CG.type = "length";
-aircraft.loaded.XYZ_CG.description = "vector of X, Y, Z coordinates for loaded aircraft CG (loaded aircraft includes payload of ducks, pucks)";
+aircraft.loaded.XYZ_CG.description = "vector of X, Y, Z coordinates for loaded aircraft CG (loaded aircraft includes payload of ducks, pucks, propeller)";
 
 end
 
@@ -670,8 +717,8 @@ end
 % compute the propeller MOI as the MOI of a flat disk
 m = aircraft.propulsion.propeller.mass.value; % mass (kg)
 r = aircraft.propulsion.propeller.diameter.value/2; % radius (in)
-I_xx = 0.5*m*r^2;
-I_yy = 0.25*m*r^2;
+I_xx = 0.5.*m.*r.^2;
+I_yy = 0.25.*m.*r.^2;
 I_zz = I_yy;
 I = zeros([3, 3, numMissionConfigs]);
 I(1,1,:) = I_xx;
@@ -738,7 +785,7 @@ unitsAgree = strcmp(units, "in");
 if all(unitsAgree)
 
 % Initialize the cell array to store CG locations for each component
-cg_locations = cell(numMissionConfigs, 8);
+cg_locations = cell(numMissionConfigs, 7);
 
 % Populate the cell array with numMissionConfigs x 3 matrices
 % arg1 = zeros([numMissionConfigs, 3]);
@@ -756,8 +803,8 @@ cg_locations = cell(numMissionConfigs, 8);
     cg_locations(:, 4) = {aircraft.tail.vertical.skin.XYZ_CG.value};    % Vertical tail skin CG
     cg_locations(:, 5) = {aircraft.propulsion.motor.XYZ_CG.value};      % Motor CG
     cg_locations(:, 6) = {aircraft.propulsion.ESC.XYZ_CG.value};        % ESC CG
-    cg_locations(:, 7) = {aircraft.propulsion.propeller.XYZ_CG.value};  % Propeller CG
-    cg_locations(:, 8) = {aircraft.propulsion.battery.XYZ_CG.value};    % Battery CG
+    % cg_locations(:, 7) = {mean(aircraft.propulsion.propeller.XYZ_CG.value)};  % Propeller CG... taking the average of a vector of identical values
+    cg_locations(:, 7) = {aircraft.propulsion.battery.XYZ_CG.value};    % Battery CG
 % end
 % for i = 1:8
 %     eval(sprintf('cg_locations{%d} = arg%d;', i, i));
@@ -784,7 +831,7 @@ aircraft.propulsion.propeller.mass.units;
 aircraft.propulsion.battery.mass.units];
 unitsAgree = strcmp(units, "kg");
 if all(unitsAgree)
- masses = cell(numMissionConfigs, 8);
+ masses = cell(numMissionConfigs, 7);
 
 % Populate the cell array with numMissionConfigs x 3 matrices
 % arg1 = zeros([numMissionConfigs, 3]);
@@ -796,14 +843,17 @@ if all(unitsAgree)
 % arg7 = arg1;
 % arg8 = arg1;
 % for k = 1:numMissionConfigs
-    masses(:, 1) = {aircraft.fuselage.mass.value};         % Fuselage hull CG
-    masses(:, 2) = {aircraft.wing.skin.mass.value};             % Wing skin CG
-    masses(:, 3) = {aircraft.tail.horizontal.skin.mass.value};  % Horizontal tail skin CG
-    masses(:, 4) = {aircraft.tail.vertical.skin.mass.value};    % Vertical tail skin CG
-    masses(:, 5) = {aircraft.propulsion.motor.mass.value};      % Motor CG
-    masses(:, 6) = {aircraft.propulsion.ESC.mass.value};        % ESC CG
-    masses(:, 7) = {aircraft.propulsion.propeller.mass.value};  % Propeller CG
-    masses(:, 8) = {aircraft.propulsion.battery.mass.value};    % Battery CG
+    masses(:, 1) = {aircraft.fuselage.mass.value};         % Fuselage hull 
+    masses(:, 2) = {aircraft.wing.skin.mass.value};             % Wing skin 
+    masses(:, 3) = {aircraft.tail.horizontal.skin.mass.value};  % Horizontal tail skin 
+    masses(:, 4) = {aircraft.tail.vertical.skin.mass.value};    % Vertical tail skin 
+    masses(:, 5) = {aircraft.propulsion.motor.mass.value};      % Motor 
+    masses(:, 6) = {aircraft.propulsion.ESC.mass.value};        % ESC 
+    masses(:, 7) = {aircraft.propulsion.battery.mass.value};    % Battery 
+
+    % for i = 1:numMissionConfigs
+    %     masses(i, 7) = {aircraft.propulsion.propeller.mass.value(i)}; % propeller mass
+    % end
 % end
 % for i = 1:8
 % masses = {aircraft.fuselage.mass.value, ...
@@ -840,7 +890,7 @@ aircraft.propulsion.propeller.MOI.units;
 aircraft.propulsion.battery.MOI.units];
 unitsAgree = strcmp(units, "kg*in^2");
 if all(unitsAgree)
-     I_matrices = cell(numMissionConfigs, 8);
+     I_matrices = cell(numMissionConfigs, 7);
 
 % Populate the cell array with numMissionConfigs x 3 matrices
 % arg1 = zeros([numMissionConfigs, 3]);
@@ -860,10 +910,9 @@ for k = 1:numMissionConfigs
     I_matrices(k, 2) = {aircraft.wing.skin.MOI.value(:,:,k)};             % Wing skin CG
     I_matrices(k, 3) = {aircraft.tail.horizontal.skin.MOI.value(:,:,k)};  % Horizontal tail skin CG
     I_matrices(k, 4) = {aircraft.tail.vertical.skin.MOI.value(:,:,k)};    % Vertical tail skin CG
-    I_matrices(k, 5) = {aircraft.propulsion.motor.MOI.value(:,:,k)};      % Motor CG
+    I_matrices(k, 5) = {aircraft.propulsion.motor.MOI.value(:,:,k)};
     I_matrices(k, 6) = {aircraft.propulsion.ESC.MOI.value(:,:,k)};        % ESC CG
-    I_matrices(k, 7) = {aircraft.propulsion.propeller.MOI.value(:,:,k)};  % Propeller CG
-    I_matrices(k, 8) = {aircraft.propulsion.battery.MOI.value(:,:,k)};
+    I_matrices(k, 7) = {aircraft.propulsion.battery.MOI.value(:,:,k)};
 end
 % I_matrices = {aircraft.fuselage.MOI.value, ...
 %     aircraft.wing.skin.MOI.value, ...
@@ -933,7 +982,7 @@ if all(unitsAgree)
         cg_locations(k, 6) = {aircraft.tail.vertical.skin.XYZ_CG.value};
         cg_locations(k, 7) = {aircraft.propulsion.motor.XYZ_CG.value};
         cg_locations(k, 8) = {aircraft.propulsion.ESC.XYZ_CG.value};
-        cg_locations(k, 9) = {aircraft.propulsion.propeller.XYZ_CG.value};
+        cg_locations(k, 9) = {aircraft.propulsion.propeller.XYZ_CG.value(k)};
         cg_locations(k, 10) = {aircraft.propulsion.battery.XYZ_CG.value};
     end
 % cg_locations = {aircraft.payload.passengers.XYZ_CG.value', ...
@@ -972,7 +1021,7 @@ if all(unitsAgree)
         masses(k, 6) = {aircraft.tail.vertical.skin.mass.value};
         masses(k, 7) = {aircraft.propulsion.motor.mass.value};
         masses(k, 8) = {aircraft.propulsion.ESC.mass.value};
-        masses(k, 9) = {aircraft.propulsion.propeller.mass.value};
+        masses(k, 9) = {aircraft.propulsion.propeller.mass.value(k)};
         masses(k, 10) = {aircraft.propulsion.battery.mass.value};
     end
 % masses = {aircraft.payload.passengers.mass.value, ...

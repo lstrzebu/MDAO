@@ -31,6 +31,10 @@ for i = 1:numel(I_matrices)
 
     % Defines the properties of the current part
     P_cm_part   = CG_locations{i};
+    [~,c] = size(P_cm_part);
+    if c == length(P_cm_part)
+        P_cm_part = P_cm_part'; % CG is inputted from main MDAO framework as a row vector, but this script expects it as a column vector. Transposing outside the function is not trivial due to cell array mechanics. 
+    end
     I_part      = I_matrices{i};
     m_part      = masses{i};
 

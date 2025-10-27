@@ -662,7 +662,6 @@ structNames = ["aircraft.fuselage.weight";
     "aircraft.tail.vertical.skin.weight";
     "aircraft.propulsion.motor.weight";
     "aircraft.propulsion.ESC.weight";
-    "aircraft.propulsion.propeller.weight";
     "aircraft.propulsion.battery.weight";
     "aircraft.fuselage.XYZ_CG";
     "aircraft.wing.skin.XYZ_CG";
@@ -673,7 +672,6 @@ structNames = ["aircraft.fuselage.weight";
     "aircraft.propulsion.propeller.XYZ_CG";
     "aircraft.propulsion.battery.XYZ_CG"];
 desiredUnits = ["N";
-    "N";
     "N";
     "N";
     "N";
@@ -696,7 +694,6 @@ part_weights = [aircraft.fuselage.weight.value;
     aircraft.tail.vertical.skin.weight.value;
     aircraft.propulsion.motor.weight.value;
     aircraft.propulsion.ESC.weight.value;
-    aircraft.propulsion.propeller.weight.value;
     aircraft.propulsion.battery.weight.value];
 part_cgs = [aircraft.fuselage.XYZ_CG.value;
     aircraft.wing.skin.XYZ_CG.value;
@@ -704,18 +701,17 @@ part_cgs = [aircraft.fuselage.XYZ_CG.value;
     aircraft.tail.vertical.skin.XYZ_CG.value;
     aircraft.propulsion.motor.XYZ_CG.value;
     aircraft.propulsion.ESC.XYZ_CG.value;
-    aircraft.propulsion.propeller.XYZ_CG.value;
     aircraft.propulsion.battery.XYZ_CG.value];
 
 aircraft.unloaded.weight.value = sum(part_weights);
 aircraft.unloaded.weight.units = 'N';
 aircraft.unloaded.weight.type = "force";
-aircraft.unloaded.weight.description = "Weight of aircraft with no payload (no ducks, pucks, or banner)";
+aircraft.unloaded.weight.description = "Weight of aircraft with no payload (no ducks, pucks, banner, or propeller)";
 
 aircraft.unloaded.XYZ_CG.value = composite_cg(part_weights, part_cgs);
 aircraft.unloaded.XYZ_CG.units = 'in';
 aircraft.unloaded.XYZ_CG.type = "length";
-aircraft.unloaded.XYZ_CG.description = "vector of X, Y, Z coordinates for empty aircraft CG. That is, the CG of the system including the: fuselage skin, wing spar, horizontal tail skin, vertical tail skin, motor, ESC, propeller, and battery.";
+aircraft.unloaded.XYZ_CG.description = "vector of X, Y, Z coordinates for empty aircraft CG. That is, the CG of the system including the: fuselage skin, wing spar, horizontal tail skin, vertical tail skin, motor, ESC, and battery.";
 
 if displayToggle
 alpha(gca, 0.5);

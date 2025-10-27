@@ -305,9 +305,6 @@ aircraft.propulsion.motor.index.description = "Which number (from 1 to the numbe
 aircraft.propulsion.battery.index.value = 4;
 aircraft.propulsion.battery.index.description = "Which number (from 1 to the number of motors being considered) is being utilized for the present design iteration";
 
-aircraft.propulsion.propeller.index.value = 4;
-aircraft.propulsion.propeller.index.description = "Which number (from 1 to the number of propellers being considered) is being utilized for the present design iteration";
-
 % Read Battery Spreadsheet
 batteryTable = readmatrix('6S Battery Data Condensed.xlsx'); % Name might change
 aircraft.propulsion.battery.weight.value = batteryTable(batteryIndex,8) * (9.81/1000); % in N
@@ -360,25 +357,6 @@ aircraft.propulsion.motor.diameter_outer.value = motorTable(motorIndex, 18)*10^(
 aircraft.propulsion.motor.diameter_outer.units = 'm';
 aircraft.propulsion.motor.diameter_outer.type = "length";
 aircraft.propulsion.motor.diameter_outer.description = "outer diameter of motor";
-
-% Read Big Prop Spreadsheet
-propTable = readtable('Prop Data.xlsx'); % Name might change
-aircraft.propulsion.propeller.weight.value = (propTable{propIndex, 2} * 28.3495) * (9.81/1000); % converted to N
-aircraft.propulsion.propeller.weight.units = 'N';
-aircraft.propulsion.propeller.weight.type = "force";
-aircraft.propulsion.propeller.weight.description = "weight of propeller";
-aircraft.propulsion.propeller.name = propTable{propIndex, 1};
-
-aircraft.propulsion.propeller.diameter.value = str2double(propTable{propIndex, 3}{1});
-aircraft.propulsion.propeller.diameter.units = 'in';
-aircraft.propulsion.propeller.diameter.type = "length";
-aircraft.propulsion.propeller.diameter.description = "diameter of propeller";
-
-% Reading specific prop spreadsheet
-aircraft.propulsion.propeller.filename = strcat('PER3_', aircraft.propulsion.propeller.name{1}, '.xlsx');
-aircraft.propulsion.propeller.data.value = readmatrix(aircraft.propulsion.propeller.filename);
-aircraft.propulsion.propeller.data.type = "non"; % nondimensional as a whole; do not convert units
-aircraft.propulsion.propeller.data.description = "prop data parameters that Bruno's propulsion function takes as an input";
 
 % Provide drag, weight, and vTrim data in N and m/s
 % weight = 40 + batteryWeight + propWeight + motorWeight;
