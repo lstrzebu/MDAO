@@ -69,7 +69,8 @@ end
 chord = aircraft.wing.c.value;
 b = aircraft.wing.b.value;
 width = b/2;
-eval(sprintf('thicknessMultiplier = 0.%s;', aircraft.wing.airfoil_name(8:9)))
+%eval(sprintf('thicknessMultiplier = 0.%s;', aircraft.wing.airfoil_name(8:9)))
+[~, thicknessMultiplier] = airfoil_thickness('MH 114.dat');
 thickness_wing = thicknessMultiplier*chord;
 vertical_wing_center = 0.85*radius_outer + thickness_wing/2;
 
@@ -469,7 +470,7 @@ else
     error('Unit mismatch: computation of wing mass is not possible.');
 end
 
-if strcmp(string(aircraft.wing.S.units), "ft^2")
+if strcmp(string(aircraft.wing.S.units), "ft^2") || strcmp(string(aircraft.wing.S.units), "in^2")
     aircraft = conv_aircraft_units(aircraft, missionIteration, "aircraft.wing.S", "m^2");
     aircraft.wing.S.value = 10000*aircraft.wing.S.value;
     aircraft.wing.S.units = 'cm^2';

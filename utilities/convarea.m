@@ -7,6 +7,7 @@ function A = convarea(V, UI, UO)
 % supported unit conversions:
 % m^2 <-> ft^2
 % m^2 <-> cm^2
+% in^2 - m^2
 
 if strcmp(UI, UO)
     A = V;
@@ -22,6 +23,10 @@ if strcmp(UI, "m^2") && strcmp(UO, "cm^2")
     A = V.*(100)^2;
 elseif strcmp(UI, "cm^2") && strcmp(UO, "m^2")
     A = V./(100)^2;
+end
+
+if strcmp(UI, "in^2") && strcmp(UO, "m^2")
+    A = V./1550;
 end
 
 end

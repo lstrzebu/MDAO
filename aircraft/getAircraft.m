@@ -29,13 +29,13 @@ aircraft.wing.dihedral.units = 'deg';
 aircraft.wing.dihedral.type = "ang";
 aircraft.wing.dihedral.description = "Dihedral angle of wing";
 
-aircraft.wing.c.value = 1; % mean aerodynamic chord
-aircraft.wing.c.units = 'ft';
+aircraft.wing.c.value = 11.586; % mean aerodynamic chord
+aircraft.wing.c.units = 'in';
 aircraft.wing.c.type = "length";
 aircraft.wing.c.description = "Mean aerodynamic chord of the wing";
 
-aircraft.wing.b.value = 4; % wingspan
-aircraft.wing.b.units = 'ft';
+aircraft.wing.b.value = 60; % wingspan
+aircraft.wing.b.units = 'in';
 aircraft.wing.b.type = "length";
 aircraft.wing.b.description = "Wing span";
 
@@ -45,7 +45,7 @@ assumptions(end+1).rationale = "Ease of manufacturing, lack of sweep benefits";
 assumptions(end+1).responsible_engineer = "Eric Stout";
 
 aircraft.wing.S.value = aircraft.wing.c.value.*aircraft.wing.b.value;
-aircraft.wing.S.units = 'ft^2';
+aircraft.wing.S.units = 'in^2';
 aircraft.wing.S.type = "area";
 aircraft.wing.S.description = "Planform area";
 
@@ -74,7 +74,8 @@ aircraft.wing.resting_angle.units = 'deg';
 aircraft.wing.resting_angle.type = "ang";
 aircraft.wing.resting_angle.description = "wing resting angle of attack with respect to fuselage (positive pitched upwards)";
 
-aircraft.wing.airfoil_name = 'NACA 2412';
+aircraft.wing.airfoil_name = 'MH 114';
+aircraft.wing.airfoil_filename = sprintf('%s.dat', aircraft.wing.airfoil_name);
 aircraft.tail.horizontal.airfoil_name = 'NACA 0012';
 aircraft.tail.vertical.airfoil_name = 'NACA 0012';
 
@@ -438,7 +439,7 @@ aircraft.wing.a_wb.description = "3D lift-curve slope of wing";
 aircraft.wing.Cm0.units = '';
 aircraft.wing.Cm0.type = "non"; % nondimensional unit type
 aircraft.wing.Cm0.description = "pitching moment coefficient at zero lift for wing";
-aircraft.wing.alpha_0L_wb.units = 'deg';
+aircraft.wing.alpha_0L_wb.units = 'rad';
 aircraft.wing.alpha_0L_wb.type = "ang";
 aircraft.wing.alpha_0L_wb.description = "zero-lift angle for wing";
 
@@ -448,13 +449,14 @@ assumptions(ii).description = "Assume that zero-lift angle of the wing approxima
 assumptions(ii).rationale = "Lift effects of fuselage seem laborious to model although it would be feasible to do so";
 assumptions(ii).responsible_engineer = "Liam Trzebunia";
 
-aircraft.wing.alpha_stall.units = 'deg';
+aircraft.wing.alpha_stall.units = 'rad';
 aircraft.wing.alpha_stall.type = "ang";
 [aircraft.wing.a_wb.value,...
     aircraft.wing.Cm0.value,...
     aircraft.wing.alpha_0L_wb.value,...
     aircraft.wing.a0.value,...
-    aircraft.wing.alpha_stall.value] = CL_alpha(aircraft.wing.b.value,...
+    ~,...
+    aircraft.wing.alpha_stall.value] = CL_alphaV3(aircraft.wing.b.value,...
     aircraft.wing.c.value,...
     aircraft.fuselage.diameter.value, ...
     0,...
@@ -468,14 +470,15 @@ aircraft.tail.horizontal.a.units = '/rad';
 aircraft.tail.horizontal.a.type = "recang";
 aircraft.tail.horizontal.a.description = "3D lift-curve slope of horizontal tail";
 
-aircraft.tail.horizontal.alpha_0L_t.units = 'deg';
+aircraft.tail.horizontal.alpha_0L_t.units = 'rad';
 aircraft.tail.horizontal.alpha_0L_t.type = "ang";
 aircraft.tail.horizontal.alpha_0L_t.description = "zero-lift angle for horizontal tail";
 [aircraft.tail.horizontal.a.value,...
     ~,...
     aircraft.tail.horizontal.alpha_0L_t.value,...
     ~,...
-    ~] = CL_alpha(aircraft.tail.horizontal.b.value,...
+    ~,...
+    ~] = CL_alphaV3(aircraft.tail.horizontal.b.value,...
     aircraft.tail.horizontal.c.value,...
     aircraft.fuselage.diameter.value, ...
     0,...
