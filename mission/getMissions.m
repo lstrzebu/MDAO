@@ -132,7 +132,7 @@ assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 minP = 3; stepP = 5; maxP = 30; 
 minC = 1; stepC = 3; maxC = 4;
 minL = 1; stepL = 7; maxL = 8; 
-minBL = 10; stepBL = 5; maxBL = 15;
+minBL = 10; stepBL = 5; maxBL = 100;
 TPBCscal = aircraft.propulsion.battery.capacity.value; % scalar for total propulsion battery capacity: units of Wh
 %minTPBC = 25; stepTPBC = 25; maxTPBC = 100;
 % coarse = zeros([length(minP:maxP), length(minC:maxC), length(minL:maxL), length(minBL:maxBL), length(minTPBC:maxTPBC)]);
@@ -158,18 +158,39 @@ cVec = minC:stepC:maxC;
 lVec = minL:stepL:maxL;
 blVec = minBL:stepBL:maxBL;
 propVec = 1:6;
+bannerAreaVec = 1000:1000:20000; % square inches
 %PBCvec = minTPBC:stepTPBC:maxTPBC;
 
 % Generate the multi-dimensional grids
-[P, C, L, BL, TPBC, propIndx] = ndgrid(pVec, cVec, lVec, blVec, TPBCscal, propVec);
+[P, C, L, BL, TPBC, propIndx, bannerArea] = ndgrid(pVec, cVec, lVec, blVec, TPBCscal, propVec, bannerAreaVec);
 
 % Flatten into an n x 5 matrix (each row is a combination: [pVal, cVal, lVal, blVal, TPBCval])
-missions = [P(:), C(:), L(:), BL(:), TPBC(:), propIndx(:)];
+missions = [P(:), C(:), L(:), BL(:), TPBC(:), propIndx(:), bannerArea(:)];
 % missions(:, 5) = TPBCscal; % no variation of propulsion battery capacity during mission generation... only during aircraft generation 
 
 % logical mask for missions to ensure (number of ducks) >= 3*(number of pucks)
 ducks_pucks_mask = missions(:,1) >= 3.*missions(:,2);
 missions = missions(ducks_pucks_mask, :);
+
+bannerArea = missions(:,7);
+bannerLength = missions(:,4);
+bannerHeight = bannerArea./bannerLength; % inches
+bannerAR = bannerLength./bannerHeight;
+ARreq = bannerAR <= 5;
+heightReq = bannerHeight >= 2;
+bannerReq = all([ARreq, heightReq], 2);
+
+% logical mask for banner requirements
+missions = missions(bannerReq, :);
+
+aircraft.banner.area.value = missions(:,7);
+aircraft.banner.area.units = 'in^2';
+aircraft.banner.area.type = "area";
+aircraft.banner.area.description = "banner area";
+aircraft.banner.AR.value = missions(:,4)./missions(:,7); % length/height
+aircraft.banner.AR.units = '';
+aircraft.banner.AR.type = "non";
+aircraft.banner.AR.description = "banner aspect ratio (length/height)";
 
 % For testing only (DELETE afterwards):
 % missions = missions(1,:);

@@ -274,14 +274,14 @@ aircraft.landing_gear.weight.type = "force";
 aircraft.landing_gear.weight.description = "weight of landing gear";
 
 % banner
-aircraft.banner.area.value = 0;
-aircraft.banner.area.units = 'm^2';
-aircraft.banner.area.type = "area";
-aircraft.banner.area.description = "area of banner";
-aircraft.banner.AR.value = 0;
-aircraft.banner.AR.units = '';
-aircraft.banner.AR.type = "non";
-aircraft.banner.AR.description = "aspect ratio of banner";
+% aircraft.banner.area.value = 0;
+% aircraft.banner.area.units = 'm^2';
+% aircraft.banner.area.type = "area";
+% aircraft.banner.area.description = "area of banner";
+% aircraft.banner.AR.value = 0;
+% aircraft.banner.AR.units = '';
+% aircraft.banner.AR.type = "non";
+% aircraft.banner.AR.description = "aspect ratio of banner";
 
 assumptions(end+1).name = "Landing Gear Weight";
 assumptions(end+1).description = sprintf("assume landing gear weight of %.2f %s", aircraft.landing_gear.weight.value, aircraft.landing_gear.weight.units);

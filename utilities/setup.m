@@ -22,7 +22,8 @@ column_titles = ["Aircraft Designator (Design Number)";
     "Banner Length (inches)";
     "Battery"; 
     "Failure Message";
-    "Propeller"];
+    "Propeller";
+    "Banner Aspect Ratio"];
 fprintf(fid, '%s,', column_titles);
 fclose(fid);
 
@@ -35,7 +36,8 @@ column_titles = ["Aircraft Designator (Design Number)";
     "Banner Length (inches)";
     "Battery"; 
     "Projected Overall Competition Score";
-    "Propeller"];
+    "Propeller";
+    "Banner Aspect Ratio"];
 fprintf(fid, '%s,', column_titles);
 fclose(fid);
 cd ..

@@ -30,7 +30,7 @@ if ~isempty(rejectedMissions)
     fid = fopen('output\rejected_missions.csv', 'a');
     [r, ~] = size(rejectedMissions);
     for i = 1:r
-        fprintf(fid, "\n%d, %s, %s, %s, %s, %s, %s, %s", aircraftIteration, rejected_print_missions(:, i), sprintf('M%d: %s', missionNumber, failure_messages(i)), aircraft.propulsion.propeller.name{i});
+        fprintf(fid, "\n%d, %s, %s, %s, %s, %s, %s, %s, %.4f", aircraftIteration, rejected_print_missions(:, i), sprintf('M%d: %s', missionNumber, failure_messages(i)), aircraft.propulsion.propeller.name{i}, aircraft.banner.AR.value(i));
     end
     fclose(fid);
 end
