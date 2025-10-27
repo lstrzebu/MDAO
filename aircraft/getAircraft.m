@@ -59,11 +59,6 @@ aircraft.wing.sweep_angle.units = 'deg';
 aircraft.wing.sweep_angle.type = "ang";
 aircraft.wing.sweep_angle.description = "Angle of sweep for wing";
 
-aircraft.fuselage.protrusion.value = 24;
-aircraft.fuselage.protrusion.units = 'in';
-aircraft.fuselage.protrusion.type = "length";
-aircraft.fuselage.protrusion.description = "Distance from nose to LE of wing root chord";
-
 % aircraft.wing.weight.value = 4;
 % aircraft.wing.weight.units = 'N';
 % aircraft.wing.weight.type = "force";
@@ -77,7 +72,7 @@ aircraft.wing.resting_angle.description = "wing resting angle of attack with res
 aircraft.wing.airfoil_name = 'MH 114';
 aircraft.wing.airfoil_filename = sprintf('%s.dat', aircraft.wing.airfoil_name);
 aircraft.tail.horizontal.airfoil_name = 'NACA 0012';
-aircraft.tail.vertical.airfoil_name = 'NACA 0012';
+aircraft.tail.vertical.airfoil_name = 'NACA 0012'; % just to give a thickness
 
 ii = length(assumptions) + 1;
 assumptions(ii).name = "Tail Arm (Leading Edge)";
@@ -85,12 +80,12 @@ assumptions(ii).description = "Assume the leading edge (LE) of both horizontal a
 assumptions(ii).rationale = "First pass of MDAO, change later";
 assumptions(ii).responsible_engineer = "Liam Trzebunia";
 
-aircraft.tail.d_tail.value = 4;
-aircraft.tail.d_tail.units = 'ft';
+aircraft.tail.d_tail.value = 40.9;
+aircraft.tail.d_tail.units = 'in';
 aircraft.tail.d_tail.type = "length";
 aircraft.tail.d_tail.description = "Distance from LE of wing to LE of both tails";
 
-aircraft.tail.horizontal.i_tail.value = 0;
+aircraft.tail.horizontal.i_tail.value = 5;
 aircraft.tail.horizontal.i_tail.units = 'deg';
 aircraft.tail.horizontal.i_tail.type = "ang";
 aircraft.tail.horizontal.i_tail.description = "Tail incidence angle based on fuselage reference line";
@@ -106,7 +101,7 @@ assumptions(ii).description = "Assume zero horizontal tail taper";
 assumptions(ii).rationale = "First pass of MDAO, change later";
 assumptions(ii).responsible_engineer = "Liam Trzebunia";
 
-aircraft.tail.horizontal.resting_angle.value = 0;
+aircraft.tail.horizontal.resting_angle.value = -aircraft.tail.horizontal.i_tail.value;
 aircraft.tail.horizontal.resting_angle.units = 'deg';
 aircraft.tail.horizontal.resting_angle.type = "ang";
 aircraft.tail.horizontal.resting_angle.description = "horizontal tail resting angle of attack with respect to fuselage (positive pitched upwards)";
@@ -117,13 +112,13 @@ assumptions(ii).description = "Assume zero resting angle of attack for wing and 
 assumptions(ii).rationale = "First pass of MDAO, change later";
 assumptions(ii).responsible_engineer = "Liam Trzebunia";
 
-aircraft.tail.horizontal.b.value = 2;
-aircraft.tail.horizontal.b.units = 'ft';
+aircraft.tail.horizontal.b.value = 15;
+aircraft.tail.horizontal.b.units = 'in';
 aircraft.tail.horizontal.b.type = "length";
 aircraft.tail.horizontal.b.description = "Span of horizontal tail";
 
-aircraft.tail.horizontal.c.value = 0.5;
-aircraft.tail.horizontal.c.units = 'ft';
+aircraft.tail.horizontal.c.value = 4.8;
+aircraft.tail.horizontal.c.units = 'in';
 aircraft.tail.horizontal.c.type = "length";
 aircraft.tail.horizontal.c.description = "mean aerodynamic chord of horizontal tail";
 
@@ -200,13 +195,13 @@ switch fuselageType
                 switch nPlies
                     case 2
                         aircraft.fuselage.mass.value = 1.617;
-                        aircraft.fuselage.XYZ_CG.value = [28.347 - aircraft.fuselage.protrusion.value, 0, 0.334];
+                        aircraft.fuselage.XYZ_CG.value = [28.347, 0, 0.334];
                         I_xx = 20.417;
                         I_yy = 426.0;
                         I_zz = 427.497;
                     case 3
                         aircraft.fuselage.mass.value = 2.414;
-                        aircraft.fuselage.XYZ_CG.value = [28.371 - aircraft.fuselage.protrusion.value, 0, 0.334];
+                        aircraft.fuselage.XYZ_CG.value = [28.371, 0, 0.334];
                         I_xx = 30.402;
                         I_yy = 636.383;
                         I_zz = 638.569;
@@ -250,6 +245,17 @@ aircraft.fuselage.length.description = "Length of fuselage";
 aircraft.fuselage.XYZ_CG.units = 'in';
 aircraft.fuselage.XYZ_CG.type = "length";
 aircraft.fuselage.XYZ_CG.description = "vector of X, Y, Z coordinates of fuselage CG";
+
+if strcmp(string(aircraft.fuselage.length.units), "in") && strcmp(string(aircraft.tail.horizontal.c.units), "in") && strcmp(string(aircraft.tail.d_tail.units), "in") && strcmp(string(aircraft.fuselage.XYZ_CG.units), "in")
+aircraft.fuselage.protrusion.value = aircraft.fuselage.length.value - aircraft.tail.horizontal.c.value - aircraft.tail.d_tail.value;
+aircraft.fuselage.protrusion.units = 'in';
+aircraft.fuselage.protrusion.type = "length";
+aircraft.fuselage.protrusion.description = "Distance from nose to LE of wing root chord";
+
+aircraft.fuselage.XYZ_CG.value(1) = aircraft.fuselage.XYZ_CG.value(1) - aircraft.fuselage.protrusion.value; % correction of fuselage CG coordinate system
+else
+    error('Unit mismatch: calculation of wing location along fuselage length not possible.');
+end
 
 aircraft = conv_aircraft_units(aircraft, 0, "aircraft.fuselage.mass", "lbm");
 if strcmp(string(aircraft.fuselage.mass.units), "lbm") && strcmp(string(aircraft.fuselage.protrusion.units), "in")
