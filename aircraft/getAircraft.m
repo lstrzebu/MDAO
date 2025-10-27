@@ -305,10 +305,10 @@ batteryIndex = 4; % Options of 1:4
 motorIndex = 5; % Options of 1:4
 %propIndex = 4; % Options of 1:6
 
-aircraft.propulsion.motor.index.value = 3;
+aircraft.propulsion.motor.index.value = motorIndex;
 aircraft.propulsion.motor.index.description = "Which number (from 1 to the number of motors being considered) is being utilized for the present design iteration";
 
-aircraft.propulsion.battery.index.value = 4;
+aircraft.propulsion.battery.index.value = batteryIndex;
 aircraft.propulsion.battery.index.description = "Which number (from 1 to the number of motors being considered) is being utilized for the present design iteration";
 
 % Read Battery Spreadsheet
@@ -369,12 +369,12 @@ aircraft.propulsion.motor.diameter_outer.description = "outer diameter of motor"
 % drag = 40;
 % vTrim = 20;
 
-aircraft.avionics.servos.number.value = 8;
-aircraft.avionics.servos.number.units = '';
-aircraft.avionics.servos.number.description = "number of servos used on the aircraft";
-aircraft.avionics.servos.weight.value = 10;
-aircraft.avionics.servos.weight.units = 'N';
-aircraft.avionics.servos.weight.description = "combined weight of all servo motors on the aircraft";
+% aircraft.avionics.servos.number.value = 8;
+% aircraft.avionics.servos.number.units = '';
+% aircraft.avionics.servos.number.description = "number of servos used on the aircraft";
+% aircraft.avionics.servos.weight.value = 10;
+% aircraft.avionics.servos.weight.units = 'N';
+% aircraft.avionics.servos.weight.description = "combined weight of all servo motors on the aircraft";
 
 assumptions(end+1).name = "ESC Mass";
 assumptions(end+1).description = "assume constant ESC mass of 126 grams";
