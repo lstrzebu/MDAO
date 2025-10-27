@@ -105,7 +105,7 @@ X_NP        = h_n.*c;
 
 %% C_L_trim calculation
 
-C_M0        = C_M0_wb + a_tail.*V_bar_ht.*(epsilon_0 + i_t_0L);
+C_M0        = C_M0_wb - a_tail.*V_bar_ht.*(epsilon_0 + i_t_0L); % negative i_t_0L produces nose-up (positive) moment
 
 C_L_trim    = c.*C_M0./(X_NP - X_CG);
 
