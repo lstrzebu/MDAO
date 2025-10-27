@@ -177,11 +177,6 @@ aircraft.tail.vertical.taper_ratio.units = '';
 aircraft.tail.vertical.taper_ratio.type = "non";
 aircraft.tail.vertical.taper_ratio.description = "Taper ratio of vertical tail";
 
-assumptions(end+1).name = "Cylindrical Approximation of Fuselage";
-assumptions(end+1).description = "Model fuselage as a perfect cylinder having a diameter equal to the true fuselage's height.";
-assumptions(end+1).rationale = "It is not worth the effort to exactly model the fuselage for aerodynamic calculations. Using a diameter equal to the true fuselage's height (rather than width) results in a more conservative estimate as the true fuselage will have less drag this way.";
-assumptions(end+1).responsible_engineer = "Liam Trzebunia";
-
 fuselageType = "large";
 material = "Hexcel AS4C (3000 filaments)";
 nPlies = 3;
@@ -279,7 +274,6 @@ aircraft.fuselage.thickness.units = 'm';
 aircraft.fuselage.thickness.type = "length";
 aircraft.fuselage.thickness.description = "difference between inner and outer radius of fuselage hull";
 
-
 aircraft.landing_gear.weight.value = 0;
 aircraft.landing_gear.weight.units = 'N';
 aircraft.landing_gear.weight.type = "force";
@@ -307,9 +301,9 @@ numBatt = 4; % considering 4 batteries at first
 opts = getBattCapOptions(numBatt);
 
 % Example Motor, Battery, and Prop Configuration Index
-batteryIndex = 3; % Options of 1:4
-motorIndex = 4; % Options of 1:4
-propIndex = 4; % Options of 1:6
+batteryIndex = 4; % Options of 1:4
+motorIndex = 5; % Options of 1:4
+%propIndex = 4; % Options of 1:6
 
 aircraft.propulsion.motor.index.value = 3;
 aircraft.propulsion.motor.index.description = "Which number (from 1 to the number of motors being considered) is being utilized for the present design iteration";

@@ -214,7 +214,7 @@ propeller.data.value(:,:,j) = readmatrix(aircraft.propulsion.propeller.filename)
 
  propeller.weight.value(j,:) = (propTable{j, 2} * 28.3495) * (9.81/1000); % converted to N
 
-propeller.diameter.value(j,:) = str2double(propTable{propIndex, 3}{1});
+propeller.diameter.value(j,:) = str2double(propTable{j, 3}{1});
     
     aircraft.propulsion.propeller.index.description = "Which number (from 1 to the number of propellers being considered) is being utilized for the present design iteration";
   aircraft.propulsion.propeller.data.type = "non"; % nondimensional as a whole; do not convert units
