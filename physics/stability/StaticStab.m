@@ -58,6 +58,8 @@ downwash_derivative = 0;
 % the calculations, the i_t used is based on the 0-L line of the wing.
 i_t_0L      = i_t + alpha_0L_wb;
 
+i_t_0L(:) = 5;
+
 %% Wing Calculations (ONLY WORKS FOR RECTANGULAR WING)
 
 % Chord of the wing
@@ -105,8 +107,8 @@ X_NP        = h_n.*c;
 
 %% C_L_trim calculation
 
-C_M0        = C_M0_wb - a_tail.*V_bar_ht.*(epsilon_0 + i_t_0L); % negative i_t_0L produces nose-up (positive) moment
-
+C_M0        = C_M0_wb + a_tail.*V_bar_ht.*(epsilon_0 + i_t_0L).*(1 - ((a_tail./a_wb).*(S_ht./S).*(1 - downwash_derivative))); % negative i_t_0L produces nose-up (positive) moment
+    
 C_L_trim    = c.*C_M0./(X_NP - X_CG);
 
 %% α_trim calculation
