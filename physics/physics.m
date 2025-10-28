@@ -27,7 +27,6 @@ end
 %% Score Result if Physically Feasible
 if continue_mission_analysis.value
     evalScore
-end
 
 %% Save Feasible Missions
 data = readcell("6S Battery Data Condensed.xlsx"); % project file takes care of the pathing
@@ -41,3 +40,5 @@ for i = 1:numMissionConfigs
     fprintf(fid, "\n%d, %s, %s, %s, %s, %s, %.3f, %s, %.4f", aircraftIteration, print_missions(:, i), total_score(i), aircraft.propulsion.propeller.name{i}, aircraft.banner.AR.value(i));
 end
 fclose(fid);
+
+end

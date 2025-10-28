@@ -1,6 +1,9 @@
-function [X_NP,C_L0,C_D0,alpha_trim_FRL,C_Zw,C_Yw,C_lw,C_mw,C_nw,C_Zv,C_Yv,C_lv,C_mv,C_nv,C_Zp,C_Yp,C_lp,C_mp,C_np,C_Zq,C_Yq,C_lq,C_mq,C_nq,C_Zr,C_Yr,C_lr,C_mr,C_nr,efficiency_factor] = Read_Out(file_name)
+%function [X_NP,C_L0,C_D0,alpha_trim_FRL,C_Zw,C_Yw,C_lw,C_mw,C_nw,C_Zv,C_Yv,C_lv,C_mv,C_nv,C_Zp,C_Yp,C_lp,C_mp,C_np,C_Zq,C_Yq,C_lq,C_mq,C_nq,C_Zr,C_Yr,C_lr,C_mr,C_nr,efficiency_factor, fileExistence] = Read_Out(file_name)
 %READ_OUT Reads your balsa.out file and produces the stability derivatives
 %from it.
+
+if isfile(sprintf('%s.out', file_name))
+    fileExistence = true;
 
 ID = fopen(sprintf('%s.out',file_name), "r");
 
@@ -103,7 +106,10 @@ alpha_trim_FRL = alfaf(1);
 
 X_NP_line = textscan(bog{contains(bog,'Xnp =')},'%s','Delimiter',{' = ','    '});
 X_NP = rmmissing(str2double(X_NP_line{1}));
-
+else
+    fileExistence = false; % likely due to an overly large angle of trim
 
 end
+
+% end
 

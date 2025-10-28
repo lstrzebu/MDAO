@@ -187,7 +187,11 @@ failure_messages = strings([numMissionConfigs 1]);
 for i = 1:numMissionConfigs
     DynamicStab(design_title,file_name,airfoil_file,Htail_airfoil_file,Vtail_airfoil_file,tail_config,x_cm(i),y_cm(i),z_cm(i),mass(i),I_matrix(:,:,i),b(i),S(i),dihedral_angle(i),d_tail(i),z_tail(i),i_t(i),S_ht(i),S_vt(i),C_r_fuselage(i),lambda_ht(i),lambda_vt(i))
 
-    [X_NP,~,~,alpha_trim_FRL,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~] = Read_Out(file_name);
+    %[X_NP,~,~,alpha_trim_FRL,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~] = Read_Out(file_name);
+    Read_Out
+    if ~fileExistence
+        failure_message = "AVL: Cannot trim. Alpha too large.";
+    end
 
     %% Detecting the failure of the static stability
 
@@ -314,7 +318,7 @@ for i = 1:numMissionConfigs
     failure_messages(i) = failure_message;
 
     % if the design has the same failure mode 5 times in a row, move on
-    if all(strcmp(failure_messages(1:i), failure_messages(1))) && i >= 5
+    if all(strcmp(failure_messages(1:i), failure_messages(1))) && i >= 5 && ~strcmp(failure_messages(1), "")
         continue_mission_analysis.value = false;
         break
     end

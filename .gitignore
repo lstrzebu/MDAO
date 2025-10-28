@@ -39,3 +39,10 @@ codegen/
 
 # Data Files
 *.csv
+
+# AVL Files
+*.avl 
+*.eig
+*.out
+*.bat
+*.run

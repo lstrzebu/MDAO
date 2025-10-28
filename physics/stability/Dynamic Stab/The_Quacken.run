@@ -1,0 +1,20 @@
+LOAD
+The_Quacken.avl
+MASS
+The_Quacken.mass
+MSET
+0
+OPER
+A PM 0
+X
+st
+The_Quacken.out
+c1
+
+
+MODE
+n
+w
+The_Quacken.eig
+
+quit

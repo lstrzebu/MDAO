@@ -41,10 +41,13 @@ getMissions % primary output: missions
 physics
 
 % select the best mission for this particular aircraft
-optimizeMission % primary output: bestMission
 
-% store the aircraft and its optimal mission somewhere for future use
-saveAircraft
+if continue_mission_analysis.value
+    optimizeMission % primary output: bestMission
+
+    % store the aircraft and its optimal mission somewhere for future use
+    saveAircraft
+end
 
 % scoredDesigns = missionObjective(feasibleDesigns); % will need to rewrite missionObjective to be elementwise (i.e. receive a matrix input)
 
