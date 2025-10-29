@@ -105,7 +105,17 @@ if ~strcmp(failure_messages(j), "no RPM exists")
 
     % Set Safety Boolean Based on Factors of Safety
     if ~(currentFS >= (1/0.85) && voltageFS >= 1 && powerFS >= (1/0.85))
-        failure_messages(j) = "insufficient electrical factors of safety";
+        if ~(currentFS >= (1/0.85))
+        failure_messages(j) = sprintf("insufficient electircal current factor of safety: max current = %.4f but required current = %.4f", maxCurrent, current);
+        elseif ~(voltageFS >= 1)
+        failure_messages(j) = sprintf("insufficient electrical voltage factor of safety: max voltage = %.4f but required voltage = %.4f", maxVoltage, voltage);
+        elseif ~(powerFS >= (1/0.85))
+        failure_messages(j) = sprintf("insufficient electrical power factor of safety: max power = %.4f but required power = %.4f", maxPower, power);
+        end
+    end
+
+    if voltage < 0 || current < 0 || pUtilization < 0
+        failure_messages(j) = "negative current, power, or voltage... failed assumption for current.";
     end
 
     pUtilizationVals(j) = pUtilization;

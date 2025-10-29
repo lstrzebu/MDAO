@@ -1,9 +1,9 @@
-function [L, L_2, D, C_D_Total, CL_trim_tot,V_stall, rejectedIndex, failure_messages] = AeroCode_2(W, V, C_L_Total, b_w, c_w, b_t, c_t, l_fuse, d_fuse, A_banner, AR_banner, alpha_trim, stall_w, CLa_w, W_ref, alphaL0_w, Cla_t, t_ref, alphaL0_t, numMissionConfigs)
+function [L, L_2, D, C_D_Total, CL_trim_tot,V_stall, rejectedIndex, failure_messages] = AeroCode_2(W, V, C_L_Total, b_w, c_w, b_t, c_t, l_fuse, d_fuse, alpha_trim, stall_w, CLa_w, W_ref, alphaL0_w, Cla_t, t_ref, alphaL0_t, numMissionConfigs, missionNumber)
 % Aero_Forces calculates total lift and drag for an aircraft
 %
 % Inputs:
 % W         : Weight
-% V         : Freestream velocity (m/s) (Trim speed)
+% V         : Freestream velocity (m./s) (Trim speed)
 % C_L_tot   : total lift coefficient
 % b_w       : Wing span (m)
 % c_w       : Wing chord (m)
@@ -11,16 +11,14 @@ function [L, L_2, D, C_D_Total, CL_trim_tot,V_stall, rejectedIndex, failure_mess
 % c_t       : Tail chord (m)
 % l_fuse    : Fuselage length (m)
 % d_fuse    : Fuselage diameter (m)
-% A_banner  : banner projected area [m^2]
-% AR_banner : estimated banner aspect ratio (length/height)
 % alpha_trim: trim angle of attack
-% stall_w   : 2d wing stall angle (deg)
+% stall_w   : 2d wing stall angle
 % CLa_w       : 3d lift slope for wing
-% W_ref       : wing resting angle of attack with respect to fuselage 
-% alphaL0_w   : 0 lift wing angle of attack (deg)
+% W_ref       : wing resting angle of attack with respect to fuselage
+% alphaL0_w   : 0 lift wing angle of attack
 % Cla_t       : 3d lift slope for tail
-% t_ref       : tail resting angle of attack with respect to fuselage (deg)
-% alphaL0_t   : 0 lift tail angle of attack (deg)
+% t_ref       : tail resting angle of attack with respect to fuselage
+% alphaL0_t   : 0 lift tail angle of attack
 %
 % Outputs:
 % L           : Total lift (N)
@@ -39,8 +37,8 @@ rho = 1.225;       % Air density (kg./m.^3)
 mu = 1.81e-5;      % Dynamic viscosity (kg./(m·s))
 
 %% Wing & Tail areas
-S_w = b_w.*c_w;
-S_t = b_t.*c_t;
+S_w = b_w .* c_w;
+S_t = b_t .* c_t;
 
 %% Aspect ratio
 AR = b_w.^2 ./ S_w;
@@ -82,30 +80,29 @@ CD_o = CD_o_fuse + CD_o_gear + CD_o_pro + CD_o_FP;
 %% Induced drag (Eqns 12.48 & 12.49)
 e_oswa = 1.78.*(1 - 0.045.*AR.^0.68) - 0.64;  % Oswald efficiency
 K = 1./(pi.*AR.*e_oswa);
-CD_i = K .* C_L_Total.^2;
+CD_i = K .* CL_trim_tot.^2;
 
 %% Banner info
 
-% Cap option: use coefficients at A = 0.075 m.^2
-C_cap = 0.405;
-n_cap = -0.494;
-
-C_D_banner = C_cap .* (AR_banner.^n_cap);       % dimensionless
-D_banner   = 0.5 .* rho .* V.^2 .* A_banner .* C_D_banner;  % [N]
-
-% Convert banner drag to an equivalent CD normalized by wing area
-CD_banner_equiv = D_banner ./ (0.5 .* rho .* V.^2 .* S_w);
+switch missionNumber
+    case 2
+        CD_banner_equiv = 0; % no banner for M2
+    case 3
+        D_banner   = 0.5 .* rho .* V.^2 .* 0.685981815499670 .* 0.05;  % [N]
+        % Convert banner drag to an equivalent CD normalized by wing area
+        CD_banner_equiv = D_banner ./ (0.5 .* rho .* V.^2 .* S_w);
+    otherwise
+        error('Rewrite Aerodynamics analysis to support Mission 1.')
+end
 
 %% Total drag coefficient and drag
 C_D_Total = CD_o + CD_i + CD_banner_equiv;
 D = 0.5 .* rho .* V.^2 .* S_w .* C_D_Total;
-
 %% Boolean
 
 %approximation for 3d wing stall compared to 2d airfoil stall
 alpha_w_trim = W_ref + alpha_trim - alphaL0_w;
 td_stall = 0.8.*stall_w; % 3d stall approx
-
 % if alpha_w_trim<td_stall
 %     alpha_boolean = true; 
 % else
@@ -114,14 +111,11 @@ td_stall = 0.8.*stall_w; % 3d stall approx
 
 CL_max = CLa_w.*(W_ref+td_stall-alphaL0_w) + (S_t./S_w).*Cla_t.*(t_ref+td_stall-alphaL0_t);
 V_stall = sqrt(2.*W./(rho.*S_w.*CL_max));
-
-
-% % if V>V_stall
-% %     speed_boolean = true;
-% % else
-% %     speed_boolean = false; 
-% % end
-
+% if V>V_stall
+%     speed_boolean = true;
+% else
+%     speed_boolean = false; 
+% end
 
 failure_messages = strings([numMissionConfigs, 1]);
 rejectedIndx_speed = V<=V_stall & alpha_w_trim < td_stall; % failure due to speed only
@@ -136,5 +130,4 @@ if all(sum([rejectedIndx_speed, rejectedIndx_angle, rejectedIndx_both], 2) <= 1)
 else
     error('An error in conditional logic has been made. Check the failure logic for static stability. Multiple mutually exclusive failure modes are being triggered simultaneously.')
 end
-
 end

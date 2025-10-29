@@ -37,7 +37,7 @@ print_missions = string(print_missions);
 print_missions(5, :) = string(batteryName);
 fid = fopen('output\accepted_missions.csv', 'a');
 for i = 1:numMissionConfigs
-    fprintf(fid, "\n%d, %s, %s, %s, %s, %s, %.3f, %s, %.4f", aircraftIteration, print_missions(:, i), total_score(i), aircraft.propulsion.propeller.name{i}, aircraft.banner.AR.value(i));
+    fprintf(fid, "\n%d, %s, %s, %s, %s, %s, %.3f, %s", aircraftIteration, print_missions(:, i), total_score(i), aircraft.propulsion.propeller.name{i});
 end
 fclose(fid);
 

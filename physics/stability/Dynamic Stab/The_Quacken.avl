@@ -2,7 +2,7 @@ Aircraft 1
 0.000000                            !   Mach
 0           0           0           !   iYsym  iZsym  Zsym
 0.448490    0.294285    1.524000    !   Sref   Cref   Bref   reference area, chord, span
-0.097036    0.000186   0.013577    !   Xref   Yref   Zref   moment reference location (arb.)
+0.120828    0.000165   0.018522    !   Xref   Yref   Zref   moment reference location (arb.)
 
 #
 #=======wing=======================================================

@@ -256,8 +256,14 @@ WriteMassFile(file_name,Length_unit,Mass_unit,Time_unit,g,air_density,mass,x_cm,
 WriteBatchFile(file_name)
 
 
-system(sprintf('%s.bat',file_name))
-
+% system(sprintf('%s.bat',file_name))
+proc = System.Diagnostics.Process();
+proc.StartInfo.FileName = 'cmd.exe';
+proc.StartInfo.Arguments = sprintf('/c %s.bat', file_name);  % Replace with your filenames
+proc.StartInfo.UseShellExecute = false;
+proc.StartInfo.CreateNoWindow = true;  % This hides the window
+proc.Start();
+proc.WaitForExit();
 
 end
 

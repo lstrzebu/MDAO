@@ -24,6 +24,7 @@ setup
 
 %% Vary Design Parameters (Outer Loop)
 % In other words, select a configuration.
+tic
 
 aircraftIteration = 1;
 missionIteration = 1;
@@ -50,4 +51,4 @@ if continue_mission_analysis.value
 end
 
 % scoredDesigns = missionObjective(feasibleDesigns); % will need to rewrite missionObjective to be elementwise (i.e. receive a matrix input)
-
+timeForPDRDesign = toc;

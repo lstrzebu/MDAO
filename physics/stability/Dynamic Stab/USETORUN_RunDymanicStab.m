@@ -184,8 +184,8 @@ end
 failure_message = "";  % assume no failure until proven otherwise. If the string remains empty, there is no failure.
 
 failure_messages = strings([numMissionConfigs 1]);
-for i = 1:numMissionConfigs
-    DynamicStab(design_title,file_name,airfoil_file,Htail_airfoil_file,Vtail_airfoil_file,tail_config,x_cm(i),y_cm(i),z_cm(i),mass(i),I_matrix(:,:,i),b(i),S(i),dihedral_angle(i),d_tail(i),z_tail(i),i_t(i),S_ht(i),S_vt(i),C_r_fuselage(i),lambda_ht(i),lambda_vt(i))
+for iii = 1:numMissionConfigs
+    DynamicStab(design_title,file_name,airfoil_file,Htail_airfoil_file,Vtail_airfoil_file,tail_config,x_cm(iii),y_cm(iii),z_cm(iii),mass(iii),I_matrix(:,:,iii),b(iii),S(iii),dihedral_angle(iii),d_tail(iii),z_tail(iii),i_t(iii),S_ht(iii),S_vt(iii),C_r_fuselage(iii),lambda_ht(iii),lambda_vt(iii))
 
     %[X_NP,~,~,alpha_trim_FRL,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~,~] = Read_Out(file_name);
     Read_Out
@@ -315,10 +315,10 @@ for i = 1:numMissionConfigs
 
     end
 
-    failure_messages(i) = failure_message;
+    failure_messages(iii) = failure_message;
 
     % if the design has the same failure mode 5 times in a row, move on
-    if all(strcmp(failure_messages(1:i), failure_messages(1))) && i >= 5 && ~strcmp(failure_messages(1), "")
+    if all(strcmp(failure_messages(1:iii), failure_messages(1))) && iii >= 5 && ~strcmp(failure_messages(1), "")
         continue_mission_analysis.value = false;
         break
     end
