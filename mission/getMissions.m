@@ -170,8 +170,8 @@ missions = [P(:), C(:), L(:), BL(:), TPBC(:), propIndx(:)];
 % missions(:, 5) = TPBCscal; % no variation of propulsion battery capacity during mission generation... only during aircraft generation 
 
 % logical mask for missions to ensure (number of ducks) >= 3*(number of pucks)
-% ducks_pucks_mask = missions(:,1) >= 3.*missions(:,2);
-% missions = missions(ducks_pucks_mask, :);
+ducks_pucks_mask = missions(:,1) >= 3.*missions(:,2);
+missions = missions(ducks_pucks_mask, :);
 
 % FOR TESTING
 missions = missions(1:5, :);
