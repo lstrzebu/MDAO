@@ -57,7 +57,7 @@ fprintf('Analyzing Mission %d feasibility for %s... \n', missionNumber, aircraft
         "";
         "kg/m^3"];
 
-    aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits);
+    aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits, missionNumber);
 
     unitsAgree = [strcmp(string(aircraft.loaded.XYZ_CG.units), "m");
         strcmp(string(aircraft.loaded.weight.units), "N");
@@ -91,7 +91,7 @@ fprintf('Analyzing Mission %d feasibility for %s... \n', missionNumber, aircraft
             "aircraft.wing.Cm0",...
             "aircraft.missions.mission(2).weather.air_density"];
 
-        aircraft = vectorize_aircraft_params(aircraft, numMissionConfigs, structNames);
+        aircraft = vectorize_aircraft_params(aircraft, numMissionConfigs, structNames, missionNumber);
 
     %     % capture assumptions embedded in the static stability analysis function call
     %     ii = length(assumptions) + 1;
@@ -183,7 +183,7 @@ if continue_mission_analysis.value
         "rad";
         "m"];
 
-    aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits);
+    aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits, missionNumber);
     aircraft = vectorize_aircraft_params(aircraft, numMissionConfigs, ["aircraft.wing.c", "aircraft.wing.a0"]);
 
     unitsAgree = [strcmp(string(aircraft.wing.b.units), "m");
@@ -258,7 +258,7 @@ if continue_mission_analysis.value
         "deg";
         "deg"];
 
-    aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits);
+    aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits, missionNumber);
     aircraft = vectorize_aircraft_params(aircraft, numMissionConfigs, "aircraft.wing.alpha_stall");
 
     unitsAgree = [strcmp(string(aircraft.loaded.weight.units), "N");
@@ -360,7 +360,7 @@ if continue_mission_analysis.value
         "deg";
         "deg"];
 
-    aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits);
+    aircraft = conv_aircraft_units(aircraft, missionIteration, structNames, desiredUnits, missionNumber);
 
     unitsAgree = [strcmp(string(aircraft.loaded.weight.units), "N");
         strcmp(string(aircraft.missions.mission(2).physics.D.units), "N");
@@ -427,3 +427,41 @@ if continue_mission_analysis.value
     fprintf('Completed Mission %d propulsion analysis for %s... \n', missionNumber, aircraftName)
 end
 fprintf('Completed Mission %d feasibility analysis for %s. \n', missionNumber, aircraftName)
+
+%% Flight Time Evaluation
+linear_length = 304.8; % 1000ft converted to m (from rules)
+if strcmp(string(aircraft.missions.mission(2).physics.turn_radius.minimum.units), "m")
+    radius = aircraft.missions.mission(2).physics.turn_radius.minimum.value;
+end
+nLaps = missions(:,3);
+flight_distance = nLaps.*(linear_length*2 + 2.*(pi.*radius.^2)); % [m], accounts for cruising distance + two full turns per lap at maximum bank angle
+if strcmp(string(aircraft.missions.mission(2).v_trim.units), "m/s")
+    v_trim = aircraft.missions.mission(2).v_trim.value;
+    flight_time = flight_distance./v_trim;
+end
+if strcmp(string(aircraft.physics.max_flight_time.units), "s")
+max_flight_time_batteryPower = aircraft.physics.max_flight_time.value;
+end
+max_flight_time_DBFrules = 5*60; % 5 minute duration for mission 2
+
+rejectedIndx_batteryPower = flight_time > max_flight_time_batteryPower & flight_time <= max_flight_time_DBFrules;
+rejectedIndx_DBFrules = flight_time > max_flight_time_DBFrules & flight_time <= max_flight_time_batteryPower;
+rejectedIndx_both = flight_time > max_flight_time_DBFrules & flight_time > max_flight_time_batteryPower; 
+
+failure_messages = strings([numMissionConfigs, 1]);
+if all(sum([rejectedIndx_batteryPower, rejectedIndx_DBFrules, rejectedIndx_both], 2) <= 1) % make sure no row is being set to true for multiple arrays
+    failure_messages(rejectedIndx_batteryPower) = sprintf("Mission 2 flight time exceeds maximum allowable flight time (by battery)."); 
+    failure_messages(rejectedIndx_DBFrules) = "Mission 2 flight time exceeds maximum allowable flight time (by competition rules).";
+    failure_messages(rejectedIndx_both) = "Mission 2 flight time exceeds maximum allowable flight time both by battery and by competition rules.";
+    rejectedIndex = any([rejectedIndx_both, rejectedIndx_batteryPower, rejectedIndx_DBFrules], 2);
+else
+    error('An error in conditional logic has been made. Check the failure logic for Mission 2 maximum flight time. Multiple mutually exclusive failure modes are being triggered simultaneously.')
+end
+
+[aircraft, missions, numMissionConfigs] = update_aircraft_mission_options(aircraft, aircraftIteration, missions, numMissionConfigs, rejectedIndx, failure_messages, structNames_mission, batteryIndex, missionNumber);
+
+if numMissionConfigs == 0
+    continue_mission_analysis.value = false;
+end
+
+% aircraft.missions.mission(2).flight_time = ;

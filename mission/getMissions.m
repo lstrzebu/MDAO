@@ -174,7 +174,7 @@ missions = [P(:), C(:), L(:), BL(:), TPBC(:), propIndx(:)];
 % missions = missions(ducks_pucks_mask, :);
 
 % FOR TESTING
-% missions = missions(1:5, :);
+missions = missions(1:5, :);
 
 % bannerArea = missions(:,7);
 % bannerLength = missions(:,4);

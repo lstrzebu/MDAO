@@ -1,4 +1,4 @@
-function aircraft = vectorize_aircraft_params(aircraft, numMissionConfigs, structNames)
+function aircraft = vectorize_aircraft_params(aircraft, numMissionConfigs, structNames, missionNumber)
 % Vectorizes aircraft parameters by representing a scalar input as a column
 % vector output whose rows all equal the scalar input
 %

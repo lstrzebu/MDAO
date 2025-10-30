@@ -203,7 +203,7 @@ for iii = 1:numMissionConfigs
     Read_Out
     if ~fileExistence
         failure_message = "AVL: Cannot trim. Alpha too large.";
-    end
+    else
 
     %% Detecting the failure of the static stability
     % Static stability failure if the CG is farther right than the NP
@@ -323,6 +323,8 @@ for iii = 1:numMissionConfigs
             % fprintf("Dynamic Stability Failed! Rolling mode is underdamped\n")
             % fprintf("Possible Fix - Increase Wing Dihedral\n\n")
         end
+
+    end
 
     end
 
