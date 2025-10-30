@@ -129,7 +129,8 @@ assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
 
 % step = 2; 
-minP = 6; stepP = 2; maxP = 30; 
+%minP = 6; stepP = 2; maxP = 30;
+minP = 6; stepP = 1; maxP = 6;
 minC = 1; stepC = 2; maxC = 10;
 minL = 3; stepL = 1; maxL = 8; 
 minBL = 72.96; stepBL = 1; maxBL = 72.96; % inches
@@ -169,8 +170,8 @@ missions = [P(:), C(:), L(:), BL(:), TPBC(:), propIndx(:)];
 % missions(:, 5) = TPBCscal; % no variation of propulsion battery capacity during mission generation... only during aircraft generation 
 
 % logical mask for missions to ensure (number of ducks) >= 3*(number of pucks)
-ducks_pucks_mask = missions(:,1) >= 3.*missions(:,2);
-missions = missions(ducks_pucks_mask, :);
+% ducks_pucks_mask = missions(:,1) >= 3.*missions(:,2);
+% missions = missions(ducks_pucks_mask, :);
 
 % FOR TESTING
 % missions = missions(1:5, :);

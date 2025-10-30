@@ -206,7 +206,6 @@ for iii = 1:numMissionConfigs
     end
 
     %% Detecting the failure of the static stability
-
     % Static stability failure if the CG is farther right than the NP
     Static_failure = x_cm > X_NP;
     if Static_failure
