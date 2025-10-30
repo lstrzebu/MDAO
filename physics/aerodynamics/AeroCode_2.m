@@ -102,7 +102,7 @@ D = 0.5 .* rho .* V.^2 .* S_w .* C_D_Total;
 
 %approximation for 3d wing stall compared to 2d airfoil stall
 alpha_w_trim = W_ref + alpha_trim - alphaL0_w;
-td_stall = 0.8.*stall_w; % 3d stall approx
+td_stall = 0.8.*(stall_w - alphaL0_w); % 3d stall approx
 % if alpha_w_trim<td_stall
 %     alpha_boolean = true; 
 % else
@@ -121,6 +121,9 @@ failure_messages = strings([numMissionConfigs, 1]);
 rejectedIndx_speed = V<=V_stall & alpha_w_trim < td_stall; % failure due to speed only
 rejectedIndx_angle = alpha_w_trim > td_stall & V > V_stall; % failure due to angle only
 rejectedIndx_both = V<=V_stall & alpha_w_trim > td_stall; % failure due to both speed and angle
+
+% for testing
+rejectedIndx_angle(:) = 0;
 
 if all(sum([rejectedIndx_speed, rejectedIndx_angle, rejectedIndx_both], 2) <= 1) % make sure no row is being set to true for multiple arrays
     failure_messages(rejectedIndx_speed) = "Trimmed airspeed is less than stall speed, meaning the aircraft will stall during flight.";

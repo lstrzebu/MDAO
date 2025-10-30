@@ -129,9 +129,9 @@ assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
 
 % step = 2; 
-minP = 3; stepP = 5; maxP = 30; 
-minC = 1; stepC = 3; maxC = 4;
-minL = 1; stepL = 7; maxL = 8; 
+minP = 6; stepP = 2; maxP = 30; 
+minC = 1; stepC = 2; maxC = 10;
+minL = 3; stepL = 1; maxL = 8; 
 minBL = 72.96; stepBL = 1; maxBL = 72.96; % inches
 TPBCscal = aircraft.propulsion.battery.capacity.value; % scalar for total propulsion battery capacity: units of Wh
 %minTPBC = 25; stepTPBC = 25; maxTPBC = 100;
@@ -196,7 +196,9 @@ missions = missions(ducks_pucks_mask, :);
 % aircraft.banner.AR.description = "banner aspect ratio (length/height)";
 
 % For testing only (DELETE afterwards):
-% missions = missions(1,:);
+% missions = missions(1:2,:);
+% missions(1, 1) = 24; % PDR ducks
+% missions(1, 2) = 8;
 
 % Now paramMatrix has n rows, where n = prod([numel(pVec), numel(cVec), numel(lVec), numel(blVec), numel(TPBCvec)])
 numMissionConfigs = size(missions, 1);

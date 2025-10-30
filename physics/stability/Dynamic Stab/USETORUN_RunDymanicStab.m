@@ -184,6 +184,18 @@ end
 failure_message = "";  % assume no failure until proven otherwise. If the string remains empty, there is no failure.
 
 failure_messages = strings([numMissionConfigs 1]);
+aircraft.missions.mission(missionNumber).v_trim.value = zeros([numMissionConfigs, 1]);
+aircraft.missions.mission(missionNumber).v_trim.units = 'm/s';
+aircraft.missions.mission(missionNumber).v_trim.type = "vel";
+aircraft.missions.mission(missionNumber).v_trim.description = "trim speed (backed out from Athena Vortex Lattice output)";
+aircraft.missions.mission(missionNumber).alpha_trim.value = zeros([numMissionConfigs, 1]);
+aircraft.missions.mission(missionNumber).alpha_trim.units = 'deg';
+aircraft.missions.mission(missionNumber).alpha_trim.type = "ang";
+aircraft.missions.mission(missionNumber).alpha_trim.description = "trim angle (Athena Vortex Lattice output)";
+aircraft.missions.mission(missionNumber).CL_trim.value = zeros([numMissionConfigs, 1]);
+aircraft.missions.mission(missionNumber).CL_trim.units = '';
+aircraft.missions.mission(missionNumber).CL_trim.type = "non";
+aircraft.missions.mission(missionNumber).CL_trim.description = "trimmed lift coefficient (Athena Vortex Lattice output)";
 for iii = 1:numMissionConfigs
     DynamicStab(design_title,file_name,airfoil_file,Htail_airfoil_file,Vtail_airfoil_file,tail_config,x_cm(iii),y_cm(iii),z_cm(iii),mass(iii),I_matrix(:,:,iii),b(iii),S(iii),dihedral_angle(iii),d_tail(iii),z_tail(iii),i_t(iii),S_ht(iii),S_vt(iii),C_r_fuselage(iii),lambda_ht(iii),lambda_vt(iii))
 

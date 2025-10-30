@@ -1,4 +1,4 @@
-%function [X_NP,C_L0,C_D0,alpha_trim_FRL,C_Zw,C_Yw,C_lw,C_mw,C_nw,C_Zv,C_Yv,C_lv,C_mv,C_nv,C_Zp,C_Yp,C_lp,C_mp,C_np,C_Zq,C_Yq,C_lq,C_mq,C_nq,C_Zr,C_Yr,C_lr,C_mr,C_nr,efficiency_factor, fileExistence] = Read_Out(file_name)
+% function [X_NP,C_L0,C_D0,alpha_trim_FRL,C_Zw,C_Yw,C_lw,C_mw,C_nw,C_Zv,C_Yv,C_lv,C_mv,C_nv,C_Zp,C_Yp,C_lp,C_mp,C_np,C_Zq,C_Yq,C_lq,C_mq,C_nq,C_Zr,C_Yr,C_lr,C_mr,C_nr,efficiency_factor, fileExistence] = Read_Out(file_name)
 %READ_OUT Reads your balsa.out file and produces the stability derivatives
 %from it.
 
@@ -92,6 +92,11 @@ C_nr = list_dervs(25) * (180/pi); % converted to 1/radians
 
 C_L0_line = textscan(bog{contains(bog,'CLtot')},'%s','Delimiter',{' = ','    '});
 C_L0 = str2double(C_L0_line{1}{2});
+aircraft.missions.mission(missionNumber).CL_trim.value(iii) = C_L0; 
+thisS = S(iii); % m^2
+thisRho = aircraft.missions.mission(missionNumber).weather.air_density.value(iii); % kg/m^3
+thisW = mass(iii)*9.81; % convert mass to weight
+aircraft.missions.mission(missionNumber).v_trim.value(iii) = sqrt((2*thisW)/(thisRho*thisS*C_L0)); % m/s
 
 C_D0_line = textscan(bog{contains(bog,'CDtot')},'%s','Delimiter',{' = ','    '});
 C_D0 = str2double(C_D0_line{1}{2});
@@ -102,7 +107,8 @@ efficiency_factor = Effe(2);
 
 a_line = textscan(bog{contains(bog,'Alpha =')},'%s','Delimiter',{' = ','    '});
 alfaf = rmmissing(str2double(a_line{1}));
-alpha_trim_FRL = alfaf(1);
+alpha_trim_FRL = alfaf(1); % degrees according to online search
+aircraft.missions.mission(missionNumber).alpha_trim.value(iii) = alpha_trim_FRL;
 
 X_NP_line = textscan(bog{contains(bog,'Xnp =')},'%s','Delimiter',{' = ','    '});
 X_NP = rmmissing(str2double(X_NP_line{1}));
