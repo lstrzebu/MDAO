@@ -130,8 +130,8 @@ assumptions(end+1).responsible_engineer = "Liam Trzebunia";
 
 % step = 2; 
 %minP = 6; stepP = 2; maxP = 30;
-minP = 6; stepP = 1; maxP = 6;
-minC = 1; stepC = 2; maxC = 10;
+minP = 6; stepP = 6; maxP = 30;
+minC = 2; stepC = 2; maxC = 10;
 minL = 3; stepL = 1; maxL = 8; 
 minBL = 72.96; stepBL = 1; maxBL = 72.96; % inches
 TPBCscal = aircraft.propulsion.battery.capacity.value; % scalar for total propulsion battery capacity: units of Wh
@@ -158,7 +158,8 @@ pVec = minP:stepP:maxP;
 cVec = minC:stepC:maxC;
 lVec = minL:stepL:maxL;
 blVec = minBL:stepBL:maxBL;
-propVec = 1:6;
+% propVec = 1:6;
+propVec = 1;
 bannerAreaVec = 1000:1000:20000; % square inches
 %PBCvec = minTPBC:stepTPBC:maxTPBC;
 
@@ -174,7 +175,7 @@ ducks_pucks_mask = missions(:,1) >= 3.*missions(:,2);
 missions = missions(ducks_pucks_mask, :);
 
 % FOR TESTING
-missions = missions(1:5, :);
+% missions = missions(1:5, :);
 
 % bannerArea = missions(:,7);
 % bannerLength = missions(:,4);
